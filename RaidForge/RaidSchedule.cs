@@ -9,8 +9,7 @@ namespace RaidForge
         // "ForceOn" => always on, "ForceOff" => always off, "Normal" => day-of-week scheduling
         public static ConfigEntry<string> OverrideMode;
 
-        // How often we do reflection checks (in seconds)
-        public static ConfigEntry<int> RaidCheckInterval;
+        // We removed user config for the check interval
 
         // Day-of-week times
         public static ConfigEntry<string> MondayStart;
@@ -32,7 +31,6 @@ namespace RaidForge
 
         public static void Initialize(ConfigFile config)
         {
-            // If already set, skip
             if (OverrideMode != null) return;
 
             OverrideMode = config.Bind(
@@ -42,12 +40,7 @@ namespace RaidForge
                 "ForceOn => always on, ForceOff => always off, Normal => day-of-week scheduling."
             );
 
-            RaidCheckInterval = config.Bind(
-                "RaidSchedule",
-                "RaidCheckInterval",
-                5,
-                "How often (in seconds) we do reflection checks. If you want near-instant toggles, set to 1. You may not want to change this"
-            );
+            // We removed the old user config for 'RaidCheckInterval'
 
             MondayStart  = config.Bind("RaidSchedule", "MondayStart", "20:00:00", "Monday start time");
             MondayEnd    = config.Bind("RaidSchedule", "MondayEnd", "22:00:00", "Monday end time");
@@ -57,12 +50,12 @@ namespace RaidForge
             WednesdayEnd   = config.Bind("RaidSchedule", "WednesdayEnd", "22:00:00", "Wed end time");
             ThursdayStart = config.Bind("RaidSchedule", "ThursdayStart", "20:00:00", "Thu start time");
             ThursdayEnd   = config.Bind("RaidSchedule", "ThursdayEnd", "22:00:00", "Thu end time");
-            FridayStart = config.Bind("RaidSchedule", "FridayStart", "20:00:00", "Fri start time");
-            FridayEnd   = config.Bind("RaidSchedule", "FridayEnd", "22:00:00", "Fri end time");
+            FridayStart   = config.Bind("RaidSchedule", "FridayStart", "20:00:00", "Fri start time");
+            FridayEnd     = config.Bind("RaidSchedule", "FridayEnd", "22:00:00", "Fri end time");
             SaturdayStart = config.Bind("RaidSchedule", "SaturdayStart", "20:00:00", "Sat start time");
             SaturdayEnd   = config.Bind("RaidSchedule", "SaturdayEnd", "22:00:00", "Sat end time");
-            SundayStart = config.Bind("RaidSchedule", "SundayStart", "20:00:00", "Sun start time");
-            SundayEnd   = config.Bind("RaidSchedule", "SundayEnd", "22:00:00", "Sun end time");
+            SundayStart   = config.Bind("RaidSchedule", "SundayStart", "20:00:00", "Sun start time");
+            SundayEnd     = config.Bind("RaidSchedule", "SundayEnd", "22:00:00", "Sun end time");
 
             LoadFromConfig();
         }
@@ -85,10 +78,8 @@ namespace RaidForge
             if (TimeSpan.TryParse(startStr, out var start) &&
                 TimeSpan.TryParse(endStr, out var end))
             {
-                // If both 0 => no window for that day
                 if (start == TimeSpan.Zero && end == TimeSpan.Zero) return;
 
-                // If end=0 but start!=0 => treat as 24h
                 if (end == TimeSpan.Zero && start != TimeSpan.Zero)
                 {
                     end = new TimeSpan(24, 0, 0);

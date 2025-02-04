@@ -2,11 +2,10 @@
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using VampireCommandFramework;
-using HarmonyLib;
 using System;
-// For chat reload
 using Bloodstone.API;
-using Bloodstone.Hooks;
+using Bloodstone.Hooks; // for GameFrame
+using HarmonyLib;
 
 namespace RaidForge
 {
@@ -18,7 +17,12 @@ namespace RaidForge
         public static RaidForgePlugin Instance { get; private set; }
         public static new ManualLogSource Logger;
 
-        private Harmony _harmony;
+        // We remove the old Harmony reference for VivoxPatch; 
+        // now we'll do OnUpdate with GameFrame:
+        private static float _timeAccumulator = 0f;
+        private static readonly float TICK_INTERVAL = 0.1f;
+        // We'll run our "check" logic every 0.1s so we can 
+        // accumulate up to 5s for the actual raid logic.
 
         public override void Load()
         {
@@ -26,68 +30,50 @@ namespace RaidForge
             Logger = Log;
             Logger.LogInfo("[RaidForge] Plugin is loading...");
 
-            // 1) Create/load config
+            // Setup your config (day-of-week times, override mode, etc.)
             Raidschedule.Initialize(Config);
-            _ = Raidschedule.OverrideMode.Value;
-            _ = Raidschedule.RaidCheckInterval.Value;
+            // We remove the old user config for RaidCheckInterval, so no references here:
             Config.Save();
 
-            // 2) Register commands (RaidCommand.cs)
+            // Register commands (RaidCommand)
             CommandRegistry.RegisterAll();
 
-            // 3) Setup Harmony for the VivoxPatch
-            _harmony = new Harmony("com.myserver.RaidForge");
-            _harmony.PatchAll();
+            // Initialize your manager so it can reset
+            RaidtimeManager.Initialize();
 
-            // 4) Hook chat for "!reload"
-            Chat.OnChatMessage += HandleReloadCommand;
+            // Hook Bloodstone’s GameFrame for updates
+            GameFrame.Initialize();
+            GameFrame.OnUpdate += GameFrame_OnUpdate;
 
-            Logger.LogInfo("[RaidForge] Plugin load finished. Using Vivox OnUpdate patch for scheduling.");
+            Logger.LogInfo("[RaidForge] Plugin load finished using Bloodstone GameFrame updates.");
         }
 
         public override bool Unload()
         {
             Logger.LogInfo("[RaidForge] Unloading plugin...");
 
-            // Unhook
-            Chat.OnChatMessage -= HandleReloadCommand;
+            // Unsubscribe from GameFrame
+            GameFrame.OnUpdate -= GameFrame_OnUpdate;
+            GameFrame.Uninitialize();
 
-            // Unregister commands & unpatch
+            // Unregister commands
             CommandRegistry.UnregisterAssembly();
-            _harmony?.UnpatchSelf();
+
+            RaidtimeManager.Dispose();
 
             return true;
         }
 
-        /// <summary>
-        /// Reloads the config on-the-fly when an admin types "!reload" in chat.
-        /// Ensures ForceOn/ForceOff changes apply immediately.
-        /// </summary>
-        private void HandleReloadCommand(VChatEvent ev)
+        private void GameFrame_OnUpdate()
         {
-            if (ev.Message == "!reload" && ev.User.IsAdmin)
+            // We'll accumulate time in real seconds
+            _timeAccumulator += UnityEngine.Time.deltaTime;
+
+            // Once we've accumulated 5 seconds, we run the scheduling check
+            if (_timeAccumulator >= 5f)
             {
-                Logger.LogInfo("[RaidForge] Reload command received...");
-                try
-                {
-                    Config.Reload();
-                    Config.Save();
-
-                    // Re-init schedule
-                    Raidschedule.Initialize(Config);
-                    Raidschedule.LoadFromConfig();
-
-                    // IMPORTANT: apply ForceOn/ForceOff logic immediately
-                    RaidtimeManager.ReloadFromConfig(true);
-
-                    ev.User.SendSystemMessage("<color=#00FF00>RaidForge config reloaded successfully.</color>");
-                    Logger.LogInfo("[RaidForge] Config reloaded via !reload command.");
-                }
-                catch (Exception ex)
-                {
-                    ev.User.SendSystemMessage($"<color=#FF0000>Failed to reload config:</color> {ex.Message}");
-                    Logger.LogError($"[RaidForge] Error reloading config: {ex}");
-                }
+                _timeAccumulator = 0f;
+                RaidtimeManager.OnServerTick();
             }
         }
     }

@@ -13,34 +13,18 @@ namespace RaidForge
         private static FieldInfo _settingsField;
         private static FieldInfo _castleDamageField;
 
-        /// <summary>
-        /// Enable raids by setting CastleDamageMode => Always
-        /// plus updating ServerGameBalanceSettings => Always
-        /// </summary>
         public static void EnableRaids(ManualLogSource logger)
         {
             bool ok1 = SetCastleDamageMode("Always");
             bool ok2 = SetServerGameBalanceCastleDamage("Always");
-            // Remove old warnings:
-            // if (!ok1 || !ok2) { logger.LogWarning(...); }
         }
 
-        /// <summary>
-        /// Disable raids by setting CastleDamageMode => Never
-        /// plus updating ServerGameBalanceSettings => Never
-        /// </summary>
         public static void DisableRaids(ManualLogSource logger)
         {
             bool ok1 = SetCastleDamageMode("Never");
             bool ok2 = SetServerGameBalanceCastleDamage("Never");
-            // Remove old warnings:
-            // if (!ok1 || !ok2) { logger.LogWarning(...); }
         }
 
-        /// <summary>
-        /// Main reflection to set CastleDamageMode = "Always" or "Never"
-        /// Returns false if reflection fails
-        /// </summary>
         private static bool SetCastleDamageMode(string val)
         {
             var world = VWorld.Server;
@@ -56,14 +40,12 @@ namespace RaidForge
             }
             if (_settingsField == null || _castleDamageField == null)
             {
-                // old logs removed
                 return false;
             }
 
             var settingsObj = _settingsField.GetValue(sgsSystem);
             if (settingsObj == null)
             {
-                // old logs removed
                 return false;
             }
 
@@ -75,14 +57,10 @@ namespace RaidForge
             }
             catch
             {
-                // old logs removed
                 return false;
             }
         }
 
-        /// <summary>
-        /// Also update the first ServerGameBalanceSettings entity => val
-        /// </summary>
         private static bool SetServerGameBalanceCastleDamage(string val)
         {
             var world = VWorld.Server;
@@ -114,16 +92,11 @@ namespace RaidForge
             }
         }
 
-        /// <summary>
-        /// Attempt to find ._Settings and .CastleDamageMode fields
-        /// in the managed ServerGameSettingsSystem
-        /// </summary>
         private static void FindCastleDamageField(ServerGameSettingsSystem sgsSystem)
         {
             var sgsType = sgsSystem.GetType();
             var fields = sgsType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            // Try any field that has "settings" in name
             foreach (var f in fields)
             {
                 if (f.Name.ToLower().Contains("settings"))
@@ -143,7 +116,7 @@ namespace RaidForge
                 }
             }
 
-            // fallback: check all fields
+            // fallback
             foreach (var f in fields)
             {
                 var obj = f.GetValue(sgsSystem);

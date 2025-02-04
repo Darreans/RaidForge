@@ -1,5 +1,5 @@
 ﻿using System;
-using BepInEx;
+using static RaidForge.Raidschedule;
 
 namespace RaidForge
 {
@@ -14,9 +14,6 @@ namespace RaidForge
 
         private static bool _initialized;
         private static RaidMode _currentMode = RaidMode.Normal;
-        private static int _intervalSec = 30;
-
-        private static DateTime _lastCheckTime = DateTime.MinValue;
 
         // If .raidoff in the middle of today's on-window => skip the rest
         private static bool _skipWindow;
@@ -24,32 +21,34 @@ namespace RaidForge
         private static TimeSpan _skipStart;
         private static TimeSpan _skipEnd;
 
+        // If _manualOverride != null, it takes priority for the rest of the day.
+        private static bool? _manualOverride = null;
+        private static DayOfWeek _manualOverrideDay;
+
         public static void Initialize()
         {
             _initialized = false;
+            _skipWindow = false;
+            _manualOverride = null;
         }
 
         public static void Dispose()
         {
             _initialized = false;
             _skipWindow = false;
+            _manualOverride = null;
         }
 
+        // This is called every 5s from GameFrame_OnUpdate in your plugin
         public static void OnServerTick()
         {
             if (!_initialized)
             {
                 _initialized = true;
                 LoadConfig();
-                _lastCheckTime = DateTime.Now;
-                RaidForgePlugin.Logger.LogInfo($"[RaidtimeManager] Initialized. intervalSec={_intervalSec}");
+                RaidForgePlugin.Logger.LogInfo("[RaidtimeManager] Initialized. Using 5s checks via GameFrame.");
             }
 
-            var now = DateTime.Now;
-            double delta = (now - _lastCheckTime).TotalSeconds;
-            if (delta < _intervalSec) return;
-
-            _lastCheckTime = now;
             CheckAndToggleRaidMode();
         }
 
@@ -58,7 +57,7 @@ namespace RaidForge
             LoadConfig();
             if (immediate)
             {
-                _lastCheckTime = DateTime.Now - TimeSpan.FromSeconds(_intervalSec);
+                // Force a re-check right now
                 CheckAndToggleRaidMode();
             }
         }
@@ -79,30 +78,47 @@ namespace RaidForge
             {
                 _currentMode = RaidMode.Normal;
             }
-
-            _intervalSec = Raidschedule.RaidCheckInterval.Value;
-            if (_intervalSec < 1) _intervalSec = 1;
         }
 
         private static void CheckAndToggleRaidMode()
         {
-            // If config override is ForceOn => always on
+            // If config override is ForceOn => always on.
             if (_currentMode == RaidMode.ForceOn)
             {
                 VrisingRaidToggler.EnableRaids(RaidForgePlugin.Logger);
                 return;
             }
-            // If config override is ForceOff => always off
+            // If config override is ForceOff => always off.
             if (_currentMode == RaidMode.ForceOff)
             {
                 VrisingRaidToggler.DisableRaids(RaidForgePlugin.Logger);
                 return;
             }
 
-            // Normal day-of-week logic
+            // Normal day-of-week logic, but first check manual overrides:
             var now = DateTime.Now;
             var day = now.DayOfWeek;
             var time = now.TimeOfDay;
+
+            // 1) If day changed from the override day, drop the override
+            if (_manualOverride.HasValue && day != _manualOverrideDay)
+            {
+                _manualOverride = null; // new day => reset override
+            }
+
+            // 2) If we have a manual override, it takes priority
+            if (_manualOverride.HasValue)
+            {
+                if (_manualOverride.Value)
+                {
+                    VrisingRaidToggler.EnableRaids(RaidForgePlugin.Logger);
+                }
+                else
+                {
+                    VrisingRaidToggler.DisableRaids(RaidForgePlugin.Logger);
+                }
+                return;
+            }
 
             // If day changed, reset skip
             if (_skipWindow && day != _skipDay)
@@ -125,7 +141,7 @@ namespace RaidForge
                 }
             }
 
-            // Now do single day-of-week scheduling
+            // day-of-week scheduling from Raidschedule.Windows:
             if (Raidschedule.Windows.TryGetValue(day, out var window))
             {
                 if (time >= window.Start && time <= window.End)
@@ -139,12 +155,13 @@ namespace RaidForge
             }
             else
             {
+                // If we have no window for that day, remain off
                 VrisingRaidToggler.DisableRaids(RaidForgePlugin.Logger);
             }
         }
 
         /// <summary>
-        /// If .raidoff is called while inside today's on-window => skip remainder
+        /// If .raidoff is called while inside today's on-window => skip remainder.
         /// </summary>
         public static void SkipCurrentWindowIfAny()
         {
@@ -156,7 +173,6 @@ namespace RaidForge
 
             if (!Raidschedule.Windows.TryGetValue(day, out var window)) return;
 
-            // If in the window => skip the rest
             if (time >= window.Start && time <= window.End)
             {
                 _skipWindow = true;
@@ -167,11 +183,7 @@ namespace RaidForge
         }
 
         /// <summary>
-        /// Called by .raidt. 
-        /// Finds the next time the schedule will turn ON in the next 7 days.
-        /// If we're currently INSIDE today's window, we skip it and look to tomorrow's.
-        /// If the window is ahead in the same day, we return that.
-        /// Otherwise we keep scanning future days up to 7 days out.
+        /// Called by .raidt => find next ON boundary
         /// </summary>
         public static DateTime? GetNextOnTime(DateTime now)
         {
@@ -182,30 +194,47 @@ namespace RaidForge
 
                 if (!Raidschedule.Windows.TryGetValue(dayOfWeek, out var window))
                 {
-                    // No window for that day => skip
                     continue;
                 }
 
                 var start = checkDate + window.Start;
                 var end = checkDate + window.End;
 
-                // If we are currently inside today's window => next on is tomorrow's
-                // so we skip if i=0 & now >= start && now <= end
+                // If today and we're already inside the window, skip it.
                 if (i == 0 && now >= start && now <= end)
                 {
-                    // skip this window, look to next day
                     continue;
                 }
 
-                // If the window start is still in the future for that day
                 if (start > now)
                 {
-                    // This is the next on boundary
                     return start;
                 }
             }
 
             return null;
+        }
+
+        // .raidon / .raidoff manual override for the rest of today.
+        public static void SetManualOverride(bool forcedOn)
+        {
+            _manualOverride = forcedOn;
+            _manualOverrideDay = DateTime.Now.DayOfWeek;
+        }
+
+        /// <summary>
+        /// If the user changes the schedule for the day-of-week that is *today*,
+        /// we can forcibly clear skip logic. This allows re-scheduling for later in the same day.
+        /// </summary>
+        public static void ClearSkipForTodayIfDayMatches(DayOfWeek changedDay)
+        {
+            var nowDay = DateTime.Now.DayOfWeek;
+            if (_skipWindow && changedDay == _skipDay && changedDay == nowDay)
+            {
+                // We had a skip window set for today, 
+                // but the user changed today's times => let's clear skip.
+                _skipWindow = false;
+            }
         }
     }
 }

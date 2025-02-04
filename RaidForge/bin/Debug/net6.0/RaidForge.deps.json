@@ -13,8 +13,7 @@
           "BepInEx.Unity.IL2CPP": "6.0.0-be.691",
           "VRising.Bloodstone": "0.2.2",
           "VRising.Unhollowed.Client": "1.0.5.802790001",
-          "VRising.VampireCommandFramework": "0.9.0",
-          "Bloody.Core": "1.2.5.0"
+          "VRising.VampireCommandFramework": "0.9.0"
         },
         "runtime": {
           "RaidForge.dll": {}
@@ -1348,14 +1347,6 @@
             "fileVersion": "0.9.0.0"
           }
         }
-      },
-      "Bloody.Core/1.2.5.0": {
-        "runtime": {
-          "Bloody.Core.dll": {
-            "assemblyVersion": "1.2.5.0",
-            "fileVersion": "1.2.5.0"
-          }
-        }
       }
     }
   },
@@ -2015,11 +2006,6 @@
       "sha512": "sha512-2O4nKLVuqn3huIKY7kNjnJTxBjjAMNPtQj+duikS/j5LoXUkjFWimXJ0JXOv2p+ZkTapxPMAdKLT6KkWA+MaVA==",
       "path": "vrising.vampirecommandframework/0.9.0",
       "hashPath": "vrising.vampirecommandframework.0.9.0.nupkg.sha512"
-    },
-    "Bloody.Core/1.2.5.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
     }
   }
 }
