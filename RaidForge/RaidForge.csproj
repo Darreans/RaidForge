@@ -5,7 +5,7 @@
     <Description>Allows you to start raids and end raids with a command, and set the times of raid on any day not just weekend or weekdays.</Description>
     <Version>0.1.10</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	  <Authors>Darrean #Inility </Authors>
+	  <Authors>Darrean(Inility) </Authors>
     <LangVersion>latest</LangVersion>
     <RootNamespace>RaidForge</RootNamespace>
     <AssemblyVersion>0.1.10.0</AssemblyVersion>

@@ -2,9 +2,7 @@
 
 namespace RaidForge
 {
-    /// <summary>
-    /// Simple data class for day-of-week scheduling.
-    /// </summary>
+  
     public class Raidwindow
     {
         public DayOfWeek Day { get; set; }

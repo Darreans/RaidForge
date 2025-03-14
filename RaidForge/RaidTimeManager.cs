@@ -15,13 +15,11 @@ namespace RaidForge
         private static bool _initialized;
         private static RaidMode _currentMode = RaidMode.Normal;
 
-        // If .raidoff in the middle of today's on-window => skip the rest
         private static bool _skipWindow;
         private static DayOfWeek _skipDay;
         private static TimeSpan _skipStart;
         private static TimeSpan _skipEnd;
 
-        // If _manualOverride != null, it takes priority for the rest of the day.
         private static bool? _manualOverride = null;
         private static DayOfWeek _manualOverrideDay;
 
@@ -39,7 +37,7 @@ namespace RaidForge
             _manualOverride = null;
         }
 
-        // This is called every 5s from GameFrame_OnUpdate in your plugin
+        // This is called every 5s from GameFrame_OnUpdate in the plugin
         public static void OnServerTick()
         {
             if (!_initialized)
@@ -47,9 +45,16 @@ namespace RaidForge
                 _initialized = true;
                 LoadConfig();
                 RaidForgePlugin.Logger.LogInfo("[RaidtimeManager] Initialized. Using 5s checks via GameFrame.");
+
+                // Also load the GolemAuto config if we haven't yet:
+                GolemAutoManager.LoadConfig();
             }
 
+            // Check & toggle raid mode based on schedule or overrides:
             CheckAndToggleRaidMode();
+
+            // Now update day-based golem HP, if automation is on:
+            GolemAutoManager.UpdateIfNeeded();
         }
 
         public static void ReloadFromConfig(bool immediate = false)
@@ -57,8 +62,9 @@ namespace RaidForge
             LoadConfig();
             if (immediate)
             {
-                // Force a re-check right now
                 CheckAndToggleRaidMode();
+                GolemAutoManager.LoadConfig(); // reload day->HP map in case it changed
+                GolemAutoManager.UpdateIfNeeded();
             }
         }
 
@@ -95,18 +101,18 @@ namespace RaidForge
                 return;
             }
 
-            // Normal day-of-week logic, but first check manual overrides:
+            // Normal mode => day-of-week logic unless there's a manual override
             var now = DateTime.Now;
             var day = now.DayOfWeek;
             var time = now.TimeOfDay;
 
-            // 1) If day changed from the override day, drop the override
+            // If we changed days, reset the override
             if (_manualOverride.HasValue && day != _manualOverrideDay)
             {
-                _manualOverride = null; // new day => reset override
+                _manualOverride = null;
             }
 
-            // 2) If we have a manual override, it takes priority
+            // Manual override => full priority
             if (_manualOverride.HasValue)
             {
                 if (_manualOverride.Value)
@@ -120,13 +126,12 @@ namespace RaidForge
                 return;
             }
 
-            // If day changed, reset skip
+            // If skipping remainder of the day’s window
             if (_skipWindow && day != _skipDay)
             {
                 _skipWindow = false;
             }
 
-            // If skipping remainder of the window => remain off
             if (_skipWindow && day == _skipDay && time >= _skipStart && time <= _skipEnd)
             {
                 VrisingRaidToggler.DisableRaids(RaidForgePlugin.Logger);
@@ -134,14 +139,13 @@ namespace RaidForge
             }
             else if (_skipWindow)
             {
-                // if we moved beyond that window or day changed, clear skip
                 if (day != _skipDay || time > _skipEnd)
                 {
                     _skipWindow = false;
                 }
             }
 
-            // day-of-week scheduling from Raidschedule.Windows:
+            // day-of-week scheduling
             if (Raidschedule.Windows.TryGetValue(day, out var window))
             {
                 if (time >= window.Start && time <= window.End)
@@ -155,14 +159,10 @@ namespace RaidForge
             }
             else
             {
-                // If we have no window for that day, remain off
                 VrisingRaidToggler.DisableRaids(RaidForgePlugin.Logger);
             }
         }
 
-        /// <summary>
-        /// If .raidoff is called while inside today's on-window => skip remainder.
-        /// </summary>
         public static void SkipCurrentWindowIfAny()
         {
             if (_currentMode != RaidMode.Normal) return;
@@ -182,9 +182,6 @@ namespace RaidForge
             }
         }
 
-        /// <summary>
-        /// Called by .raidt => find next ON boundary
-        /// </summary>
         public static DateTime? GetNextOnTime(DateTime now)
         {
             for (int i = 0; i < 7; i++)
@@ -200,7 +197,6 @@ namespace RaidForge
                 var start = checkDate + window.Start;
                 var end = checkDate + window.End;
 
-                // If today and we're already inside the window, skip it.
                 if (i == 0 && now >= start && now <= end)
                 {
                     continue;
@@ -211,28 +207,26 @@ namespace RaidForge
                     return start;
                 }
             }
-
             return null;
         }
 
-        // .raidon / .raidoff manual override for the rest of today.
         public static void SetManualOverride(bool forcedOn)
         {
             _manualOverride = forcedOn;
             _manualOverrideDay = DateTime.Now.DayOfWeek;
         }
 
-        /// <summary>
-        /// If the user changes the schedule for the day-of-week that is *today*,
-        /// we can forcibly clear skip logic. This allows re-scheduling for later in the same day.
-        /// </summary>
+        public static void ClearManualOverride()
+        {
+            _manualOverride = null;
+            _skipWindow = false;
+        }
+
         public static void ClearSkipForTodayIfDayMatches(DayOfWeek changedDay)
         {
             var nowDay = DateTime.Now.DayOfWeek;
             if (_skipWindow && changedDay == _skipDay && changedDay == nowDay)
             {
-                // We had a skip window set for today, 
-                // but the user changed today's times => let's clear skip.
                 _skipWindow = false;
             }
         }

@@ -11,7 +11,7 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("Darrean #Inility ")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("Darrean(Inility) ")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Allows you to start raids and end raids with a command, and set the times of raid" +
     " on any day not just weekend or weekdays.")]

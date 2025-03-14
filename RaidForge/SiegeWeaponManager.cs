@@ -8,9 +8,7 @@ namespace RaidForge
 {
     public static class SiegeWeaponManager
     {
-        /// <summary>
-        /// Set the SiegeWeaponHealth in the first ServerGameBalanceSettings entity (no reflection).
-        /// </summary>
+        
         public static bool SetSiegeWeaponHealth(SiegeWeaponHealth newValue, ManualLogSource logger)
         {
             var world = VWorld.Server;
@@ -52,10 +50,7 @@ namespace RaidForge
             }
         }
 
-        /// <summary>
-        /// Read the current SiegeWeaponHealth from the first ServerGameBalanceSettings entity.
-        /// Returns null if not found.
-        /// </summary>
+        
         public static SiegeWeaponHealth? GetSiegeWeaponHealth(ManualLogSource logger)
         {
             var world = VWorld.Server;

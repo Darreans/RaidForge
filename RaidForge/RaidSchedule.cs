@@ -6,12 +6,13 @@ namespace RaidForge
 {
     public static class Raidschedule
     {
-        // "ForceOn" => always on, "ForceOff" => always off, "Normal" => day-of-week scheduling
         public static ConfigEntry<string> OverrideMode;
 
-        // We removed user config for the check interval
+        public static ConfigEntry<bool> GolemAutomationEnabled;
+        public static ConfigEntry<string> GolemStartDateString;
+        public static ConfigEntry<string> GolemDayToHealthMap;
 
-        // Day-of-week times
+     
         public static ConfigEntry<string> MondayStart;
         public static ConfigEntry<string> MondayEnd;
         public static ConfigEntry<string> TuesdayStart;
@@ -31,16 +32,16 @@ namespace RaidForge
 
         public static void Initialize(ConfigFile config)
         {
+            // Only do thionce
             if (OverrideMode != null) return;
 
+            // ============= Basic Raid Schedule Config Entries =============
             OverrideMode = config.Bind(
                 "RaidSchedule",
                 "OverrideMode",
                 "Normal",
                 "ForceOn => always on, ForceOff => always off, Normal => day-of-week scheduling."
             );
-
-            // We removed the old user config for 'RaidCheckInterval'
 
             MondayStart  = config.Bind("RaidSchedule", "MondayStart", "20:00:00", "Monday start time");
             MondayEnd    = config.Bind("RaidSchedule", "MondayEnd", "22:00:00", "Monday end time");
@@ -56,6 +57,29 @@ namespace RaidForge
             SaturdayEnd   = config.Bind("RaidSchedule", "SaturdayEnd", "22:00:00", "Sat end time");
             SundayStart   = config.Bind("RaidSchedule", "SundayStart", "20:00:00", "Sun start time");
             SundayEnd     = config.Bind("RaidSchedule", "SundayEnd", "22:00:00", "Sun end time");
+
+          
+            GolemAutomationEnabled = config.Bind(
+                "GolemAutomation",
+                "Enabled",
+                false,
+                "Whether Golem day-based HP automation is enabled (on/off)."
+            );
+
+           
+            GolemStartDateString = config.Bind(
+                "GolemAutomation",
+                "StartDate",
+                "",
+                "Date/time for day-0 in 'yyyy-MM-dd HH:mm:ss' format. If empty, no date is set."
+            );
+
+            GolemDayToHealthMap = config.Bind(
+                "GolemAutomation",
+                "DayToHealthMap",
+                "0=Low,1=Normal,2=High,3=VeryHigh",
+                "Comma-separated list of day=SiegeWeaponHealth pairs."
+            );
 
             LoadFromConfig();
         }
@@ -80,6 +104,7 @@ namespace RaidForge
             {
                 if (start == TimeSpan.Zero && end == TimeSpan.Zero) return;
 
+                // If end is "0", treat that as 24:00
                 if (end == TimeSpan.Zero && start != TimeSpan.Zero)
                 {
                     end = new TimeSpan(24, 0, 0);
