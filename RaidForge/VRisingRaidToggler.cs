@@ -116,7 +116,6 @@ namespace RaidForge
                 }
             }
 
-            // fallback
             foreach (var f in fields)
             {
                 var obj = f.GetValue(sgsSystem);

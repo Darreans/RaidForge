@@ -20,4 +20,9 @@
     <PackageReference Include="VRising.VampireCommandFramework" Version="0.9.*" />
     <PackageReference Include="VRising.Bloodstone" Version="0.2.*" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ForgeScheduler">
+      <HintPath>..\ForgeScheduler\bin\Debug\net6.0\ForgeScheduler.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

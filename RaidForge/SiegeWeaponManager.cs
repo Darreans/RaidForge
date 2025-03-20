@@ -36,12 +36,12 @@ namespace RaidForge
                 sgb.SiegeWeaponHealth = newValue;
                 em.SetComponentData(entity, sgb);
 
-                logger.LogInfo($"[SiegeWeaponManager] Updated SGB.SiegeWeaponHealth => {newValue}");
+                logger.LogInfo($"[SiegeWeaponManager] Updated Golem Health => {newValue}");
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError($"[SiegeWeaponManager] Error updating SGB.SiegeWeaponHealth: {ex}");
+                logger.LogError($"[SiegeWeaponManager] Could not update Golem Health: {ex}");
                 return false;
             }
             finally

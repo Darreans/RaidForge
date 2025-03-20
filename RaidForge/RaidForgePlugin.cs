@@ -2,67 +2,45 @@
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using VampireCommandFramework;
-using System;
-using Bloodstone.API;
-using Bloodstone.Hooks; 
 using HarmonyLib;
+using Bloodstone.API;
 
 namespace RaidForge
 {
     [BepInPlugin("RaidForge", "RaidForge Mod", "1.0.0")]
     [BepInDependency("gg.deca.VampireCommandFramework")]
     [BepInDependency("gg.deca.Bloodstone")]
+    [Reloadable]
     public class RaidForgePlugin : BasePlugin
     {
         public static RaidForgePlugin Instance { get; private set; }
         public static new ManualLogSource Logger;
 
-        private static float _timeAccumulator = 0f;
-        private static readonly float TICK_INTERVAL = 0.1f;
+        private Harmony _harmony;
         
-
         public override void Load()
         {
             Instance = this;
             Logger = Log;
-            Logger.LogInfo("[RaidForge] Plugin is loading...");
 
-            Raidschedule.Initialize(Config);
-            Config.Save();
+            _harmony = new Harmony("raidforge.plugin");
+            _harmony.PatchAll();
+
 
             CommandRegistry.RegisterAll();
 
-            RaidtimeManager.Initialize();
+            
 
-            GameFrame.Initialize();
-            GameFrame.OnUpdate += GameFrame_OnUpdate;
-
-            Logger.LogInfo("[RaidForge] Plugin load finished using Bloodstone GameFrame updates.");
+            Logger.LogInfo("[RaidForge] Loaded.");
         }
 
         public override bool Unload()
         {
-            Logger.LogInfo("[RaidForge] Unloading plugin...");
-
-            GameFrame.OnUpdate -= GameFrame_OnUpdate;
-            GameFrame.Uninitialize();
-
+          
             CommandRegistry.UnregisterAssembly();
-
-            RaidtimeManager.Dispose();
+            _harmony?.UnpatchSelf();
 
             return true;
-        }
-
-        private void GameFrame_OnUpdate()
-        {
-            _timeAccumulator += UnityEngine.Time.deltaTime;
-
-            if (_timeAccumulator >= 5f)
-            {
-                _timeAccumulator = 0f;
-                RaidtimeManager.OnServerTick();
-            }
         }
     }
 }

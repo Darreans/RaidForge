@@ -11,3 +11,6 @@ C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.dll
 C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\refint\RaidForge.dll
 C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.pdb
 C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\ref\RaidForge.dll
+C:\Users\Darrean\source\repos\RaidForge\bin\Debug\net6.0\ForgeScheduler.pdb
+C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.csproj.Up2Date
+C:\Users\Darrean\source\repos\RaidForge\bin\Debug\net6.0\ForgeScheduler.dll
