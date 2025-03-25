@@ -21,8 +21,8 @@ namespace RaidForge
 
         public static void DisableRaids(ManualLogSource logger)
         {
-            bool ok1 = SetCastleDamageMode("Never");
-            bool ok2 = SetServerGameBalanceCastleDamage("Never");
+            bool ok1 = SetCastleDamageMode("TimeRestricted");
+            bool ok2 = SetServerGameBalanceCastleDamage("TimeRestricted");
         }
 
         private static bool SetCastleDamageMode(string val)

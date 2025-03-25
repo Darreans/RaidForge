@@ -5266,17 +5266,17 @@
   "project": {
     "version": "0.1.10",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Darrean\\source\\repos\\RaidForge\\RaidForge.csproj",
+      "projectUniqueName": "C:\\Users\\Darrean\\Downloads\\RaidForge-main (1)\\RaidForge-main\\RaidForge\\RaidForge.csproj",
       "projectName": "RaidForge",
-      "projectPath": "C:\\Users\\Darrean\\source\\repos\\RaidForge\\RaidForge.csproj",
+      "projectPath": "C:\\Users\\Darrean\\Downloads\\RaidForge-main (1)\\RaidForge-main\\RaidForge\\RaidForge.csproj",
       "packagesPath": "C:\\Users\\Darrean\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Darrean\\source\\repos\\RaidForge\\obj\\",
+      "outputPath": "C:\\Users\\Darrean\\Downloads\\RaidForge-main (1)\\RaidForge-main\\RaidForge\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Darrean\\source\\repos\\RaidForge\\NuGet.Config",
+        "C:\\Users\\Darrean\\Downloads\\RaidForge-main (1)\\RaidForge-main\\RaidForge\\NuGet.Config",
         "C:\\Users\\Darrean\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"

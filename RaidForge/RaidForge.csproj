@@ -22,7 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ForgeScheduler">
-      <HintPath>..\ForgeScheduler\bin\Debug\net6.0\ForgeScheduler.dll</HintPath>
+      <HintPath>..\..\..\..\source\repos\RaidForge\bin\Debug\net6.0\ForgeScheduler.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
