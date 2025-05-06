@@ -1,154 +1,93 @@
 # RaidForge Mod - README
 
 ## Description
-RaidForge is a mod for *V Rising* that allows server administrators to manage and control raid mechanics more effectively based on their server’s local time. It is part of the **Forge System**. To enable automation features, YOU MUST INSTALL ForgeScheduler. While toggle options can be used without it, activating and deactivating raids at scheduled times requires ForgeScheduler to be installed. The configuration file cannot be generated without it.
+RaidForge is a mod for *V Rising* designed to give server administrators enhanced control over raid mechanics. It allows setting custom raid schedules for any day of the week and automating Siege Golem health based on server runtime duration.
 
-RaidForge provides commands for:
-- Forcing raids on/off
-- Scheduling raid windows for each day of the week
-- Controlling golem HP via commands
-
-### Discords To Join
-
-Join our community server and Discord: **[Sanguine Reign](https://discord.gg/sanguineReign)** to explore more Forge System mods and exciting features!
-
-For additional mods and support, join the modding community on Discord by visiting [V Rising Mods Wiki](https://wiki.vrisingmods.com/).
-
-## Important note
-
-This mod will NOT override the settings for raid hours. You must set your raid time to 00:00 in VS Castle Time. Failure to do so will activate your raid time, and using .raidoff will NOT override it. For the best experience, it is recommended to use .TimeRestricted and set the time to 00:00.
-Even if you choose to use Always, you should still set the time to 00:00 to prevent issues. All config settings will be available under the ForgeScheduler folder. You will need to install that as it is the handler for automation for ForgeMods.
-
-
----
-## Patch Notes (v1.4.0) (Current)
-
-Thank you **Nova** for reporting the resolved bugs below.
-
-- ** Logging off and back on when .raidoff was used would prevent issues with you being able to key castle hearts
-
-## Patch Notes (v1.3.0) 
-
-- Fixed an issue with being unable to key castle heart. You can now  key castle hearts.
-
-Removed the following commands due to ForgeScheduler now handling configuration settings. RaidForge alone will now only support toggle options; for automation, you must install ForgeScheduler. All daily settings can now be configured using ForgeScheduler with RaidForge:
-
-  - **`.golemauto on/off`** → Toggle day-based HP automation.
-  - **`.golemauto start [optional-date]`** → Set “day 0” to the current or specified date/time.
-  - **`.golemauto check`** → Check the current day, start date, and mapped HP.
-  - **`.golemauto clear`** → Remove the start date, disabling daily HP changes until reset.
-  - **`.raidmode <ForceOn|ForceOff|Normal>`**
-  - **`.raidresume`**
-  - **`.raidmon`**
-  - **`.raidtue`**
-  - **`.raidwed`**
-  - **`.raidthu`**
-  - **`.raidfri`**
-  - **`.raidsat`**
-  - **`.raidsun`**
-  - **`.raidsched`**
-
----
-
-## Patch Notes (v1.2.0)
-
-- **New `.raidresume` command**: Quickly revert to the **normal day-of-week schedule** after using `.raidon` or `.raidoff`.
-  - If you do not use `.raidresume` after `.raidoff`, raiding time will not resume until the following day’s schedule.
-- **New Golem Automation**: Dynamically adjusts golem HP each day based on a start date.
-  - **`.golemauto on/off`** → Toggle day-based HP automation.
-  - **`.golemauto start [optional-date]`** → Set “day 0” to the current or specified date/time.
-  - **`.golemauto check`** → Check the current day, start date, and mapped HP.
-  - **`.golemauto clear`** → Remove the start date, disabling daily HP changes until reset.
-- **Immediate Config Save**: When setting a golem start date with `.golemauto start`, the configuration is immediately saved to `RaidForge.cfg` in a human-readable date/time format (`yyyy-MM-dd HH:mm:ss`).
-
----
-
-## Patch Notes (v1.1.0)
-
-- Added `.raidmode <ForceOn|ForceOff|Normal>` for quick override toggling.
-- Removed `RaidCheckInterval` from the user config (now fixed at 5-second internal checks).
-- Enabled re-scheduling a second window on the same day after skipping a previous one.
-- Introduced color-coded chat replies for clearer admin/player feedback.
-- Displayed approximate golem HP after setting `SiegeWeaponHealth`.
-- Improved day-of-week skip logic (no forced "off" for an entire day unless explicitly set via `.raidmode ForceOff`).
-- Added the ability to manage golem configurations/HP entirely through commands.
-
----
+This mod allows you to:
+- Manually enable or disable raiding periods instantly.
+- Configure specific daily raid windows using the server's local time.
+- Automate Siege Golem health adjustments based on the number of days the server has been running since a specified start date.
+- Manually set Siege Golem health levels.
+- View the raid schedule and upcoming raid times.
 
 ## Features
-- **Force Raids**: Instantly enable/disable raids, overriding the schedule.
-- **Scheduled Raids**: Configure specific times/days for raids using the server’s local time (requires ForgeScheduler).
-- **Server Time Display**: Quickly check the server’s current date and time.
-- **Control Golem (SiegeWeaponHealth)**:
-  - **Manual Control**: Set and display approximate HP using commands (e.g., `.golemhigh`, `.golemmax`, etc.).
-- **Integration with ForgeScheduler**: Automate golem health settings and raid schedules based on day-of-the-week.
+- **Manual Raid Control**: Instantly enable (`.raidon`) or disable (`.raidoff`) raids, overriding any schedule.
+- **Scheduled Raids**: Define custom start and end times for raiding for each day of the week via configuration file.
+- **Automated Golem Health**:
+    - Set a "server start date".
+    - Configure specific Siege Golem health levels to activate automatically on certain days after the start date.
+    - Enable/disable this automation via config.
+    - Set the start date easily using the `.golemstartdate` command.
+- **Manual Golem Control**:
+    - Check the current golem health level (`.golemcurrent`).
+    - Manually set specific golem health levels using `.golemset <LevelName>`.
+    - List available golem health levels and their estimated HP (`.golemlist`).
+- **Player Commands**: Players can check the time until the next raid (`.raidt`) and view the weekly schedule (`.raiddays`).
+- **Configurable Logging**: Enable verbose logging via config for easier troubleshooting.
 
----
+## Important Note on Server Settings
+For the scheduled raid times to work correctly, you should configure your server's base raid settings appropriately in the `ServerHostSettings.json`:
+- Set `CastleDamageMode` to `TimeRestricted`.
+- Set the start and end times for **all** days within `GameTimeModifiers` to cover the entire 24-hour period (e.g., StartTime 0, EndTime 24) or simply set them both to 00:00. This allows the mod to fully control the active raid windows based on its own schedule. If you leave default server raid times active, they might conflict with the mod's schedule.
 
 ## Commands
 
-Prefix all commands with a period (`.`). Some commands are admin-only, while `.raidt` is available to all players.
 
-### .raidon (Admin-Only)
-**Description:** Forces raids to be enabled immediately.
+**Admin-Only Commands:**
+- **`.reloadraidforge`**: Reloads all RaidForge configurations (Raid Schedule & Golem Automation).
+- **`.raidon`**: Forces raids ON immediately, overriding the schedule.
+- **`.raidoff`**: Forces raids OFF immediately, overriding the schedule.
+- **`.golemstartdate`**: Sets the Golem Automation start date/time to the moment the command is run. Saves to config.
+- **`.golemcurrent`**: Shows the current `SiegeWeaponHealth` setting.
+- **`.golemset <LevelName>`**: Manually sets the `SiegeWeaponHealth`. Example: `.golemset High`. Use `.golemlist` to see valid LevelNames.
+- **`.golemlist`**: Lists all available Siege Golem health levels and their estimated HP.
 
-### .raidoff (Admin-Only)
-**Description:** Forces raids to be disabled immediately.
+**Player-Accessible Commands:**
+- **`.raidt`**: Shows the time remaining until the next scheduled raid window begins.
+- **`.raiddays`**: Displays the configured weekly raid schedule.
 
-### .raidmode (Admin-Only, requires ForgeScheduler)
-**Description:** Sets the raid mode. Now includes an ignore option (`.raidmode ignore`) to bypass scheduled automation logic.
+## Configuration
+Configuration is done via the BepInEx config file, typically located at `BepInEx/config/RaidForge.cfg`.
 
-### .raidt (Player Accessible, requires ForgeScheduler)
-**Description:** Displays the next scheduled raid start time within the current/upcoming days.
-
-### Day-of-Week Window Commands (Admin-Only)
-**Description:** Set daily raid windows in HH:mm format.  
-*Example:* `.raidmon 19:00 21:00` sets Monday’s raid window from 7:00 PM to 9:00 PM.
-
-### Golem / SiegeWeaponHealth Commands (Admin-Only)
-**Description:** Adjusts the siege-weapon (golem) HP level via ServerGameBalanceSettings, showing approximate HP.
-
-**Manual Commands:**
-- **`.golemcurrent`** → Displays the current SiegeWeaponHealth.
-- **`.golemverylow`**, **`.golemlow`**, **`.golemnormal`**, **`.golemhigh`**, **`.golemveryhigh`**, **`.golemmegahigh`**, **`.golemultrahigh`**, **`.golemcrazyhigh`**, **`.golemmax`** → Change the golems’ HP immediately.
-
----
+Key sections:
+- **`[Daily Schedule]`**: Configure raid start/end times (HH:mm format) for each day. Set `EnableVerboseLogging` to `true` or `false`.
+- **`[GolemAutomation]`**:
+    - `EnableGolemAutomation`: `true` or `false` to turn the feature on/off.
+    - `ServerStartDate`: Set the reference start date/time (`yyyy-MM-dd HH:mm:ss`) for day counting. Can be set via `.golemstartdate`.
+- **`[GolemAutomation.Levels]`**:
+    - `{LevelName}_Enable`: `true` or `false` for each health level (e.g., `High_Enable = true`).
+    - `{LevelName}_Day`: Day number (0+) when the corresponding level should activate if enabled (e.g., `High_Day = 1`). Use `-1` to effectively disable a level even if `_Enable` is true.
 
 ## Installation Instructions
-
-**Download the Mod Files:**  
-Obtain the latest `RaidForge.dll` release from our official repository or release page.
-
-**Extract Files:**  
-Place `RaidForge.dll` in your server’s BepInEx plugins directory:
-
----
+1. Ensure BepInEx IL2CPP is installed correctly on your server.
+2. Download the latest `RaidForge.dll` release.
+3. Place `RaidForge.dll` into your server’s `BepInEx/plugins` directory.
 
 ## Dependencies
-- VampireCommandFramework
-- Bloodstone
-- ForgeScheduler 
----
+- **VampireCommandFramework**: Required for chat command handling.
 
-## Support
+## Support & Community
 
-For support, bug reports, or feature requests:
-- **Discord:** Direct Message *inility#4118*
-- **Discord Channel:** [Sanguine Reign](https://discord.gg/sanguineReign)
+- Join the **VArena Discord**: **[https://discord.gg/varena](https://discord.gg/varena)**
 
----
+For general V Rising modding discussions and finding other mods:
+- Visit the **V Rising Modding Wiki**: [https://wiki.vrisingmods.com/](https://wiki.vrisingmods.com/)
+
+## Acknowledgements
+Special thanks to the V Rising Modding community and the developers of the underlying frameworks. Collaboration and open code sharing make mods like this possible.
 
 ## Developer
-
-Darrean (inility).
-
----
+Darrean (inility)
 
 ## License
+This RaidForge mod is licensed under the **MIT License** with a non-commercial clause.
 
-This mod is free to use and modify.
+**Summary:**
+- You **ARE free** to use, copy, modify, merge, publish, and distribute copies of this software.
+- You **MUST include** the original copyright notice and this permission notice in all copies or substantial portions of the software.
+- You **MAY NOT** sell copies of the Software or derivative works based on the Software for profit.
 
-**Disclaimer:**  
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RaidForge is a third-party mod and is not affiliated with the official V Rising development team. Use at your own risk.
-
+**Disclaimer:**
+RaidForge is a third-party mod and is not affiliated with Stunlock Studios or the official V Rising development team. Use at your own risk.
