@@ -19,6 +19,7 @@ namespace RaidForge
     {
         public static List<RaidScheduleEntry> Schedule { get; private set; }
         public static ConfigEntry<bool> EnableVerboseLogging { get; private set; }
+        public static ConfigEntry<bool> AllowWaygateTeleports { get; private set; }
 
         private static ManualLogSource _logger;
         private static ConfigEntry<string> _mondayStartTime, _mondayEndTime;
@@ -70,10 +71,12 @@ namespace RaidForge
             _sundayStartTime = config.Bind(SECTION_SCHEDULE, "SundayStartTime", defaultWeekendStartTime, "Raid Start Time for Sunday.");
             _sundayEndTime = config.Bind(SECTION_SCHEDULE, "SundayEndTime", defaultWeekendEndTime, "Raid End Time for Sunday.");
             _dailyConfigs[DayOfWeek.Sunday] = (_sundayStartTime, _sundayEndTime);
-
+            
             EnableVerboseLogging = config.Bind(SECTION_SCHEDULE, "EnableVerboseLogging", false,
                 "Set to true to enable detailed informational logs for debugging raid schedule checks.");
 
+            AllowWaygateTeleports = config.Bind("Options", "AllowWaygateTeleports", true, "Allow teleportation via Waygates during raid window.");
+            
             if (EnableVerboseLogging.Value) _logger.LogInfo("Raid schedule configuration settings bound.");
         }
 

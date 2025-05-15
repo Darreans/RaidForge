@@ -1,7 +1,6 @@
 ﻿using System;
 using BepInEx.Logging;
 using ProjectM;       
-using Unity.Entities; 
 
 namespace RaidForge 
 {
@@ -21,43 +20,26 @@ namespace RaidForge
 
         private static bool SetCastleDamageMode(CastleDamageMode newMode, ManualLogSource logger)
         {
-            EntityManager entityManager;
             try
             {
-                entityManager = VWorldUtils.EntityManager;
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError($"!!! Toggler FAILED: Could not get EntityManager: {ex.Message}");
-                return false;
-            }
-
-            try
-            {
-                ComponentType[] queryComponents = { ComponentType.ReadWrite<ServerGameBalanceSettings>() };
-                EntityQuery settingsQuery = entityManager.CreateEntityQuery(queryComponents);
-
-                if (settingsQuery.IsEmptyIgnoreFilter)
+                if (VWorldUtils.GameBalanceSettings(
+                out var after,
+                settings =>
                 {
-                    logger?.LogError("!!! Toggler FAILED: Could not find ServerGameBalanceSettings entity.");
-                    return false;
-                }
+                    logger?.LogInfo($"Toggler: Current CastleDamageMode is: {settings.CastleDamageMode}. Desired mode: {newMode}");
 
-                Entity settingsEntity = settingsQuery.GetSingletonEntity();
-                ServerGameBalanceSettings balanceSettings = entityManager.GetComponentData<ServerGameBalanceSettings>(settingsEntity);
+                    if (settings.CastleDamageMode == newMode)
+                    {
+                        logger?.LogInfo($"Toggler: CastleDamageMode is already set to {newMode}. No change needed.");
+                        return settings;
+                    }
 
-                logger?.LogInfo($"Toggler: Current CastleDamageMode is: {balanceSettings.CastleDamageMode}. Desired mode: {newMode}");
-
-                if (balanceSettings.CastleDamageMode == newMode)
-                {
-                    logger?.LogInfo($"Toggler: CastleDamageMode is already set to {newMode}. No change needed.");
-                    return true; 
-                }
-
-                logger?.LogInfo($"Toggler: Changing CastleDamageMode from {balanceSettings.CastleDamageMode} to {newMode}...");
-                balanceSettings.CastleDamageMode = newMode;
-                entityManager.SetComponentData(settingsEntity, balanceSettings);
-                logger?.LogInfo($"Toggler: Successfully SET CastleDamageMode to {newMode}.");
+                    logger?.LogInfo($"Toggler: Changing CastleDamageMode from {settings.CastleDamageMode} to {newMode}...");
+                    settings.CastleDamageMode = newMode;
+                    
+                    return settings;
+                }))
+                
                 return true; 
             }
             catch (Exception ex)
@@ -65,6 +47,8 @@ namespace RaidForge
                 logger?.LogError($"!!! Toggler EXCEPTION while setting CastleDamageMode: {ex}");
                 return false; 
             }
+
+            return false;
         }
     }
 }

@@ -5,6 +5,8 @@ using BepInEx.Configuration;
 using VampireCommandFramework;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using HarmonyLib;
 using ProjectM;
 using Il2CppInterop.Runtime.Injection;
 using Unity.Entities;
@@ -15,12 +17,14 @@ namespace RaidForge
     [BepInDependency("gg.deca.VampireCommandFramework")]
     public class RaidForgePlugin : BasePlugin
     {
+        private static Harmony? _harmony;
+        
         public static RaidForgePlugin Instance { get; private set; }
         public static ManualLogSource Logger { get; private set; }
 
         public static ConfigEntry<bool> EnableVerboseLogging { get; private set; }
 
-        private static bool _isAutoRaidActive = false;
+        public static bool _isAutoRaidActive = false;
         private static int _lastGolemCheckDay = -1;
         private static SiegeWeaponHealth? _lastGolemHealthApplied = null;
         private static bool _initialCheckPerformed = false;
@@ -36,6 +40,9 @@ namespace RaidForge
         {
             try
             {
+                _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+                _harmony.PatchAll(Assembly.GetExecutingAssembly());
+                
                 Instance = this;
                 Logger = Log;
 
@@ -49,7 +56,7 @@ namespace RaidForge
                 GolemAutomationConfig.Initialize(this.Config, Logger);
 
                 RaidConfig.ParseSchedule();
-
+                
                 Config.SettingChanged += OnConfigChanged;
 
                 try { CommandRegistry.RegisterAll(); } catch (Exception ex) { Log.LogError($"!!! Failed to register commands. Exception: {ex}"); }
@@ -62,7 +69,7 @@ namespace RaidForge
                     if (_updaterComponent != null) { if (EnableVerboseLogging.Value) Log.LogInfo($"Updater component added. Checks run every 30 seconds once world is ready."); } else { Log.LogError("!!! Failed to add RaidForgeUpdater component!"); }
                 }
                 catch (Exception ex) { Log.LogError($"!!! CRITICAL: Failed to initialize MonoBehaviour updater: {ex}"); }
-
+                
                 Log.LogInfo("RaidForge plugin load sequence complete.");
             }
             catch (Exception ex) { Log.LogError($"!!! CRITICAL Error during RaidForge plugin load: {ex}"); }
@@ -239,25 +246,39 @@ namespace RaidForge
         {
             try
             {
-                ComponentType[] queryComponents = { ComponentType.ReadWrite<ServerGameBalanceSettings>() };
-                EntityQuery settingsQuery = entityManager.CreateEntityQuery(queryComponents);
-                if (settingsQuery.IsEmptyIgnoreFilter) { logger?.LogError("!!! SetCastleDamageModeInternal: Could not find ServerGameBalanceSettings entity."); return false; }
-                Entity settingsEntity = settingsQuery.GetSingletonEntity();
-                ServerGameBalanceSettings balanceSettings = entityManager.GetComponentData<ServerGameBalanceSettings>(settingsEntity);
-                if (balanceSettings.CastleDamageMode == newMode) { if (EnableVerboseLogging.Value) logger?.LogInfo($"SetCastleDamageModeInternal: Mode already set to {newMode}."); return true; }
-                balanceSettings.CastleDamageMode = newMode;
-                entityManager.SetComponentData(settingsEntity, balanceSettings);
+                if (VWorldUtils.GameBalanceSettings(
+                out var after,
+                settings =>
+                {
+                    if (settings.CastleDamageMode == newMode)
+                    {
+                        if (EnableVerboseLogging.Value)
+                            logger?.LogInfo($"SetCastleDamageModeInternal: Mode already set to {newMode}.");
+
+                        return settings;
+                    }
+
+                    settings.CastleDamageMode = newMode;
+                    return settings;
+                }));
+                
                 logger?.LogInfo($"SetCastleDamageModeInternal: Successfully set CastleDamageMode to {newMode}.");
+                
                 return true;
             }
-            catch (Exception ex) { logger?.LogError($"!!! SetCastleDamageModeInternal Error: {ex}"); return false; }
+            catch (Exception ex) {
+                logger?.LogError($"!!! SetCastleDamageModeInternal Error: {ex}");
+                return false; 
+            }
         }
 
         public static void ResetGolemCheckDay()
         {
             _lastGolemCheckDay = -1;
             _lastGolemHealthApplied = null;
-            if (EnableVerboseLogging.Value) Logger?.LogInfo("Golem automation check day reset.");
+            
+            if (EnableVerboseLogging.Value)
+                Logger?.LogInfo("Golem automation check day reset.");
         }
 
         public override bool Unload()

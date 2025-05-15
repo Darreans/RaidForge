@@ -57,7 +57,9 @@ Key sections:
 - **`[GolemAutomation.Levels]`**:
     - `{LevelName}_Enable`: `true` or `false` for each health level (e.g., `High_Enable = true`).
     - `{LevelName}_Day`: Day number (0+) when the corresponding level should activate if enabled (e.g., `High_Day = 1`). Use `-1` to effectively disable a level even if `_Enable` is true.
-
+- **`[Options]`**: Configure raid start/end times (HH:mm format) for each day. Set `EnableVerboseLogging` to `true` or `false`.
+    - `AllowWaygateTeleports`: `true` or `false` to allow/disallow waygate teleports during raid window
+  
 ## Installation Instructions
 1. Ensure BepInEx IL2CPP is installed correctly on your server.
 2. Download the latest `RaidForge.dll` release.
@@ -78,6 +80,9 @@ Special thanks to the V Rising Modding community and the developers of the under
 
 ## Developer
 Darrean (inility)
+
+### Contributors
+helskog - Added feature for preventing waygate usage during raid window
 
 ## License
 This RaidForge mod is licensed under the **MIT License** with a non-commercial clause.

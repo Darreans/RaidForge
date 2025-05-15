@@ -10,6 +10,7 @@ namespace RaidForge
         public static bool SetSiegeWeaponHealth(SiegeWeaponHealth newValue, ManualLogSource logger)
         {
             EntityManager entityManager;
+            
             try
             {
                 entityManager = VWorldUtils.EntityManager;
@@ -22,29 +23,23 @@ namespace RaidForge
 
             try
             {
-                ComponentType[] queryComponents = { ComponentType.ReadWrite<ServerGameBalanceSettings>() };
-                var query = entityManager.CreateEntityQuery(queryComponents);
-
-                if (query.IsEmptyIgnoreFilter)
+                if (VWorldUtils.GameBalanceSettings(
+                out var after,
+                settings =>
                 {
-                    logger.LogWarning("[SiegeWeaponManager] No entity found with ServerGameBalanceSettings!");
-                    return false;
-                }
+                    if (settings.SiegeWeaponHealth == newValue)
+                    {
+                        logger.LogInfo($"[SiegeWeaponManager] SiegeWeaponHealth already set to {newValue}. No change made.");
+                        return settings; 
+                    }
+                
+                    settings.SiegeWeaponHealth = newValue;
 
-                var entity = query.GetSingletonEntity();
-                var sgb = entityManager.GetComponentData<ServerGameBalanceSettings>(entity);
-
-                if (sgb.SiegeWeaponHealth == newValue)
-                {
-                    logger.LogInfo($"[SiegeWeaponManager] SiegeWeaponHealth already set to {newValue}. No change made.");
-                    return true; 
-                }
-
-
-                sgb.SiegeWeaponHealth = newValue;
-                entityManager.SetComponentData(entity, sgb);
-
-                logger.LogInfo($"[SiegeWeaponManager] Updated Golem Health => {newValue}");
+                    logger.LogInfo($"[SiegeWeaponManager] Updated Golem Health => {newValue}");
+                    
+                    return settings;
+                }))
+                    
                 return true;
             }
             catch (Exception ex)
@@ -52,35 +47,16 @@ namespace RaidForge
                 logger.LogError($"[SiegeWeaponManager] Could not update Golem Health: {ex}");
                 return false;
             }
+
+            return false;
         }
 
         public static SiegeWeaponHealth? GetSiegeWeaponHealth(ManualLogSource logger)
         {
-            EntityManager entityManager;
             try
             {
-                entityManager = VWorldUtils.EntityManager;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"[SiegeWeaponManager] Could not get EntityManager: {ex.Message}");
-                return null;
-            }
-
-            try
-            {
-                ComponentType[] queryComponents = { ComponentType.ReadOnly<ServerGameBalanceSettings>() };
-                var query = entityManager.CreateEntityQuery(queryComponents);
-
-                if (query.IsEmptyIgnoreFilter)
-                {
-                    logger.LogWarning("[SiegeWeaponManager] No entity found with ServerGameBalanceSettings!");
-                    return null;
-                }
-
-                var entity = query.GetSingletonEntity();
-                var sgb = entityManager.GetComponentData<ServerGameBalanceSettings>(entity);
-                return sgb.SiegeWeaponHealth;
+                VWorldUtils.GameBalanceSettings(out var settings);
+                return settings.SiegeWeaponHealth;
             }
             catch (Exception ex)
             {
