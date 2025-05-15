@@ -1,30 +1,44 @@
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.csproj.AssemblyReference.cache
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\MyPluginInfo.cs
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.AssemblyInfoInputs.cache
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.AssemblyInfo.cs
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.csproj.CoreCompileInputs.cache
-C:\Users\Darrean\source\repos\RaidForge\bin\Debug\net6.0\RaidForge.deps.json
-C:\Users\Darrean\source\repos\RaidForge\bin\Debug\net6.0\RaidForge.dll
-C:\Users\Darrean\source\repos\RaidForge\bin\Debug\net6.0\RaidForge.pdb
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.dll
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\refint\RaidForge.dll
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.pdb
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\ref\RaidForge.dll
-C:\Users\Darrean\source\repos\RaidForge\bin\Debug\net6.0\ForgeScheduler.pdb
-C:\Users\Darrean\source\repos\RaidForge\obj\Debug\net6.0\RaidForge.csproj.Up2Date
-C:\Users\Darrean\source\repos\RaidForge\bin\Debug\net6.0\Bloodstone.dll
-C:\Users\Darrean\source\repos\RaidForge\bin\Debug\net6.0\Bloodstone.pdb
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\RaidForge.csproj.AssemblyReference.cache
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\MyPluginInfo.cs
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\RaidForge.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\RaidForge.AssemblyInfoInputs.cache
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\RaidForge.AssemblyInfo.cs
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\RaidForge.csproj.CoreCompileInputs.cache
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\RaidForge.dll
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\refint\RaidForge.dll
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\RaidForge.pdb
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\bin\Debug\net6.0\RaidForge.deps.json
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\bin\Debug\net6.0\RaidForge.dll
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\bin\Debug\net6.0\RaidForge.pdb
-C:\Users\Darrean\source\repos\RaidForge1.1 Ready\obj\Debug\net6.0\ref\RaidForge.dll
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/RaidForge.csproj.AssemblyReference.cache
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/MyPluginInfo.cs
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/RaidForge.GeneratedMSBuildEditorConfig.editorconfig
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/RaidForge.AssemblyInfoInputs.cache
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/RaidForge.AssemblyInfo.cs
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/RaidForge.csproj.CoreCompileInputs.cache
+C:/Users/Darrean/source/repos/RaidForge/bin/Debug/net6.0/RaidForge.deps.json
+C:/Users/Darrean/source/repos/RaidForge/bin/Debug/net6.0/RaidForge.dll
+C:/Users/Darrean/source/repos/RaidForge/bin/Debug/net6.0/RaidForge.pdb
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/RaidForge.dll
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/refint/RaidForge.dll
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/RaidForge.pdb
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/ref/RaidForge.dll
+C:/Users/Darrean/source/repos/RaidForge/bin/Debug/net6.0/ForgeScheduler.pdb
+C:/Users/Darrean/source/repos/RaidForge/obj/Debug/net6.0/RaidForge.csproj.Up2Date
+C:/Users/Darrean/source/repos/RaidForge/bin/Debug/net6.0/Bloodstone.dll
+C:/Users/Darrean/source/repos/RaidForge/bin/Debug/net6.0/Bloodstone.pdb
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/RaidForge.csproj.AssemblyReference.cache
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/MyPluginInfo.cs
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/RaidForge.GeneratedMSBuildEditorConfig.editorconfig
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/RaidForge.AssemblyInfoInputs.cache
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/RaidForge.AssemblyInfo.cs
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/RaidForge.csproj.CoreCompileInputs.cache
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/RaidForge.dll
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/refint/RaidForge.dll
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/RaidForge.pdb
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/bin/Debug/net6.0/RaidForge.deps.json
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/bin/Debug/net6.0/RaidForge.dll
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/bin/Debug/net6.0/RaidForge.pdb
+C:/Users/Darrean/source/repos/RaidForge1.1 Ready/obj/Debug/net6.0/ref/RaidForge.dll
+/home/helskog/Development/Plugins/Server/RaidForge/bin/Debug/net6.0/RaidForge.deps.json
+/home/helskog/Development/Plugins/Server/RaidForge/bin/Debug/net6.0/RaidForge.dll
+/home/helskog/Development/Plugins/Server/RaidForge/bin/Debug/net6.0/RaidForge.pdb
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/RaidForge.csproj.AssemblyReference.cache
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/MyPluginInfo.cs
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/RaidForge.GeneratedMSBuildEditorConfig.editorconfig
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/RaidForge.AssemblyInfoInputs.cache
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/RaidForge.AssemblyInfo.cs
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/RaidForge.csproj.CoreCompileInputs.cache
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/RaidForge.sourcelink.json
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/RaidForge.dll
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/refint/RaidForge.dll
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/RaidForge.pdb
+/home/helskog/Development/Plugins/Server/RaidForge/obj/Debug/net6.0/ref/RaidForge.dll

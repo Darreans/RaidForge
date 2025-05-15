@@ -1,4 +1,6 @@
-﻿using Unity.Entities;
+﻿using System;
+using ProjectM;
+using Unity.Entities;
 
 namespace RaidForge 
 {
@@ -7,7 +9,7 @@ namespace RaidForge
         private static World? _serverWorld;
 
         private static EntityManager? _entityManager;
-
+        
         public static World Server
         {
             get
@@ -43,8 +45,7 @@ namespace RaidForge
                 return Server.EntityManager;
             }
         }
-
-
+        
         private static World? GetWorld(string name)
         {
             foreach (var world in World.s_AllWorlds)
@@ -65,6 +66,54 @@ namespace RaidForge
             }
             catch
             {
+                return false;
+            }
+        }
+
+        public static bool ZDateTime(out TimeZonedDateTime dt)
+        {
+            dt = default;
+            return true;
+        }
+
+        public static bool GameBalanceSettings(
+            out ServerGameBalanceSettings settings,
+            Func<ServerGameBalanceSettings, ServerGameBalanceSettings> modify = null
+        )
+        {
+            settings = default!;
+            try
+            {
+                if (_entityManager != null)
+                {
+                    var em    = _entityManager.Value;
+                    var query = em.CreateEntityQuery(ComponentType.ReadWrite<ServerGameBalanceSettings>());
+
+                    if (query.IsEmptyIgnoreFilter)
+                    {
+                        RaidForgePlugin.Logger.LogError("Could not find ServerGameBalanceSettings entity.");
+                        return false;
+                    }
+
+                    var entity   = query.GetSingletonEntity();
+                    var original = entity.Read<ServerGameBalanceSettings>();
+
+                    if (modify is null)
+                    {
+                        settings = original;
+                        return true;
+                    }
+
+                    var updated = modify(original);
+                    
+                    entity.Write(updated);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                RaidForgePlugin.Logger.LogError($"Exception while accessing ServerGameBalanceSettings: {ex}");
                 return false;
             }
         }
