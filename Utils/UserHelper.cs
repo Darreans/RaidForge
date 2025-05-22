@@ -4,12 +4,8 @@ using Unity.Entities;
 using Unity.Collections;
 using System;
 
-// It's good practice to ensure LoggingHelper is accessible if used within this class,
-// for example, if IsAnyClanMemberOnline needs to log errors.
-// Assuming LoggingHelper is in a namespace like RaidForge.Utils
-// using RaidForge.Utils;
 
-namespace RaidForge.Utils // Assuming this is your namespace for utility classes
+namespace RaidForge.Utils 
 {
     public static class UserHelper
     {
