@@ -1,30 +1,36 @@
 {
   "format": 1,
   "restore": {
-    "/home/helskog/Development/Plugins/Server/RaidForge/RaidForge.csproj": {}
+    "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj": {}
   },
   "projects": {
-    "/home/helskog/Development/Plugins/Server/RaidForge/RaidForge.csproj": {
-      "version": "0.1.10",
+    "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj": {
+      "version": "2.0.0",
       "restore": {
-        "projectUniqueName": "/home/helskog/Development/Plugins/Server/RaidForge/RaidForge.csproj",
+        "projectUniqueName": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
         "projectName": "RaidForge",
-        "projectPath": "/home/helskog/Development/Plugins/Server/RaidForge/RaidForge.csproj",
-        "packagesPath": "/home/helskog/.nuget/packages/",
-        "outputPath": "/home/helskog/Development/Plugins/Server/RaidForge/obj/",
+        "projectPath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
+        "packagesPath": "C:\\Users\\Darrean\\.nuget\\packages\\",
+        "outputPath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/helskog/Development/Plugins/Server/RaidForge/nuget.config",
-          "/home/helskog/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Darrean\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net6.0"
         ],
         "sources": {
-          "https://api.nuget.org/v3/index.json": {},
-          "https://nuget.bepinex.dev/v3/index.json": {},
-          "https://nuget.samboy.dev/v3/index.json": {},
-          "https://nuget.samboy.dev/v3/index.json": {}
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.plugininfoprops\\2.1.0": {},
+          "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client": {},
+          "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client\\1.0.45.802790001-1": {},
+          "C:\\Users\\Darrean\\Downloads\\sqllitedb": {},
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net6.0": {
@@ -42,7 +48,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net6.0": {
@@ -55,7 +61,7 @@
             },
             "BepInEx.PluginInfoProps": {
               "target": "Package",
-              "version": "[2.*, )"
+              "version": "[2.1.0, )"
             },
             "BepInEx.Unity.IL2CPP": {
               "include": "Compile",
@@ -64,11 +70,7 @@
             },
             "VRising.Unhollowed.Client": {
               "target": "Package",
-              "version": "[1.1.*, )"
-            },
-            "VRising.VampireCommandFramework": {
-              "target": "Package",
-              "version": "[0.9.*, )"
+              "version": "[1.1.8.9179701, )"
             }
           },
           "imports": [
@@ -82,18 +84,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[6.0.36, 6.0.36]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.105/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     }

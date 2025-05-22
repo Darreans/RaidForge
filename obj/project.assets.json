@@ -1410,7 +1410,7 @@
           }
         }
       },
-      "VRising.Unhollowed.Client/1.1.7.9169101": {
+      "VRising.Unhollowed.Client/1.1.8.9179701": {
         "type": "package",
         "compile": {
           "lib/net6.0/Backtrace.Unity.dll": {},
@@ -1761,19 +1761,6 @@
           "lib/net6.0/com.stunlock.network.eos.dll": {},
           "lib/net6.0/com.stunlock.platform.dll": {},
           "lib/net6.0/com.stunlock.platform.pc.dll": {}
-        }
-      },
-      "VRising.VampireCommandFramework/0.9.0": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/VampireCommandFramework.dll": {
-            "related": ".deps.json;.pdb"
-          }
-        },
-        "runtime": {
-          "lib/net6.0/VampireCommandFramework.dll": {
-            "related": ".deps.json;.pdb"
-          }
         }
       }
     }
@@ -4972,10 +4959,10 @@
         "system.threading.tasks.nuspec"
       ]
     },
-    "VRising.Unhollowed.Client/1.1.7.9169101": {
-      "sha512": "vsEUb0IYahTcerw+8SkjOaJ9nUwbHecQhUOoyzEBoYIFoX4Jz/E+/YF+ZAXssi6M04r787RV5meuKkg83Cbf5w==",
+    "VRising.Unhollowed.Client/1.1.8.9179701": {
+      "sha512": "AhIpTgpYL6aKb7STKV7SZLbr01OgIgxaih1rQdUW5D7E2J3hvKFGVvkTcp9jQ6slAsbTe+vpgbnHzQ9d/oIRpA==",
       "type": "package",
-      "path": "vrising.unhollowed.client/1.1.7.9169101",
+      "path": "vrising.unhollowed.client/1.1.8.9179701",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -5154,60 +5141,50 @@
         "lib/net6.0/com.stunlock.network.eos.dll",
         "lib/net6.0/com.stunlock.platform.dll",
         "lib/net6.0/com.stunlock.platform.pc.dll",
-        "vrising.unhollowed.client.1.1.7.9169101.nupkg.sha512",
+        "vrising.unhollowed.client.1.1.8.9179701.nupkg.sha512",
         "vrising.unhollowed.client.nuspec"
-      ]
-    },
-    "VRising.VampireCommandFramework/0.9.0": {
-      "sha512": "2O4nKLVuqn3huIKY7kNjnJTxBjjAMNPtQj+duikS/j5LoXUkjFWimXJ0JXOv2p+ZkTapxPMAdKLT6KkWA+MaVA==",
-      "type": "package",
-      "path": "vrising.vampirecommandframework/0.9.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "docs/README.md",
-        "images/logo.png",
-        "lib/net6.0/VampireCommandFramework.deps.json",
-        "lib/net6.0/VampireCommandFramework.dll",
-        "lib/net6.0/VampireCommandFramework.pdb",
-        "vrising.vampirecommandframework.0.9.0.nupkg.sha512",
-        "vrising.vampirecommandframework.nuspec"
       ]
     }
   },
   "projectFileDependencyGroups": {
     "net6.0": [
       "BepInEx.Core >= 6.0.0-be.691",
-      "BepInEx.PluginInfoProps >= 2.*",
+      "BepInEx.PluginInfoProps >= 2.1.0",
       "BepInEx.Unity.IL2CPP >= 6.0.0-be.691",
-      "VRising.Unhollowed.Client >= 1.1.*",
-      "VRising.VampireCommandFramework >= 0.9.*"
+      "VRising.Unhollowed.Client >= 1.1.8.9179701"
     ]
   },
   "packageFolders": {
-    "/home/helskog/.nuget/packages/": {}
+    "C:\\Users\\Darrean\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
-    "version": "0.1.10",
+    "version": "2.0.0",
     "restore": {
-      "projectUniqueName": "/home/helskog/Development/Plugins/Server/RaidForge/RaidForge.csproj",
+      "projectUniqueName": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
       "projectName": "RaidForge",
-      "projectPath": "/home/helskog/Development/Plugins/Server/RaidForge/RaidForge.csproj",
-      "packagesPath": "/home/helskog/.nuget/packages/",
-      "outputPath": "/home/helskog/Development/Plugins/Server/RaidForge/obj/",
+      "projectPath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
+      "packagesPath": "C:\\Users\\Darrean\\.nuget\\packages\\",
+      "outputPath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/home/helskog/Development/Plugins/Server/RaidForge/nuget.config",
-        "/home/helskog/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Darrean\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net6.0"
       ],
       "sources": {
-        "https://api.nuget.org/v3/index.json": {},
-        "https://nuget.bepinex.dev/v3/index.json": {},
-        "https://nuget.samboy.dev/v3/index.json": {},
-        "https://nuget.samboy.dev/v3/index.json": {}
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.plugininfoprops\\2.1.0": {},
+        "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client": {},
+        "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client\\1.0.45.802790001-1": {},
+        "C:\\Users\\Darrean\\Downloads\\sqllitedb": {},
+        "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net6.0": {
@@ -5225,7 +5202,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net6.0": {
@@ -5238,7 +5215,7 @@
           },
           "BepInEx.PluginInfoProps": {
             "target": "Package",
-            "version": "[2.*, )"
+            "version": "[2.1.0, )"
           },
           "BepInEx.Unity.IL2CPP": {
             "include": "Compile",
@@ -5247,11 +5224,7 @@
           },
           "VRising.Unhollowed.Client": {
             "target": "Package",
-            "version": "[1.1.*, )"
-          },
-          "VRising.VampireCommandFramework": {
-            "target": "Package",
-            "version": "[0.9.*, )"
+            "version": "[1.1.8.9179701, )"
           }
         },
         "imports": [
@@ -5265,18 +5238,12 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[6.0.36, 6.0.36]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.105/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
       }
     }
   }
