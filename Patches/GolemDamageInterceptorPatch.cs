@@ -5,15 +5,15 @@ using ProjectM.Network;
 using ProjectM.Scripting;
 using Unity.Collections;
 using Unity.Entities;
-using Stunlock.Core;
+using Stunlock.Core; // PrefabGUID is in here
 using RaidForge.Services;
 using RaidForge.Config;
-using RaidForge.Data;
+using RaidForge.Data; // Still needed for PrefabData.SiegeGolemBuff
 using RaidForge.Utils;
-using RaidForge;
+using RaidForge; // For Plugin.BepInLogger
 using System;
 using System.Collections.Generic;
-using ProjectM.Gameplay.Systems;
+using ProjectM.Gameplay.Systems; // For ServerGameManager access in HasSiegeGolemBuff
 
 namespace RaidForge.Patches
 {
@@ -33,7 +33,8 @@ namespace RaidForge.Patches
             }
 
             EntityManager em = __instance.EntityManager;
-            NativeArray<Entity> statChangeEventEntities = __instance._Query.ToEntityArray(Allocator.TempJob);
+            // Using Allocator.Temp for main-thread short-lived allocations
+            NativeArray<Entity> statChangeEventEntities = __instance._Query.ToEntityArray(Allocator.Temp);
 
             try
             {
@@ -51,7 +52,7 @@ namespace RaidForge.Patches
                     Entity targetEntity = originalEvent.Entity;
                     Entity sourceAbilityOrEffectEntity = originalEvent.Source;
 
-                    if (!em.Exists(targetEntity) || !IsProtectedStructureAndGetHeart(em, targetEntity, out Entity castleHeartEntity))
+                    if (!em.Exists(targetEntity) || !IsProtectedAndGetHeart(em, targetEntity, out Entity castleHeartEntity))
                     {
                         continue;
                     }
@@ -80,7 +81,6 @@ namespace RaidForge.Patches
                     else if (em.HasComponent<EntityOwner>(actualDirectOwner))
                     {
                         Entity ultimateOwner = em.GetComponentData<EntityOwner>(actualDirectOwner).Owner;
-
                         if (em.Exists(ultimateOwner) && em.HasComponent<PlayerCharacter>(ultimateOwner))
                         {
                             if (HasSiegeGolemBuff(em, ultimateOwner))
@@ -167,41 +167,51 @@ namespace RaidForge.Patches
             return serverGameManager.TryGetBuff(playerCharacterEntity, PrefabData.SiegeGolemBuff, out _);
         }
 
-        private static bool IsProtectedStructureAndGetHeart(EntityManager em, Entity entity, out Entity castleHeartEntity)
+        private static bool IsProtectedAndGetHeart(EntityManager em, Entity entity, out Entity castleHeartEntity)
         {
             castleHeartEntity = Entity.Null;
 
-            if (em.HasComponent<CastleHeart>(entity) && em.HasComponent<UserOwner>(entity))
+            // Path 1: The entity being damaged IS a CastleHeart itself.
+            if (em.HasComponent<CastleHeart>(entity))
             {
-                castleHeartEntity = entity;
-                return true;
+                // A Castle Heart is considered protectable if it's owned by a user.
+                // The OfflineGraceService will handle if that user (or their clan) is offline.
+                if (em.HasComponent<UserOwner>(entity))
+                {
+                    castleHeartEntity = entity;
+                    return true;
+                }
+                else if (TroubleshootingConfig.EnableVerboseLogging.Value)
+                {
+                    // This might be a world/system Castle Heart, not a player's.
+                    LoggingHelper.Debug($"Entity {entity} is a CastleHeart but lacks UserOwner. Not considered for player-base offline protection by this path.");
+                }
             }
 
-            if (em.HasComponent<PrefabGUID>(entity))
+            // Path 2: The entity being damaged is a structure connected to a CastleHeart.
+            if (em.HasComponent<CastleHeartConnection>(entity))
             {
-                PrefabGUID prefabGuid = em.GetComponentData<PrefabGUID>(entity);
-                if (PrefabData.ProtectedStructurePrefabHashes.Contains(prefabGuid.GuidHash))
-                {
-                    if (em.HasComponent<CastleHeartConnection>(entity))
-                    {
-                        NetworkedEntity networkedCHEntity = em.GetComponentData<CastleHeartConnection>(entity).CastleHeartEntity;
-                        Entity actualCHEntity = networkedCHEntity._Entity;
+                NetworkedEntity networkedCHEntity = em.GetComponentData<CastleHeartConnection>(entity).CastleHeartEntity;
+                Entity actualCHEntity = networkedCHEntity._Entity; // Get the actual Entity
 
-                        if (em.Exists(actualCHEntity))
-                        {
-                            castleHeartEntity = actualCHEntity;
-                            return true;
-                        }
-                        else if (TroubleshootingConfig.EnableVerboseLogging.Value)
-                        {
-                            LoggingHelper.Debug($"Structure {entity} (Prefab: {prefabGuid.GuidHash}) is a protected type, connected to a (now) non-existent CastleHeart (NetworkedEntity: {networkedCHEntity}). Cannot apply offline protection.");
-                        }
+                if (em.Exists(actualCHEntity))
+                {
+                    // The connected Castle Heart must exist AND be a CastleHeart component AND have a UserOwner
+                    // for it to be considered a protectable player base heart.
+                    if (em.HasComponent<CastleHeart>(actualCHEntity) && em.HasComponent<UserOwner>(actualCHEntity))
+                    {
+                        castleHeartEntity = actualCHEntity;
+                        return true;
                     }
                     else if (TroubleshootingConfig.EnableVerboseLogging.Value)
                     {
-                        LoggingHelper.Debug($"Structure {entity} (Prefab: {prefabGuid.GuidHash}) is a protected type but has no CastleHeartConnection. Cannot apply offline protection.");
+                        LoggingHelper.Debug($"Structure {entity} is connected to CH {actualCHEntity}, but this CH entity itself is not a CastleHeart or lacks UserOwner. Not protected via this path.");
                     }
-                    return false;
+                }
+                else if (TroubleshootingConfig.EnableVerboseLogging.Value)
+                {
+                    // Corrected log message for NetworkedEntity
+                    LoggingHelper.Debug($"Structure {entity} has CastleHeartConnection to a non-existent CastleHeart (NetworkedEntity: {networkedCHEntity}). Cannot apply offline protection via this path.");
                 }
             }
             return false;

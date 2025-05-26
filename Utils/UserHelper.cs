@@ -5,6 +5,7 @@ using Unity.Collections;
 using System;
 
 
+
 namespace RaidForge.Utils 
 {
     public static class UserHelper

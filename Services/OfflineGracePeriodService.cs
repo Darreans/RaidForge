@@ -6,7 +6,7 @@ using BepInEx.Logging;
 using System;
 using System.Collections.Generic;
 using ProjectM.CastleBuilding;
-using RaidForge.Config;
+using RaidForge.Config; // Make sure this is included
 using RaidForge.Utils;
 
 namespace RaidForge.Services
@@ -20,7 +20,7 @@ namespace RaidForge.Services
         }
 
         private static Dictionary<Entity, ClanGraceDetails> _gracePeriodEntries = new Dictionary<Entity, ClanGraceDetails>();
-        private const double GRACE_PERIOD_MINUTES = 15.0;
+        // REMOVED: private const double GRACE_PERIOD_MINUTES = 15.0;
         private static ManualLogSource _internalLogger;
 
         public static void Initialize(ManualLogSource logger)
@@ -33,6 +33,7 @@ namespace RaidForge.Services
         {
             if (!OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value)
             {
+                // LoggingHelper.Debug already checks for verbose logging
                 LoggingHelper.Debug("[OfflineGraceService] Offline raid protection is disabled. Skipping HandleUserDisconnected.");
                 return;
             }
@@ -47,7 +48,6 @@ namespace RaidForge.Services
             User disconnectedUserData = entityManager.GetComponentData<User>(disconnectedUserEntity);
             LoggingHelper.Debug($"[OfflineGraceService] Processing disconnect for User: {disconnectedUserData.CharacterName.ToString()} (PlatformID: {disconnectedUserData.PlatformId})");
 
-            // USER ACTION: Verify User.ClanEntity with dnSpy (NetworkedEntity vs Entity)
             Entity clanEntity = disconnectedUserData.ClanEntity._Entity;
             LoggingHelper.Debug($"[OfflineGraceService] User's ClanEntity: {clanEntity}");
 
@@ -74,12 +74,20 @@ namespace RaidForge.Services
                 isClanLogout = false;
             }
 
-            _gracePeriodEntries[keyForGrace] = new ClanGraceDetails
+            // Check if GracePeriodDurationMinutes is positive before setting a grace period
+            if (OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value > 0)
             {
-                GracePeriodStartTimeUtc = DateTime.UtcNow,
-                LastMemberCharacterName = disconnectedUserData.CharacterName
-            };
-            LoggingHelper.Debug($"[OfflineGraceService] Grace period set for Key: {keyForGrace} (IsClan: {isClanLogout}). StartTimeUTC: {_gracePeriodEntries[keyForGrace].GracePeriodStartTimeUtc}, TriggeredBy: {disconnectedUserData.CharacterName.ToString()}");
+                _gracePeriodEntries[keyForGrace] = new ClanGraceDetails
+                {
+                    GracePeriodStartTimeUtc = DateTime.UtcNow,
+                    LastMemberCharacterName = disconnectedUserData.CharacterName
+                };
+                LoggingHelper.Debug($"[OfflineGraceService] Grace period set for Key: {keyForGrace} (IsClan: {isClanLogout}). StartTimeUTC: {_gracePeriodEntries[keyForGrace].GracePeriodStartTimeUtc}, TriggeredBy: {disconnectedUserData.CharacterName.ToString()}. Duration: {OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value} mins.");
+            }
+            else
+            {
+                LoggingHelper.Debug($"[OfflineGraceService] Grace period duration is 0 or negative. No grace period timer started for Key: {keyForGrace}. Protection (if applicable) would be immediate.");
+            }
         }
 
         public static void HandleClanMemberDeparted(EntityManager entityManager, Entity userWhoLeft, Entity clanThatWasLeft, FixedString64Bytes userWhoLeftCharacterName)
@@ -101,12 +109,20 @@ namespace RaidForge.Services
             if (!UserHelper.IsAnyClanMemberOnline(entityManager, clanThatWasLeft))
             {
                 LoggingHelper.Info($"[OfflineGraceService] No members of Clan {clanThatWasLeft} are online after {userWhoLeftCharacterName.ToString()} departed. Setting grace period for clan.");
-                _gracePeriodEntries[clanThatWasLeft] = new ClanGraceDetails
+                // Check if GracePeriodDurationMinutes is positive
+                if (OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value > 0)
                 {
-                    GracePeriodStartTimeUtc = DateTime.UtcNow,
-                    LastMemberCharacterName = userWhoLeftCharacterName
-                };
-                LoggingHelper.Debug($"[OfflineGraceService] Clan {clanThatWasLeft} grace period set due to member departure. StartTimeUTC: {_gracePeriodEntries[clanThatWasLeft].GracePeriodStartTimeUtc}, TriggeredByDepartureOf: {userWhoLeftCharacterName.ToString()}");
+                    _gracePeriodEntries[clanThatWasLeft] = new ClanGraceDetails
+                    {
+                        GracePeriodStartTimeUtc = DateTime.UtcNow,
+                        LastMemberCharacterName = userWhoLeftCharacterName
+                    };
+                    LoggingHelper.Debug($"[OfflineGraceService] Clan {clanThatWasLeft} grace period set due to member departure. StartTimeUTC: {_gracePeriodEntries[clanThatWasLeft].GracePeriodStartTimeUtc}, TriggeredByDepartureOf: {userWhoLeftCharacterName.ToString()}. Duration: {OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value} mins.");
+                }
+                else
+                {
+                    LoggingHelper.Debug($"[OfflineGraceService] Grace period duration is 0 or negative. No grace period timer started for Clan: {clanThatWasLeft} after member departure.");
+                }
             }
             else
             {
@@ -116,36 +132,51 @@ namespace RaidForge.Services
 
         public static bool IsBaseVulnerableDueToGracePeriodOrBreach(EntityManager entityManager, Entity castleHeartEntity)
         {
+            // Grace period config value (float)
+            float configuredGraceMinutes = OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value;
+
             if (!OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value)
             {
                 LoggingHelper.Debug("[OfflineGraceService] Offline raid protection is disabled. Base is considered vulnerable from this service's perspective (grace periods effectively off).");
-                return true;
+                return true; // Base is not protected by this mod if feature is off
             }
 
             LoggingHelper.Debug($"[OfflineGraceService] IsBaseVulnerable? CH: {castleHeartEntity}");
             if (!entityManager.Exists(castleHeartEntity))
             {
                 LoggingHelper.Warning($"[OfflineGraceService] IsBaseVulnerable: CH {castleHeartEntity} does not exist.");
-                return false;
+                return false; // Cannot determine vulnerability if CH doesn't exist, assume not vulnerable by grace
             }
 
+            // Check if the Castle Heart is currently breached (IsSieged)
             if (entityManager.HasComponent<CastleHeart>(castleHeartEntity))
             {
                 CastleHeart chComponent = entityManager.GetComponentData<CastleHeart>(castleHeartEntity);
                 if (chComponent.IsSieged())
                 {
-                    LoggingHelper.Debug($"[OfflineGraceService] CH {castleHeartEntity} is IN BREACH. Vulnerable.");
-                    return true;
+                    LoggingHelper.Debug($"[OfflineGraceService] CH {castleHeartEntity} is IN BREACH (IsSieged=true). Base is vulnerable.");
+                    return true; // Base is vulnerable if already breached
                 }
             }
 
-            if (!entityManager.HasComponent<UserOwner>(castleHeartEntity))
+            // If grace period is zero or negative, then any offline status (not voided by login) means protection is active,
+            // and it's not "vulnerable due to grace period".
+            // The vulnerability here is about the *grace period itself* making it vulnerable.
+            if (configuredGraceMinutes <= 0)
             {
-                LoggingHelper.Warning($"[OfflineGraceService] IsBaseVulnerable: CH {castleHeartEntity} has no UserOwner component.");
+                LoggingHelper.Debug($"[OfflineGraceService] Grace period duration ({configuredGraceMinutes} mins) is zero or negative. Base is not considered vulnerable due to an active grace period timer.");
+                // If it's not breached, and grace is 0, it's not vulnerable *due to grace*.
+                // The OfflineProtectionService.ShouldProtectBase will then just evaluate if owner is online/offline.
                 return false;
             }
 
-            // USER ACTION: Verify UserOwner.Owner with dnSpy (NetworkedEntity vs Entity)
+
+            if (!entityManager.HasComponent<UserOwner>(castleHeartEntity))
+            {
+                LoggingHelper.Warning($"[OfflineGraceService] IsBaseVulnerable: CH {castleHeartEntity} has no UserOwner component. Cannot check grace period.");
+                return false; // Not vulnerable by grace if no owner to track
+            }
+
             Entity ownerUserEntity = entityManager.GetComponentData<UserOwner>(castleHeartEntity).Owner._Entity;
             if (!entityManager.Exists(ownerUserEntity) || !entityManager.HasComponent<User>(ownerUserEntity))
             {
@@ -154,7 +185,6 @@ namespace RaidForge.Services
             }
 
             User ownerData = entityManager.GetComponentData<User>(ownerUserEntity);
-            // USER ACTION: Verify User.ClanEntity with dnSpy (NetworkedEntity vs Entity)
             Entity clanEntity = ownerData.ClanEntity._Entity;
             Entity keyForGraceCheck = entityManager.Exists(clanEntity) && entityManager.HasComponent<ClanTeam>(clanEntity) ? clanEntity : ownerUserEntity;
 
@@ -185,43 +215,59 @@ namespace RaidForge.Services
                 if (voidGrace)
                 {
                     _gracePeriodEntries.Remove(keyForGraceCheck);
-                    return false;
+                    LoggingHelper.Debug($"[OfflineGraceService] Grace voided for key {keyForGraceCheck}. Base is NOT vulnerable due to grace period.");
+                    return false; // Grace period removed, so not vulnerable *due to grace*
                 }
 
+                // Using configuredGraceMinutes (float) cast to double for TimeSpan.FromMinutes
                 TimeSpan timeSinceLogout = DateTime.UtcNow - details.GracePeriodStartTimeUtc;
-                LoggingHelper.Debug($"[OfflineGraceService] Time since logout for key {keyForGraceCheck}: {timeSinceLogout.TotalMinutes:F2} mins. Grace period is {GRACE_PERIOD_MINUTES} mins.");
-                if (timeSinceLogout.TotalMinutes < GRACE_PERIOD_MINUTES)
+                LoggingHelper.Debug($"[OfflineGraceService] Time since logout for key {keyForGraceCheck}: {timeSinceLogout.TotalMinutes:F2} mins. Configured grace period is {configuredGraceMinutes} mins.");
+
+                if (timeSinceLogout.TotalMinutes < configuredGraceMinutes)
                 {
-                    double remainingMins = GRACE_PERIOD_MINUTES - timeSinceLogout.TotalMinutes;
-                    LoggingHelper.Debug($"[OfflineGraceService] Key {keyForGraceCheck} (CH: {castleHeartEntity}) is WITHIN grace period ({remainingMins:F1} mins remaining, triggered by {details.LastMemberCharacterName.ToString()}). Base is vulnerable.");
-                    return true;
+                    double remainingMins = configuredGraceMinutes - timeSinceLogout.TotalMinutes;
+                    LoggingHelper.Debug($"[OfflineGraceService] Key {keyForGraceCheck} (CH: {castleHeartEntity}) is WITHIN grace period ({remainingMins:F1} mins remaining, triggered by {details.LastMemberCharacterName.ToString()}). Base is vulnerable due to grace period.");
+                    return true; // Within grace period, therefore vulnerable
                 }
                 else
                 {
-                    LoggingHelper.Info($"[OfflineGraceService] Grace period for key {keyForGraceCheck} has EXPIRED. Removing entry.");
+                    LoggingHelper.Info($"[OfflineGraceService] Grace period for key {keyForGraceCheck} has EXPIRED. Removing entry. Base no longer vulnerable due to this expired grace.");
                     _gracePeriodEntries.Remove(keyForGraceCheck);
                 }
             }
             else
             {
-                LoggingHelper.Debug($"[OfflineGraceService] No active grace details found for key {keyForGraceCheck}.");
+                LoggingHelper.Debug($"[OfflineGraceService] No active grace details found for key {keyForGraceCheck}. Base is not vulnerable due to an active grace period timer.");
             }
+            // If no active (or an expired) grace period applies, it's not vulnerable *due to the grace period itself*.
             return false;
         }
 
         public static bool GetClanGracePeriodInfo(EntityManager entityManager, Entity keyEntity,
-                                                 out TimeSpan remainingTime,
-                                                 out FixedString64Bytes lastLogoffName,
-                                                 out DateTime actualLogoutTime)
+                                                out TimeSpan remainingTime,
+                                                out FixedString64Bytes lastLogoffName,
+                                                out DateTime actualLogoutTime)
         {
             remainingTime = TimeSpan.Zero; lastLogoffName = default; actualLogoutTime = default;
+            float configuredGraceMinutes = OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value;
 
-            if (!OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value)
+            if (!OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value || configuredGraceMinutes <= 0)
             {
-                LoggingHelper.Debug("[OfflineGraceService] Offline raid protection is disabled. Grace period info not applicable.");
+                LoggingHelper.Debug("[OfflineGraceService] Offline raid protection is disabled or grace period is zero/negative. Grace period info not applicable.");
                 return false;
             }
+            // ... (rest of the method remains similar, just replace hardcoded GRACE_PERIOD_MINUTES with configuredGraceMinutes)
+            // Example change within GetClanGracePeriodInfo:
+            // if (elapsed.TotalMinutes < configuredGraceMinutes) // Use configuredGraceMinutes
+            // {
+            //     remainingTime = TimeSpan.FromMinutes(configuredGraceMinutes) - elapsed; // Use configuredGraceMinutes
+            // ...
+            // }
+            // The existing logic for voiding grace if users log back in is good.
+            // The rest of this method should be updated to use 'configuredGraceMinutes'
+            // where GRACE_PERIOD_MINUTES was previously used.
 
+            // Fully updated GetClanGracePeriodInfo:
             if (!entityManager.Exists(keyEntity))
             {
                 LoggingHelper.Warning($"[OfflineGraceService] GetClanGracePeriodInfo: KeyEntity {keyEntity} does not exist.");
@@ -234,7 +280,7 @@ namespace RaidForge.Services
                 LoggingHelper.Debug($"[OfflineGraceService] Found grace details for key {keyEntity}. StartTimeUTC: {details.GracePeriodStartTimeUtc}");
 
                 bool voidGrace = false;
-                if (entityManager.HasComponent<ClanTeam>(keyEntity))
+                if (entityManager.HasComponent<ClanTeam>(keyEntity)) // It's a clan key
                 {
                     if (UserHelper.IsAnyClanMemberOnline(entityManager, keyEntity))
                     {
@@ -242,7 +288,7 @@ namespace RaidForge.Services
                         LoggingHelper.Info($"[OfflineGraceService] A member of Clan {keyEntity} is now online (for GetClanGracePeriodInfo). Voiding grace.");
                     }
                 }
-                else if (entityManager.HasComponent<User>(keyEntity))
+                else if (entityManager.HasComponent<User>(keyEntity)) // It's a solo user key
                 {
                     if (entityManager.GetComponentData<User>(keyEntity).IsConnected)
                     {
@@ -254,14 +300,14 @@ namespace RaidForge.Services
                 if (voidGrace)
                 {
                     _gracePeriodEntries.Remove(keyEntity);
-                    return false;
+                    return false; // Grace voided
                 }
 
                 TimeSpan elapsed = DateTime.UtcNow - details.GracePeriodStartTimeUtc;
-                LoggingHelper.Debug($"[OfflineGraceService] Time since logout for key {keyEntity} (in GetClanGracePeriodInfo): {elapsed.TotalMinutes:F2} mins. Grace period is {GRACE_PERIOD_MINUTES} mins.");
-                if (elapsed.TotalMinutes < GRACE_PERIOD_MINUTES)
+                LoggingHelper.Debug($"[OfflineGraceService] Time since logout for key {keyEntity} (in GetClanGracePeriodInfo): {elapsed.TotalMinutes:F2} mins. Configured grace period is {configuredGraceMinutes} mins.");
+                if (elapsed.TotalMinutes < configuredGraceMinutes)
                 {
-                    remainingTime = TimeSpan.FromMinutes(GRACE_PERIOD_MINUTES) - elapsed;
+                    remainingTime = TimeSpan.FromMinutes((double)configuredGraceMinutes) - elapsed;
                     lastLogoffName = details.LastMemberCharacterName;
                     actualLogoutTime = details.GracePeriodStartTimeUtc;
                     LoggingHelper.Debug($"[OfflineGraceService] Active grace for key {keyEntity}. Remaining: {remainingTime.TotalSeconds:F0}s. Last logoff: {lastLogoffName.ToString()}.");
@@ -280,6 +326,7 @@ namespace RaidForge.Services
             return false;
         }
 
+
         public static void CleanupOldGraceTimers()
         {
             if (!OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value)
@@ -292,16 +339,34 @@ namespace RaidForge.Services
                 return;
             }
 
+            float configuredGraceMinutes = OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value;
+            // If grace period is not positive, there should be no timers to clean up from this system.
+            if (configuredGraceMinutes <= 0 && _gracePeriodEntries.Count > 0)
+            {
+                LoggingHelper.Info($"[OfflineGraceService] Grace period duration is {configuredGraceMinutes} mins. Clearing any stray grace entries as they shouldn't exist.");
+                _gracePeriodEntries.Clear();
+                return;
+            }
+            if (configuredGraceMinutes <=0) return; 
+
             var keysToRemove = new List<Entity>();
+            double cleanupThresholdMinutes = (double)configuredGraceMinutes + 10.0;
+
             foreach (var kvp in _gracePeriodEntries)
             {
-                if ((DateTime.UtcNow - kvp.Value.GracePeriodStartTimeUtc).TotalMinutes > GRACE_PERIOD_MINUTES + 10)
-                { keysToRemove.Add(kvp.Key); }
+                if ((DateTime.UtcNow - kvp.Value.GracePeriodStartTimeUtc).TotalMinutes > cleanupThresholdMinutes)
+                {
+                    keysToRemove.Add(kvp.Key);
+                }
             }
+
             if (keysToRemove.Count > 0)
             {
-                LoggingHelper.Info($"[OfflineGraceService] Cleaning up {keysToRemove.Count} old grace timers.");
-                foreach (var key in keysToRemove) { _gracePeriodEntries.Remove(key); }
+                LoggingHelper.Info($"[OfflineGraceService] Cleaning up {keysToRemove.Count} old grace timers (older than {cleanupThresholdMinutes:F0} mins).");
+                foreach (var key in keysToRemove)
+                {
+                    _gracePeriodEntries.Remove(key);
+                }
             }
         }
     }

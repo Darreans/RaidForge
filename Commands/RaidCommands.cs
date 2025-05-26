@@ -403,7 +403,7 @@ namespace RaidForge.Commands
 
                 if (OfflineGraceService.GetClanGracePeriodInfo(em, keyForGraceCheck, out TimeSpan remainingGraceTime, out FixedString64Bytes lastLogoffName, out _))
                 {
-                    string graceMsg = $"{playerBaseName} is {ChatColors.WarningText("RAIDABLE")} for another {ChatColors.AccentText($"{remainingGraceTime.Minutes}m {remainingGraceTime.Seconds}s")} (grace period from {lastLogoffName.ToString()}'s logout).";
+                    string graceMsg = $"{playerBaseName} is {ChatColors.WarningText("RAIDABLE")} for another {ChatColors.AccentText($"{remainingGraceTime.Minutes}m {remainingGraceTime.Seconds}s")}.";
                     LoggingHelper.Debug($"[.raidtimer] {playerBaseName} is in GRACE PERIOD. {graceMsg}");
                     ctx.Reply(graceMsg);
                     return;

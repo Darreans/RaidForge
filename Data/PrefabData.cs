@@ -9,6 +9,8 @@ namespace RaidForge.Data
 
         public static readonly HashSet<int> ProtectedStructurePrefabHashes = new HashSet<int>
         {
+           // No longer need, but will leave for now.
+
             728150320,  // TM_Castle_Wall_Tier02_Stone_Entrance
             996421136,  // TM_Castle_Wall_Tier02_Stone_EntranceWide
             1960255814, // TM_Castle_Wall_Tier02_Stone_EntranceWide_Left
@@ -37,3 +39,4 @@ namespace RaidForge.Data
 
     }
 }
+

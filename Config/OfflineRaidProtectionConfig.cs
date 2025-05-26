@@ -1,27 +1,29 @@
 ﻿using BepInEx.Configuration;
-using BepInEx.Logging;
 
 namespace RaidForge.Config
 {
     public static class OfflineRaidProtectionConfig
     {
-        public static ConfigFile ConfigFileInstance { get; private set; } 
+        public static ConfigEntry<bool> EnableOfflineRaidProtection;
 
-        public static ConfigEntry<bool> EnableOfflineRaidProtection { get; private set; }
+        public static ConfigEntry<float> GracePeriodDurationMinutes;
 
-        private const string SECTION_MAIN = "Offline Raid Protection";
-
-        public static void Initialize(ConfigFile configFile, ManualLogSource logger = null) 
+        public static void Initialize(ConfigFile config)
         {
-            ConfigFileInstance = configFile;
+            EnableOfflineRaidProtection = config.Bind(
+                "OfflineRaidProtection", 
+                "Enabled",               
+                true,                    
+                "Enable or disable the offline raid protection system against Siege Golems.");
 
-            EnableOfflineRaidProtection = configFile.Bind(
-                SECTION_MAIN,
-                "EnableOfflineProtection",
-                false,
-                "If true, offline raid protection logic (including grace periods) will be active. If false, bases are raidable regardless of owner online status (respecting global raid windows).");
+            GracePeriodDurationMinutes = config.Bind(
+                "OfflineRaidProtection", 
+                "GracePeriodMinutes",    
+                15.0f,                   
+                "The duration (in minutes) of the grace period after all members of a clan log off if in clan or solo players not in clan. " +
+                "During this period, their base is still considered 'online' or 'recently online' for the purpose of Siege Golem offline protection. " +
+                "Set to 0 to have no grace period (protection activates immediately once the service confirms they are offline). This is not recommended as abuse can occur");
 
-            logger?.LogInfo("[OfflineRaidProtectionConfig] Initialized.");
         }
     }
 }
