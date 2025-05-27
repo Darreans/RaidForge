@@ -120,8 +120,22 @@ namespace RaidForge.Commands
             var schedule = Plugin.GetSchedule();
             if (schedule == null) { ctx.Reply(ChatColors.ErrorText("Error retrieving schedule.")); return; }
 
+            string configuredTimeZone = string.Empty;
+            if (RaidConfig.RaidScheduleTimeZoneDisplayString != null)
+            {
+                configuredTimeZone = RaidConfig.RaidScheduleTimeZoneDisplayString.Value?.Trim() ?? string.Empty;
+            }
+
+            string headerTimeZoneSuffix = !string.IsNullOrWhiteSpace(configuredTimeZone) ? $" ({configuredTimeZone})" : "";
+            ctx.Reply(ChatColors.HighlightText($"Raid Schedule{headerTimeZoneSuffix}:"));
+
             var culture = CultureInfo.InvariantCulture;
-            var scheduleByDay = schedule.OrderBy(e => e.StartTime).GroupBy(e => e.Day).ToDictionary(g => g.Key, g => g.ToList());
+            var scheduleByDay = schedule
+                                .GroupBy(e => e.Day)
+                                .ToDictionary(
+                                    g => g.Key,
+                                    g => g.OrderBy(e => e.StartTime).ToList()
+                                );
 
             var daysOfWeekOrdered = new List<DayOfWeek>
             {
@@ -129,30 +143,27 @@ namespace RaidForge.Commands
                 DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
             };
 
-            StringBuilder sbPart1 = new StringBuilder(ChatColors.HighlightText("Raid Schedule (Mon - Wed):") + "\n");
-            StringBuilder sbPart2 = new StringBuilder(ChatColors.HighlightText("Raid Schedule (Thu - Sun):") + "\n");
-
             foreach (DayOfWeek currentDay in daysOfWeekOrdered)
             {
                 string dayLineContent = "";
                 if (scheduleByDay.TryGetValue(currentDay, out var entriesForDay) && entriesForDay.Any())
                 {
                     List<string> dayScheduleStrings = new List<string>();
-                    foreach (var entry in entriesForDay.OrderBy(e => e.StartTime))
+                    foreach (var entry in entriesForDay)
                     {
                         string startTimeStr = (DateTime.MinValue + entry.StartTime).ToString("h:mm tt", culture);
                         string endTimeStr;
 
                         if (entry.SpansMidnight)
                         {
-                            DayOfWeek endDay = (DayOfWeek)(((int)currentDay + 1) % 7);
+                            DayOfWeek endDayAbbreviationDay = (DayOfWeek)(((int)entry.Day + 1) % 7);
                             if (entry.EndTime == TimeSpan.Zero)
                             {
-                                endTimeStr = ChatColors.SuccessText("Midnight") + ChatColors.MutedText($" (End of {currentDay.ToString().Substring(0, 3)})");
+                                endTimeStr = ChatColors.SuccessText("Midnight") + ChatColors.MutedText($" (End of {entry.Day.ToString().Substring(0, 3)})");
                             }
                             else
                             {
-                                endTimeStr = ChatColors.SuccessText((DateTime.MinValue + entry.EndTime).ToString("h:mm tt", culture)) + ChatColors.MutedText($" ({endDay.ToString().Substring(0, 3)})");
+                                endTimeStr = ChatColors.SuccessText((DateTime.MinValue + entry.EndTime).ToString("h:mm tt", culture)) + ChatColors.MutedText($" ({endDayAbbreviationDay.ToString().Substring(0, 3)})");
                             }
                         }
                         else
@@ -168,23 +179,9 @@ namespace RaidForge.Commands
                     dayLineContent = ChatColors.WarningText("No Raids Scheduled");
                 }
 
-                if (currentDay >= DayOfWeek.Monday && currentDay <= DayOfWeek.Wednesday)
-                {
-                    sbPart1.Append(ChatColors.InfoText(currentDay.ToString()) + ": " + dayLineContent + "\n");
-                }
-                else
-                {
-                    sbPart2.Append(ChatColors.InfoText(currentDay.ToString()) + ": " + dayLineContent + "\n");
-                }
+                ctx.Reply(ChatColors.InfoText(currentDay.ToString()) + ": " + dayLineContent);
             }
-
-            string finalMonWed = sbPart1.ToString().TrimEnd('\n');
-            string finalThuSun = sbPart2.ToString().TrimEnd('\n');
-
-            ctx.Reply(finalMonWed);
-            ctx.Reply(finalThuSun);
         }
-
 
         [Command("golemstartdate", "Sets the Golem Automation start date to the current time.", adminOnly: true)]
         public void SetGolemStartDate(ChatCommandContext ctx)

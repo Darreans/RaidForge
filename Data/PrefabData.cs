@@ -5,12 +5,16 @@ namespace RaidForge.Data
 {
     public static class PrefabData
     {
-        public static readonly PrefabGUID SiegeGolemBuff = new PrefabGUID(914043867); 
+        public static readonly PrefabGUID SiegeGolemBuff = new PrefabGUID(914043867);
+
+        //conditions for offline raid announcement  
+        public static readonly PrefabGUID TntExplosivePrefab1 = new PrefabGUID(-1021407417);
+        public static readonly PrefabGUID TntExplosivePrefab2 = new PrefabGUID(1779299585);
 
         public static readonly HashSet<int> ProtectedStructurePrefabHashes = new HashSet<int>
         {
            // No longer need, but will leave for now.
-
+           /*
             728150320,  // TM_Castle_Wall_Tier02_Stone_Entrance
             996421136,  // TM_Castle_Wall_Tier02_Stone_EntranceWide
             1960255814, // TM_Castle_Wall_Tier02_Stone_EntranceWide_Left
@@ -32,7 +36,7 @@ namespace RaidForge.Data
             -1293632412, // TM_Castle_Wall_Tier01_Wood_Entrance
              1639432090, // TM_Castle_Wall_Tier01_Wood_Pillar
              792289367, // TM_Castle_Wall_Tier01_Wood	
-
+           */
         };
 
         public static readonly PrefabGUID InterloperDebuff = new PrefabGUID(-1572696947);

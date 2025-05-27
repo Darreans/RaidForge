@@ -22,6 +22,8 @@ namespace RaidForge.Config
         public static List<RaidScheduleEntry> Schedule { get; private set; }
         public static ConfigEntry<bool> AllowWaygateTeleports { get; private set; }
 
+        public static ConfigEntry<string> RaidScheduleTimeZoneDisplayString { get; private set; }
+
         private static ManualLogSource _logger;
         private static Dictionary<DayOfWeek, (ConfigEntry<string> Start, ConfigEntry<string> End)> _dailyConfigs;
 
@@ -35,9 +37,13 @@ namespace RaidForge.Config
             Schedule = new List<RaidScheduleEntry>();
             _dailyConfigs = new Dictionary<DayOfWeek, (ConfigEntry<string> Start, ConfigEntry<string> End)>();
 
-
             AllowWaygateTeleports = configFile.Bind(SECTION_GENERAL, "AllowWaygateTeleportsDuringRaid", true,
                 "Allow teleportation via Waygates during an active raid window (if global raids are ON).");
+
+            RaidScheduleTimeZoneDisplayString = configFile.Bind(SECTION_GENERAL,
+                "RaidScheduleTimeZoneForDisplay", 
+                "Server Time", 
+                "The timezone string (e.g., EST, PST, UTC, Server Time) to display next to raid times in the .raiddays command. Leave empty if no timezone should be shown.");
 
             string defaultOffTime = "00:00";
             string defaultWeekendStartTime = "20:00";
@@ -61,6 +67,7 @@ namespace RaidForge.Config
         {
             if (_logger == null || _dailyConfigs == null)
             {
+                // Using Console.WriteLine as a fallback if logger isn't available during a critical failure.
                 Console.WriteLine("[RaidConfig] CRITICAL: RaidConfig not properly initialized before parsing schedule.");
                 Schedule = new List<RaidScheduleEntry>();
                 return;
@@ -74,21 +81,42 @@ namespace RaidForge.Config
                 if (!_dailyConfigs.TryGetValue(day, out var configPair)) { continue; }
                 var startTimeStr = configPair.Start.Value?.Trim() ?? "00:00";
                 var endTimeStr = configPair.End.Value?.Trim() ?? "00:00";
-                if (startTimeStr == "00:00") { continue; }
+
+             
+                if (startTimeStr == "00:00" && (endTimeStr == "00:00" || string.IsNullOrEmpty(endTimeStr)))
+                {
+                    continue;
+                }
+
                 if (!TimeSpan.TryParseExact(startTimeStr, "h\\:mm", CultureInfo.InvariantCulture, out var startTime) &&
                     !TimeSpan.TryParseExact(startTimeStr, "hh\\:mm", CultureInfo.InvariantCulture, out startTime))
-                { continue; }
+                {
+                    if (TroubleshootingConfig.EnableVerboseLogging?.Value == true) _logger.LogWarning($"[RaidConfig] Could not parse start time '{startTimeStr}' for {day}. Skipping entry.");
+                    continue;
+                }
+
                 TimeSpan endTime;
-                bool treatEndTimeAsEndOfDay = (endTimeStr == "00:00");
-                if (treatEndTimeAsEndOfDay) { endTime = TimeSpan.FromHours(24); }
+                bool treatEndTimeAsEndOfDay = (endTimeStr == "00:00" || string.IsNullOrEmpty(endTimeStr));
+
+                if (treatEndTimeAsEndOfDay)
+                {
+                    endTime = TimeSpan.Zero;
+                }
                 else if (!TimeSpan.TryParseExact(endTimeStr, "h\\:mm", CultureInfo.InvariantCulture, out endTime) &&
                          !TimeSpan.TryParseExact(endTimeStr, "hh\\:mm", CultureInfo.InvariantCulture, out endTime))
-                { continue; }
-                bool spansMidnight = (treatEndTimeAsEndOfDay && startTime != TimeSpan.Zero) || (!treatEndTimeAsEndOfDay && endTime < startTime);
-                newSchedule.Add(new RaidScheduleEntry { Day = day, StartTime = startTime, EndTime = (treatEndTimeAsEndOfDay ? TimeSpan.Zero : endTime), SpansMidnight = spansMidnight });
+                {
+                    if (TroubleshootingConfig.EnableVerboseLogging?.Value == true) _logger.LogWarning($"[RaidConfig] Could not parse end time '{endTimeStr}' for {day}. Skipping entry.");
+                    continue;
+                }
+
+                bool spansMidnight = (endTime < startTime && endTime != TimeSpan.Zero) || (startTime != TimeSpan.Zero && endTime == TimeSpan.Zero);
+
+
+                newSchedule.Add(new RaidScheduleEntry { Day = day, StartTime = startTime, EndTime = endTime, SpansMidnight = spansMidnight });
+
                 if (TroubleshootingConfig.EnableVerboseLogging?.Value == true)
                 {
-                    string endDisplay = treatEndTimeAsEndOfDay ? "24:00 (Midnight)" : endTime.ToString("hh\\:mm");
+                    string endDisplay = (endTime == TimeSpan.Zero && spansMidnight) ? "Midnight" : endTime.ToString("hh\\:mm");
                     _logger.LogInfo($"[RaidConfig] Parsed schedule entry: {day} {startTime:hh\\:mm} - {endDisplay}{(spansMidnight ? " (spans midnight)" : "")}");
                 }
             }
