@@ -1,8 +1,8 @@
 ﻿using System;
-using BepInEx.Logging; 
+using BepInEx.Logging;
 using Unity.Entities;
 using ProjectM;
-using RaidForge.Utils; 
+using RaidForge.Utils;
 
 namespace RaidForge.Systems
 {
@@ -13,31 +13,26 @@ namespace RaidForge.Systems
             try
             {
                 if (VWorld.GameBalanceSettings(
-                    out var originalSettings, 
+                    out var originalSettings,
                     settings =>
                     {
                         if (settings.SiegeWeaponHealth == newValue)
                         {
-                            LoggingHelper.Info($"[SiegeWeaponSystem] SiegeWeaponHealth already set to {newValue}. No change made.");
-                            return settings; 
+                            return settings;
                         }
-
                         settings.SiegeWeaponHealth = newValue;
-                        LoggingHelper.Info($"[SiegeWeaponSystem] Updated Golem Health => {newValue}");
-                        return settings; // Modified settings
+                        return settings;
                     }))
                 {
                     return true;
                 }
                 else
                 {
-                    LoggingHelper.Error($"[SiegeWeaponSystem] Failed to apply GameBalanceSettings for SiegeWeaponHealth {newValue}.");
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                LoggingHelper.Error($"[SiegeWeaponSystem] Could not update Golem Health to {newValue}", ex);
                 return false;
             }
         }
@@ -50,12 +45,10 @@ namespace RaidForge.Systems
                 {
                     return settings.SiegeWeaponHealth;
                 }
-                LoggingHelper.Error($"[SiegeWeaponSystem] Could not retrieve ServerGameBalanceSettings to get SiegeWeaponHealth.");
                 return null;
             }
             catch (Exception ex)
             {
-                LoggingHelper.Error($"[SiegeWeaponSystem] Error reading SGB.SiegeWeaponHealth", ex);
                 return null;
             }
         }

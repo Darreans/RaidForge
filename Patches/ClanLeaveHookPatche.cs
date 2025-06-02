@@ -4,8 +4,8 @@ using ProjectM.Gameplay.Clan;
 using ProjectM.Network;
 using Unity.Entities;
 using System;
-using RaidForge.Services; 
-using RaidForge.Utils;    
+using RaidForge.Services;
+using RaidForge.Utils;
 using Unity.Collections;
 
 namespace RaidForge.Patches
@@ -15,19 +15,15 @@ namespace RaidForge.Patches
     {
         private static void Postfix(ClanSystem_Server __instance, EntityCommandBuffer commandBuffer, ModificationsRegistry modificationsRegistry, Entity clanEntity, Entity userToLeave, ClanSystem_Server.LeaveReason reason, CastleHeartLimitType castleHeartLimitType)
         {
-            LoggingHelper.Info($"[ClanLeaveHookPatch] Postfix for LeaveClan entered. User: {userToLeave}, Clan: {clanEntity}, Reason: {reason}");
-
-            if (__instance == null)
-            {
-                LoggingHelper.Error("[ClanLeaveHookPatch] __instance (ClanSystem_Server) is null! Cannot proceed.");
-                return;
-            }
-
             EntityManager entityManager = __instance.EntityManager;
 
             if (entityManager == default)
             {
-                LoggingHelper.Error("[ClanLeaveHookPatch] EntityManager is default! Cannot proceed.");
+                return;
+            }
+
+            if (userToLeave == Entity.Null)
+            {
                 return;
             }
 
@@ -38,23 +34,16 @@ namespace RaidForge.Patches
                 {
                     userWhoLeftCharacterName = entityManager.GetComponentData<User>(userToLeave).CharacterName;
                 }
-                else
+
+                if (entityManager.Exists(clanEntity))
                 {
-                    LoggingHelper.Warning($"[ClanLeaveHookPatch] UserToLeave {userToLeave} does not exist or lacks User component. Using default name for logging.");
+                    OfflineGraceService.HandleClanMemberDeparted(entityManager, userToLeave, clanEntity, userWhoLeftCharacterName);
                 }
 
-                if (!entityManager.Exists(clanEntity))
-                {
-                    LoggingHelper.Warning($"[ClanLeaveHookPatch] ClanEntity {clanEntity} does not exist. Cannot process clan leave for grace period.");
-                    return;
-                }
-
-                LoggingHelper.Info($"[ClanLeaveHookPatch] User '{userWhoLeftCharacterName.ToString()}' (Entity: {userToLeave}) left Clan {clanEntity}. Calling HandleClanMemberDeparted.");
-                OfflineGraceService.HandleClanMemberDeparted(entityManager, userToLeave, clanEntity, userWhoLeftCharacterName);
+                OwnershipCacheService.UpdateUserClan(userToLeave, Entity.Null, entityManager);
             }
             catch (Exception ex)
             {
-                LoggingHelper.Error($"Error in ClanLeaveHookPatch Postfix", ex);
             }
         }
     }

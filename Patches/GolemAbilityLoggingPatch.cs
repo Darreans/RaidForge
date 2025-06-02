@@ -11,6 +11,8 @@ using ProjectM.Gameplay.Systems;
 using ProjectM.Scripting;
 using System;
 
+//really its for my own tracking.
+
 namespace RaidForge.Patches
 {
     [HarmonyPatch]
@@ -34,7 +36,6 @@ namespace RaidForge.Patches
 
                 if (!SGM_nullable.HasValue)
                 {
-                    LoggingHelper.Debug("[GolemAbilityLogger] SGM not available this frame.");
                     return;
                 }
                 ServerGameManager SGM = SGM_nullable.Value;
@@ -54,27 +55,13 @@ namespace RaidForge.Patches
                         {
                             if (SGM.TryGetBuff(casterCharacterEntity, PrefabData.SiegeGolemBuff, out _))
                             {
-                                string charName = "UnknownPlayer";
-                                if (em.TryGetComponentData<PlayerCharacter>(casterCharacterEntity, out var pc) &&
-                                    pc.UserEntity != Entity.Null &&
-                                    em.TryGetComponentData<User>(pc.UserEntity, out var user))
-                                {
-                                    charName = user.CharacterName.ToString();
-                                }
-
-                                PrefabGUID abilityBeingCast = default;
-                                string abilityName = "UnknownAbility (GUID not found)";
-
-                                LoggingHelper.Debug($"[GolemAbilityLogger] GOLEM PLAYER '{charName}' (PC: {casterCharacterEntity}) initiated an ability cast (Event Entity: {eventEntity}). Ability GUID (if found): {abilityBeingCast.GuidHash}"); 
                             }
                         }
                     }
                 }
-                catch (Exception e) { LoggingHelper.Error($"[GolemAbilityLogger] Exception: {e}"); }
+                catch (Exception e) { }
                 finally { if (eventEntities.IsCreated) eventEntities.Dispose(); }
             }
         }
     }
 }
-
-// just a crap ton of logs.

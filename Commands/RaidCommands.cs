@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using VampireCommandFramework;
 using ProjectM;
 using ProjectM.Network;
@@ -12,7 +11,7 @@ using RaidForge.Services;
 using RaidForge.Systems;
 using RaidForge.Config;
 using RaidForge.Utils;
-using ProjectM.CastleBuilding;
+using ProjectM.CastleBuilding; 
 
 namespace RaidForge.Commands
 {
@@ -67,8 +66,16 @@ namespace RaidForge.Commands
         public void RaidTime(ChatCommandContext ctx)
         {
             var schedule = Plugin.GetSchedule();
-            if (schedule == null) { ctx.Reply(ChatColors.ErrorText("Error retrieving schedule configuration.")); return; }
-            if (!schedule.Any()) { ctx.Reply(ChatColors.InfoText("No raid schedule is configured.")); return; }
+            if (schedule == null)
+            {
+                ctx.Reply(ChatColors.ErrorText("Error retrieving schedule configuration."));
+                return;
+            }
+            if (!schedule.Any())
+            {
+                ctx.Reply(ChatColors.InfoText("No raid schedule is configured."));
+                return;
+            }
 
             DateTime now = DateTime.Now;
             DateTime nextRaidStart = DateTime.MaxValue;
@@ -80,18 +87,27 @@ namespace RaidForge.Commands
 
             for (int daysAhead = 0; daysAhead <= 7; daysAhead++)
             {
-                DateTime checkDate = now.AddDays(daysAhead); DayOfWeek checkDay = checkDate.DayOfWeek;
+                DateTime checkDate = now.AddDays(daysAhead);
+                DayOfWeek checkDay = checkDate.DayOfWeek;
+
                 foreach (var entry in schedule)
                 {
-                    DateTime potentialStart = checkDate.Date + entry.StartTime;
+                    DateTime potentialStart;
                     if (entry.Day == checkDay)
                     {
-                        if (potentialStart > now && potentialStart < nextRaidStart) { nextRaidStart = potentialStart; }
+                        potentialStart = checkDate.Date + entry.StartTime;
+                        if (potentialStart > now && potentialStart < nextRaidStart)
+                        {
+                            nextRaidStart = potentialStart;
+                        }
                     }
-                    else if (entry.SpansMidnight && (int)(entry.Day + 1) % 7 == (int)checkDay)
+                    else if (entry.SpansMidnight && (DayOfWeek)(((int)entry.Day + 1) % 7) == checkDay)
                     {
-                        DateTime actualStartYesterday = checkDate.AddDays(-1).Date + entry.StartTime;
-                        if (actualStartYesterday > now && actualStartYesterday < nextRaidStart) { nextRaidStart = actualStartYesterday; }
+                        potentialStart = checkDate.Date.AddDays(-1) + entry.StartTime;
+                        if (potentialStart > now && potentialStart < nextRaidStart)
+                        {
+                            nextRaidStart = potentialStart;
+                        }
                     }
                 }
             }
@@ -101,16 +117,17 @@ namespace RaidForge.Commands
                 TimeSpan timeUntil = nextRaidStart - now;
                 string timeString;
                 if (timeUntil.TotalSeconds < 1 && timeUntil.TotalSeconds > -60) { timeString = "imminently (within the minute)"; }
-                else if (timeUntil.TotalMinutes < 1) { timeString = $"{(int)timeUntil.TotalSeconds} second{(timeUntil.TotalSeconds != 1 ? "s" : "")}"; }
-                else if (timeUntil.TotalHours < 1) { timeString = $"{timeUntil.Minutes} minute{(timeUntil.Minutes != 1 ? "s" : "")}"; }
-                else if (timeUntil.TotalDays < 1) { timeString = $"{timeUntil.Hours} hour{(timeUntil.Hours != 1 ? "s" : "")} and {timeUntil.Minutes} minute{(timeUntil.Minutes != 1 ? "s" : "")}"; }
-                else { timeString = $"{timeUntil.Days} day{(timeUntil.Days != 1 ? "s" : "")}, {timeUntil.Hours} hour{(timeUntil.Hours != 1 ? "s" : "")} and {timeUntil.Minutes} minute{(timeUntil.Minutes != 1 ? "s" : "")}"; }
+                else if (timeUntil.TotalSeconds < 60) { timeString = $"{(int)timeUntil.TotalSeconds} second{(timeUntil.TotalSeconds != 1 ? "s" : "")}"; }
+                else if (timeUntil.TotalMinutes < 60) { timeString = $"{(int)timeUntil.TotalMinutes} minute{((int)timeUntil.TotalMinutes != 1 ? "s" : "")}"; }
+                else if (timeUntil.TotalHours < 24) { timeString = $"{(int)timeUntil.TotalHours} hour{((int)timeUntil.TotalHours != 1 ? "s" : "")} and {timeUntil.Minutes} minute{(timeUntil.Minutes != 1 ? "s" : "")}"; }
+                else { timeString = $"{(int)timeUntil.TotalDays} day{((int)timeUntil.TotalDays != 1 ? "s" : "")}, {timeUntil.Hours} hour{(timeUntil.Hours != 1 ? "s" : "")} and {timeUntil.Minutes} minute{(timeUntil.Minutes != 1 ? "s" : "")}"; }
+
                 ctx.Reply(ChatColors.InfoText($"Next scheduled raid window starts in: {ChatColors.AccentText(timeString)}"));
                 ctx.Reply(ChatColors.MutedText($"({nextRaidStart:f})"));
             }
             else if (!Plugin.IsAutoRaidCurrentlyActive)
             {
-                ctx.Reply(ChatColors.InfoText("No upcoming raids found in the schedule."));
+                ctx.Reply(ChatColors.InfoText("No upcoming raids found in the schedule within the next 7 days."));
             }
         }
 
@@ -120,32 +137,23 @@ namespace RaidForge.Commands
             var schedule = Plugin.GetSchedule();
             if (schedule == null) { ctx.Reply(ChatColors.ErrorText("Error retrieving schedule.")); return; }
 
-            string configuredTimeZone = string.Empty;
-            if (RaidConfig.RaidScheduleTimeZoneDisplayString != null)
-            {
-                configuredTimeZone = RaidConfig.RaidScheduleTimeZoneDisplayString.Value?.Trim() ?? string.Empty;
-            }
-
+            string configuredTimeZone = RaidConfig.RaidScheduleTimeZoneDisplayString?.Value?.Trim() ?? string.Empty;
             string headerTimeZoneSuffix = !string.IsNullOrWhiteSpace(configuredTimeZone) ? $" ({configuredTimeZone})" : "";
             ctx.Reply(ChatColors.HighlightText($"Raid Schedule{headerTimeZoneSuffix}:"));
 
             var culture = CultureInfo.InvariantCulture;
             var scheduleByDay = schedule
-                                .GroupBy(e => e.Day)
-                                .ToDictionary(
-                                    g => g.Key,
-                                    g => g.OrderBy(e => e.StartTime).ToList()
-                                );
-
-            var daysOfWeekOrdered = new List<DayOfWeek>
-            {
-                DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
-                DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
-            };
+                                    .GroupBy(e => e.Day)
+                                    .ToDictionary(
+                                        g => g.Key,
+                                        g => g.OrderBy(e => e.StartTime).ToList()
+                                    );
+            var daysOfWeekOrdered = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>()
+                                .OrderBy(d => (d == DayOfWeek.Sunday ? 7 : (int)d)).ToList();
 
             foreach (DayOfWeek currentDay in daysOfWeekOrdered)
             {
-                string dayLineContent = "";
+                string dayLineContent;
                 if (scheduleByDay.TryGetValue(currentDay, out var entriesForDay) && entriesForDay.Any())
                 {
                     List<string> dayScheduleStrings = new List<string>();
@@ -153,18 +161,12 @@ namespace RaidForge.Commands
                     {
                         string startTimeStr = (DateTime.MinValue + entry.StartTime).ToString("h:mm tt", culture);
                         string endTimeStr;
-
                         if (entry.SpansMidnight)
                         {
                             DayOfWeek endDayAbbreviationDay = (DayOfWeek)(((int)entry.Day + 1) % 7);
-                            if (entry.EndTime == TimeSpan.Zero)
-                            {
-                                endTimeStr = ChatColors.SuccessText("Midnight") + ChatColors.MutedText($" (End of {entry.Day.ToString().Substring(0, 3)})");
-                            }
-                            else
-                            {
-                                endTimeStr = ChatColors.SuccessText((DateTime.MinValue + entry.EndTime).ToString("h:mm tt", culture)) + ChatColors.MutedText($" ({endDayAbbreviationDay.ToString().Substring(0, 3)})");
-                            }
+                            endTimeStr = (entry.EndTime == TimeSpan.Zero) ?
+                                ChatColors.SuccessText("Midnight") + ChatColors.MutedText($" (End of {entry.Day.ToString().Substring(0, 3)})") :
+                                ChatColors.SuccessText((DateTime.MinValue + entry.EndTime).ToString("h:mm tt", culture)) + ChatColors.MutedText($" ({endDayAbbreviationDay.ToString().Substring(0, 3)})");
                         }
                         else
                         {
@@ -178,7 +180,6 @@ namespace RaidForge.Commands
                 {
                     dayLineContent = ChatColors.WarningText("No Raids Scheduled");
                 }
-
                 ctx.Reply(ChatColors.InfoText(currentDay.ToString()) + ": " + dayLineContent);
             }
         }
@@ -216,19 +217,19 @@ namespace RaidForge.Commands
         {
             var currentActualHealthEnum = SiegeWeaponSystem.GetSiegeWeaponHealth(Plugin.BepInLogger);
             string actualHpStr = "N/A";
-            if (currentActualHealthEnum != null && GolemAutomationConfig.GolemHpEstimates.TryGetValue(currentActualHealthEnum.Value, out int approxHp))
+            if (currentActualHealthEnum.HasValue && GolemAutomationConfig.GolemHpEstimates.TryGetValue(currentActualHealthEnum.Value, out int approxHp))
             {
                 actualHpStr = $"~{approxHp} HP ({currentActualHealthEnum.Value})";
             }
-            else if (currentActualHealthEnum != null)
+            else if (currentActualHealthEnum.HasValue)
             {
                 actualHpStr = currentActualHealthEnum.Value.ToString();
             }
             ctx.Reply(ChatColors.InfoText($"Current Live Golem Health Setting: {ChatColors.AccentText(actualHpStr)}"));
 
             string manualLevelOverrideVal = string.IsNullOrEmpty(GolemAutomationConfig.ManualSiegeWeaponHealthOverride?.Value)
-                ? "Not set"
-                : GolemAutomationConfig.ManualSiegeWeaponHealthOverride.Value;
+                                            ? "Not set"
+                                            : GolemAutomationConfig.ManualSiegeWeaponHealthOverride.Value;
 
             ctx.Reply(ChatColors.InfoText($"Config - Manual Level Override: {ChatColors.HighlightText(manualLevelOverrideVal)}"));
             ctx.Reply(ChatColors.InfoText($"Config - Day-Based Automation Enabled: {ChatColors.HighlightText(GolemAutomationConfig.EnableDayBasedAutomation.Value.ToString())}"));
@@ -243,7 +244,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("golemsethp", "Manually sets and persists a Siege Golem health level (e.g. Max, Low, Normal). Usage: .golemsethp <LevelName>", adminOnly: true)]
+        [Command("golemsethp", "Manually sets and persists a Siege Golem health level. Usage: .golemsethp <LevelName>", adminOnly: true)]
         public void GolemSetHpByLevelName(ChatCommandContext ctx, string levelName)
         {
             LoggingHelper.Info($"User {ctx.User.CharacterName} used .golemsethp {levelName} command.");
@@ -258,7 +259,7 @@ namespace RaidForge.Commands
                 {
                     hpEstimate = $" (~{approxHpVal} HP)";
                 }
-                ctx.Reply(ChatColors.SuccessText($"Persistent Golem health override set to Level: {ChatColors.AccentText(healthValue.ToString())}{hpEstimate}. Day-based automation is now overridden by this manual setting. Use '.golemauto' to clear."));
+                ctx.Reply(ChatColors.SuccessText($"Persistent Golem health override set to Level: {ChatColors.AccentText(healthValue.ToString())}{hpEstimate}. Day-based automation is now overridden. Use '.golemauto' to clear."));
             }
             else
             {
@@ -267,18 +268,17 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("golemauto", "Clears any manual Golem health level override. Day-based automation will apply if enabled in config.", adminOnly: true)]
+        [Command("golemauto", "Clears manual Golem health override. Day-based automation will apply if enabled.", adminOnly: true)]
         public void GolemSetAuto(ChatCommandContext ctx)
         {
             LoggingHelper.Info($"User {ctx.User.CharacterName} used .golemauto command.");
             GolemAutomationConfig.ClearManualSiegeWeaponHealthOverrideAndSave();
             Plugin.TriggerGolemAutomationResetFromCommand();
             GolemAutomationSystem.CheckAutomation();
-
-            ctx.Reply(ChatColors.SuccessText("Manual Golem health level override cleared. Golem health will now follow day-based automation (if enabled in config)."));
+            ctx.Reply(ChatColors.SuccessText("Manual Golem health override cleared. Automation will apply if enabled."));
         }
 
-        [Command("golemlist", "Lists available Siege Golem health levels and their estimated HP.", adminOnly: true)]
+        [Command("golemlist", "Lists available Siege Golem health levels and estimated HP.", adminOnly: true)]
         public void GolemList(ChatCommandContext ctx)
         {
             ctx.Reply(ChatColors.HighlightText("Siege Golem Health Levels (Estimates from Config):"));
@@ -293,7 +293,8 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("raidtimer", "Shows raid vulnerability status for a player's clan. Usage: .raidtimer <PlayerNameOrSteamID>", adminOnly: false)]
+
+        [Command("raidtimer", "Shows raid vulnerability status for a player's clan/base. Usage: .raidtimer <PlayerNameOrSteamID>", adminOnly: false)]
         public void DisplayRaidVulnerabilityTimer(ChatCommandContext ctx, string playerNameOrSteamId)
         {
             LoggingHelper.Debug($"[.raidtimer] Command invoked by {ctx.User.CharacterName} for target: {playerNameOrSteamId}");
@@ -301,121 +302,182 @@ namespace RaidForge.Commands
             {
                 EntityManager em = VWorld.EntityManager;
 
-                if (!UserHelper.FindUserEntity(em, playerNameOrSteamId, out Entity userEntity, out User userData, out string foundCharacterName))
+                if (!UserHelper.FindUserEntity(em, playerNameOrSteamId, out Entity targetUserEntity, out User targetUserData, out string foundCharacterName))
                 {
-                    LoggingHelper.Warning($"[.raidtimer] Player '{playerNameOrSteamId}' not found using UserHelper.");
-                    ctx.Reply(ChatColors.WarningText($"Player '{playerNameOrSteamId}' not found."));
+                    ctx.Reply(ChatColors.Format($"Player '{playerNameOrSteamId}' not found.", ChatColors.Warning)); // Using Warning for not found
                     return;
                 }
-                LoggingHelper.Debug($"[.raidtimer] Found user via UserHelper: {foundCharacterName} ({userEntity})");
                 string characterName = foundCharacterName;
-                Entity clanEntity = userData.ClanEntity._Entity;
-                LoggingHelper.Debug($"[.raidtimer] Target User: {characterName} ({userEntity}), Initial ClanEntity from User: {clanEntity}");
 
-                Entity relevantCastleHeartEntity = Entity.Null;
-                FixedString64Bytes castleName = new FixedString64Bytes("-");
+                Entity targetUserClanEntity = Entity.Null;
+                OwnershipCacheService.TryGetUserClan(targetUserEntity, out targetUserClanEntity);
 
-                NativeArray<Entity> allHearts = default;
-                try
+                if (!Plugin.SystemsInitialized)
                 {
-                    EntityQuery heartsQuery = em.CreateEntityQuery(ComponentType.ReadOnly<CastleHeart>(), ComponentType.ReadOnly<UserOwner>());
-                    allHearts = heartsQuery.ToEntityArray(Allocator.Temp);
-                    LoggingHelper.Debug($"[.raidtimer] Found {allHearts.Length} total CastleHearts with UserOwner to check for {characterName}.");
+                    ctx.Reply(ChatColors.ErrorText("Systems (and cache) not fully initialized. Please try again shortly."));
+                    return;
+                }
 
-                    foreach (Entity heartEntity in allHearts)
+                string primaryPersistentKey = null;
+                string ownerContextualName = characterName;
+
+                if (targetUserClanEntity != Entity.Null && em.Exists(targetUserClanEntity) && em.HasComponent<ClanTeam>(targetUserClanEntity))
+                {
+                    primaryPersistentKey = PersistentKeyHelper.GetClanKey(em, targetUserClanEntity);
+                    if (em.TryGetComponentData<ClanTeam>(targetUserClanEntity, out ClanTeam clanTeamData))
+                        ownerContextualName = clanTeamData.Name.ToString() + " (Clan)";
+                    else
+                        ownerContextualName = "Clan " + targetUserClanEntity.ToString();
+                }
+                else
+                {
+                    primaryPersistentKey = PersistentKeyHelper.GetUserKey(targetUserData.PlatformId);
+                }
+
+                if (string.IsNullOrEmpty(primaryPersistentKey))
+                {
+                    ctx.Reply(ChatColors.ErrorText($"Could not determine a stable key for {ownerContextualName} to check offline status."));
+                    return;
+                }
+
+                bool orpSystemEnabled = OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value;
+                DateTime? overallOfflineStartTime = null;
+                bool isUnderTimedOfflineState = false;
+                bool isUnderDefaultBootOrp = false;
+
+                if (orpSystemEnabled)
+                {
+                    if (OfflineGraceService.TryGetOfflineStartTime(primaryPersistentKey, out DateTime ost))
                     {
-                        UserOwner heartOwnerData = em.GetComponentData<UserOwner>(heartEntity);
-                        Entity ownerOfHeartUserEntity = heartOwnerData.Owner._Entity;
+                        overallOfflineStartTime = ost;
+                        isUnderTimedOfflineState = true;
+                    }
+                    else if (OfflineGraceService.IsUnderDefaultBootORP(primaryPersistentKey))
+                    {
+                        isUnderDefaultBootOrp = true;
+                    }
+                }
 
-                        if (!em.Exists(ownerOfHeartUserEntity))
-                        {
-                            if (TroubleshootingConfig.EnableVerboseLogging.Value) LoggingHelper.Debug($"[.raidtimer] Heart {heartEntity} owner UserEntity {ownerOfHeartUserEntity} does not exist. Skipping.");
-                            continue;
-                        }
-                        if (TroubleshootingConfig.EnableVerboseLogging.Value) LoggingHelper.Debug($"[.raidtimer] Checking Heart {heartEntity}, owned by UserEntity {ownerOfHeartUserEntity}.");
+                List<(Entity HeartEntity, string CastleName)> ownedHearts = new List<(Entity, string)>();
+                var heartOwnerCacheView = OwnershipCacheService.GetHeartToOwnerCacheView();
+                foreach (var heartOwnerPair in heartOwnerCacheView)
+                {
+                    Entity currentHeartEntity = heartOwnerPair.Key;
+                    Entity ownerOfHeartInCache = heartOwnerPair.Value;
+                    if (!em.Exists(currentHeartEntity) || !em.Exists(ownerOfHeartInCache)) continue;
 
-                        bool foundMatch = false;
-                        if (ownerOfHeartUserEntity == userEntity)
-                        {
-                            if (TroubleshootingConfig.EnableVerboseLogging.Value) LoggingHelper.Debug($"[.raidtimer] Direct ownership match for Heart {heartEntity} by User {userEntity} ({characterName}).");
+                    bool foundMatch = false;
+                    if (ownerOfHeartInCache == targetUserEntity) foundMatch = true;
+                    else if (targetUserClanEntity != Entity.Null)
+                    {
+                        if (OwnershipCacheService.TryGetUserClan(ownerOfHeartInCache, out Entity actualOwnerClan) && actualOwnerClan == targetUserClanEntity)
                             foundMatch = true;
-                        }
-                        else if (em.Exists(clanEntity) && em.HasComponent<User>(ownerOfHeartUserEntity))
-                        {
-                            User ownerOfHeartUserData = em.GetComponentData<User>(ownerOfHeartUserEntity);
-                            Entity ownerOfHeartClanEntity = ownerOfHeartUserData.ClanEntity._Entity;
-
-                            if (TroubleshootingConfig.EnableVerboseLogging.Value) LoggingHelper.Debug($"[.raidtimer] Heart {heartEntity} owner's clan: {ownerOfHeartClanEntity}. Target player's clan: {clanEntity}.");
-                            if (em.Exists(ownerOfHeartClanEntity) && ownerOfHeartClanEntity == clanEntity)
-                            {
-                                if (TroubleshootingConfig.EnableVerboseLogging.Value) LoggingHelper.Debug($"[.raidtimer] Heart {heartEntity} matches clan {clanEntity}.");
-                                foundMatch = true;
-                            }
-                        }
-                        if (foundMatch)
-                        {
-                            relevantCastleHeartEntity = heartEntity;
-                            if (em.HasComponent<NameableInteractable>(heartEntity))
-                            {
-                                castleName = em.GetComponentData<NameableInteractable>(heartEntity).Name;
-                            }
-                            LoggingHelper.Debug($"[.raidtimer] Found relevant CH: {relevantCastleHeartEntity} Name: {castleName} for {characterName}.");
-                            break;
-                        }
                     }
-                }
-                finally { if (allHearts.IsCreated) allHearts.Dispose(); }
-
-                string playerBaseName = string.IsNullOrWhiteSpace(castleName.ToString()) || castleName.ToString() == "-" ? $"{characterName}'s base" : $"'{castleName.ToString()}'";
-
-                if (relevantCastleHeartEntity == Entity.Null)
-                {
-                    string clanStatusMessage = em.Exists(clanEntity) ? $"or their clan" : "(and they are not in a clan)";
-                    LoggingHelper.Warning($"[.raidtimer] No Castle Heart found associated with {characterName} {clanStatusMessage}.");
-                    ctx.Reply(ChatColors.WarningText($"No Castle Heart found for {characterName} {clanStatusMessage}."));
-                    return;
-                }
-
-                LoggingHelper.Debug($"[.raidtimer] Checking status for {playerBaseName} (CH: {relevantCastleHeartEntity}).");
-
-                if (em.HasComponent<CastleHeart>(relevantCastleHeartEntity))
-                {
-                    CastleHeart chComponent = em.GetComponentData<CastleHeart>(relevantCastleHeartEntity);
-                    if (chComponent.IsSieged())
+                    if (foundMatch)
                     {
-                        LoggingHelper.Debug($"[.raidtimer] {playerBaseName} is IN BREACH.");
-                        ctx.Reply(ChatColors.Format($"{playerBaseName} is {ChatColors.ErrorText("IN BREACH")} and vulnerable until the siege ends.", ChatColors.Warning));
-                        return;
+                        FixedString64Bytes castleNameFs = new FixedString64Bytes("-");
+                        if (em.HasComponent<NameableInteractable>(currentHeartEntity))
+                            castleNameFs = em.GetComponentData<NameableInteractable>(currentHeartEntity).Name;
+                        string cName = castleNameFs.ToString();
+                        ownedHearts.Add((currentHeartEntity, string.IsNullOrWhiteSpace(cName) || cName == "-" ? $"{ownerContextualName}'s base ({currentHeartEntity.Index})" : $"'{cName}'"));
                     }
                 }
-                else
+
+                if (!ownedHearts.Any())
                 {
-                    LoggingHelper.Error($"[.raidtimer] Error: Could not read CastleHeart component for {playerBaseName}.");
-                    ctx.Reply(ChatColors.ErrorText($"Error reading data for {playerBaseName}."));
+                    ctx.Reply(ChatColors.InfoText($"No Castle Hearts found for {ownerContextualName}.")); 
                     return;
                 }
 
-                Entity keyForGraceCheck = em.Exists(clanEntity) && em.HasComponent<ClanTeam>(clanEntity) ? clanEntity : userEntity;
-                LoggingHelper.Debug($"[.raidtimer] Key for grace check: {keyForGraceCheck}");
-
-                if (OfflineGraceService.GetClanGracePeriodInfo(em, keyForGraceCheck, out TimeSpan remainingGraceTime, out FixedString64Bytes lastLogoffName, out _))
+                ctx.Reply(ChatColors.HighlightText($"Status for {ownerContextualName}'s base(s):"));
+                if (!orpSystemEnabled)
                 {
-                    string graceMsg = $"{playerBaseName} is {ChatColors.WarningText("RAIDABLE")} for another {ChatColors.AccentText($"{remainingGraceTime.Minutes}m {remainingGraceTime.Seconds}s")}.";
-                    LoggingHelper.Debug($"[.raidtimer] {playerBaseName} is in GRACE PERIOD. {graceMsg}");
-                    ctx.Reply(graceMsg);
-                    return;
+                
                 }
 
-                LoggingHelper.Debug($"[.raidtimer] {playerBaseName} not in breach and not in grace period. Checking protection status...");
-                if (OfflineProtectionService.ShouldProtectBase(relevantCastleHeartEntity, em, Plugin.BepInLogger))
+                foreach (var heartInfo in ownedHearts)
                 {
-                    LoggingHelper.Debug($"[.raidtimer] {playerBaseName} is OFFLINE PROTECTED.");
-                    ctx.Reply(ChatColors.SuccessText($"{playerBaseName} is currently OFFLINE PROTECTED."));
-                }
-                else
-                {
-                    LoggingHelper.Debug($"[.raidtimer] {playerBaseName} is RAIDABLE (online or protection not applicable).");
-                    ctx.Reply(ChatColors.HighlightText($"{playerBaseName} is currently RAIDABLE."));
+                    Entity relevantCastleHeartEntity = heartInfo.HeartEntity;
+                    string playerBaseName = heartInfo.CastleName;
+
+                    if (em.HasComponent<CastleHeart>(relevantCastleHeartEntity) && em.GetComponentData<CastleHeart>(relevantCastleHeartEntity).IsSieged())
+                    {
+                        ctx.Reply(ChatColors.InfoText($"is {ChatColors.WarningText("IN BREACH")}."));
+                        continue;
+                    }
+
+                    bool isActuallyDecaying = OfflineProtectionService.IsBaseDecaying(relevantCastleHeartEntity, em);
+                    if (orpSystemEnabled && isActuallyDecaying)
+                    {
+                        ctx.Reply(ChatColors.InfoText($"has a base {ChatColors.WarningText("IN DECAY")}."));
+                        continue;
+                    }
+
+                    if (orpSystemEnabled)
+                    {
+                        bool effectivelyAllOffline;
+
+                        if (isUnderTimedOfflineState && overallOfflineStartTime.HasValue)
+                        {
+                            TimeSpan timeOffline = DateTime.UtcNow - overallOfflineStartTime.Value;
+                            float configuredGraceMinutes = OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value;
+
+                            if (configuredGraceMinutes > 0 && timeOffline.TotalMinutes < configuredGraceMinutes)
+                            {
+                                TimeSpan remainingGraceTime = TimeSpan.FromMinutes(configuredGraceMinutes) - timeOffline;
+                                string timeString = $"{(int)remainingGraceTime.TotalMinutes}m {remainingGraceTime.Seconds}s";
+                                ctx.Reply(ChatColors.InfoText($"is {ChatColors.WarningText("RAIDABLE")} for another {ChatColors.AccentText(timeString)}."));
+                            }
+                            else
+                            {
+                                if (Plugin.ServerHasJustBooted)
+                                {
+                                    effectivelyAllOffline = true;
+                                }
+                                else
+                                {
+                                    effectivelyAllOffline = OfflineProtectionService.AreAllDefendersActuallyOffline(relevantCastleHeartEntity, em);
+                                }
+
+                                if (effectivelyAllOffline)
+                                {
+                                    ctx.Reply(ChatColors.InfoText($"is {ChatColors.AccentText("OFFLINE PROTECTED")}."));
+                                }
+                                else
+                                {
+                                    ctx.Reply(ChatColors.InfoText($"Base is {ChatColors.WarningText("RAIDABLE")}."));
+                                }
+                            }
+                        }
+                        else if (isUnderDefaultBootOrp)
+                        {
+                            if (Plugin.ServerHasJustBooted)
+                            {
+                                effectivelyAllOffline = true;
+                            }
+                            else
+                            {
+                                effectivelyAllOffline = OfflineProtectionService.AreAllDefendersActuallyOffline(relevantCastleHeartEntity, em);
+                            }
+
+                            if (effectivelyAllOffline)
+                            {
+                                ctx.Reply(ChatColors.InfoText($"is {ChatColors.AccentText("OFFLINE PROTECTED")}."));
+                            }
+                            else
+                            {
+                                ctx.Reply(ChatColors.InfoText($"Base is {ChatColors.WarningText("RAIDABLE")}."));
+                            }
+                        }
+                        else
+                        {
+                            ctx.Reply(ChatColors.InfoText($"Base is {ChatColors.WarningText("RAIDABLE")}."));
+                        }
+                    }
+                    else
+                    {
+                        ctx.Reply(ChatColors.InfoText($"Base is {ChatColors.WarningText("RAIDABLE")} {(isActuallyDecaying ? ChatColors.MutedText(" and is decaying") : "")}."));
+                    }
                 }
             }
             catch (Exception e)

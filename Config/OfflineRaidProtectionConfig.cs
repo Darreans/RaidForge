@@ -6,14 +6,14 @@ namespace RaidForge.Config
     {
         public static ConfigEntry<bool> EnableOfflineRaidProtection;
         public static ConfigEntry<float> GracePeriodDurationMinutes;
-
         public static ConfigEntry<bool> AnnounceOfflineRaidDuringGrace;
+        public static ConfigEntry<bool> AnnounceDecayedBaseRaid;
 
         public static void Initialize(ConfigFile config)
         {
             EnableOfflineRaidProtection = config.Bind(
                 "OfflineRaidProtection",
-                "EnableOfflineProtection", 
+                "EnableOfflineProtection",
                 true,
                 "Enable or disable the offline raid protection system against all damage types when fully active (after grace).");
 
@@ -29,8 +29,15 @@ namespace RaidForge.Config
                 "OfflineRaidProtection",
                 "AnnounceOfflineRaidDuringGrace",
                 true,
-                "If true, a global announcement will be made when an offline base that can be raided" +
-                "is being raided.");
+                "If true, a global announcement will be made when an offline base (within its grace period) " +
+                "is being raided (30 second cool down).");
+
+            AnnounceDecayedBaseRaid = config.Bind(
+                "OfflineRaidProtection",
+                "AnnounceDecayedBaseRaid",
+                true,
+                "If true, a global announcement will be made when a decayed base " +
+                "is being damaged by a player (5 minute cool down)");
         }
     }
 }

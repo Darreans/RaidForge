@@ -67,7 +67,6 @@ namespace RaidForge.Config
         {
             if (_logger == null || _dailyConfigs == null)
             {
-                // Using Console.WriteLine as a fallback if logger isn't available during a critical failure.
                 Console.WriteLine("[RaidConfig] CRITICAL: RaidConfig not properly initialized before parsing schedule.");
                 Schedule = new List<RaidScheduleEntry>();
                 return;
