@@ -5,7 +5,6 @@ using Stunlock.Network;
 using System;
 using RaidForge.Services;
 using RaidForge.Utils;
-using RaidForge;
 using Unity.Entities;
 
 namespace RaidForge.Patches
@@ -31,10 +30,6 @@ namespace RaidForge.Patches
                         {
                             charNameForLog = connectedUserData.CharacterName.ToString();
                         }
-                        else
-                        {
-                            charNameForLog = $"UserEntity {userEntity} found but no User component/name or entity non-existent.";
-                        }
                     }
                 }
 
@@ -49,7 +44,6 @@ namespace RaidForge.Patches
                 string userPersistentKey = PersistentKeyHelper.GetUserKey(platformId);
 
                 OfflineGraceService.MarkAsOnline(userPersistentKey, charNameForLog);
-
                 OwnershipCacheService.HandlePlayerConnected(userEntity, entityManager);
 
                 if (OwnershipCacheService.TryGetUserClan(userEntity, out Entity clanEntity) && clanEntity != Entity.Null)
@@ -63,8 +57,15 @@ namespace RaidForge.Patches
                             clanNameForContext = entityManager.GetComponentData<ClanTeam>(clanEntity).Name.ToString();
                         }
                         OfflineGraceService.MarkAsOnline(clanPersistentKey, $"{clanNameForContext} (member {charNameForLog} connected)");
+                        ShardVulnerabilityService.SetNotVulnerable(clanPersistentKey, clanNameForContext);
                     }
                 }
+                else 
+                {
+                    ShardVulnerabilityService.SetNotVulnerable(userPersistentKey, charNameForLog);
+                }
+
+                Plugin.RunOnBootShardScanIfNeeded();
 
                 if (!Plugin.SystemsInitialized && VWorld.IsServerWorldReady())
                 {
@@ -73,6 +74,7 @@ namespace RaidForge.Patches
             }
             catch (Exception ex)
             {
+                LoggingHelper.Error("Error in UserConnectHookPatch Postfix", ex);
             }
         }
     }

@@ -99,8 +99,11 @@
           }
         }
       },
-      "AssetRipper.Primitives/3.1.1": {
+      "AssetRipper.Primitives/2.1.1": {
         "type": "package",
+        "dependencies": {
+          "System.Text.Json": "8.0.1"
+        },
         "compile": {
           "lib/net6.0/AssetRipper.Primitives.dll": {
             "related": ".xml"
@@ -112,7 +115,7 @@
           }
         }
       },
-      "BepInEx.Core/6.0.0-be.691": {
+      "BepInEx.Core/6.0.0-be.690": {
         "type": "package",
         "dependencies": {
           "HarmonyX": "2.10.1",
@@ -130,16 +133,16 @@
           }
         }
       },
-      "BepInEx.PluginInfoProps/2.1.0": {
+      "BepInEx.PluginInfoProps/1.1.0": {
         "type": "package",
         "build": {
           "build/BepInEx.PluginInfoProps.props": {}
         }
       },
-      "BepInEx.Unity.Common/6.0.0-be.691": {
+      "BepInEx.Unity.Common/6.0.0-be.690": {
         "type": "package",
         "dependencies": {
-          "AssetRipper.Primitives": "3.1.1",
+          "AssetRipper.Primitives": "2.1.1",
           "MonoMod.Utils": "22.5.1.1"
         },
         "compile": {
@@ -153,11 +156,11 @@
           }
         }
       },
-      "BepInEx.Unity.IL2CPP/6.0.0-be.691": {
+      "BepInEx.Unity.IL2CPP/6.0.0-be.690": {
         "type": "package",
         "dependencies": {
-          "BepInEx.Core": "6.0.0-be.691",
-          "BepInEx.Unity.Common": "6.0.0-be.691",
+          "BepInEx.Core": "6.0.0-be.690",
+          "BepInEx.Unity.Common": "6.0.0-be.690",
           "HarmonyX": "2.10.1",
           "Iced": "1.20.0",
           "Il2CppInterop.Generator": "1.4.6-ci.426",
@@ -1337,7 +1340,7 @@
           }
         }
       },
-      "System.Text.Encodings.Web/6.0.0": {
+      "System.Text.Encodings.Web/8.0.0": {
         "type": "package",
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
@@ -1353,7 +1356,7 @@
           }
         },
         "build": {
-          "buildTransitive/netcoreapp3.1/_._": {}
+          "buildTransitive/net6.0/_._": {}
         },
         "runtimeTargets": {
           "runtimes/browser/lib/net6.0/_._": {
@@ -1362,11 +1365,11 @@
           }
         }
       },
-      "System.Text.Json/6.0.8": {
+      "System.Text.Json/8.0.1": {
         "type": "package",
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0",
-          "System.Text.Encodings.Web": "6.0.0"
+          "System.Text.Encodings.Web": "8.0.0"
         },
         "compile": {
           "lib/net6.0/System.Text.Json.dll": {
@@ -1379,7 +1382,7 @@
           }
         },
         "build": {
-          "buildTransitive/netcoreapp3.1/_._": {}
+          "buildTransitive/net6.0/_._": {}
         }
       },
       "System.Threading/4.3.0": {
@@ -1410,7 +1413,7 @@
           }
         }
       },
-      "VRising.Unhollowed.Client/1.1.8.9179701": {
+      "VRising.Unhollowed.Client/1.1.8.9179702": {
         "type": "package",
         "compile": {
           "lib/net6.0/Backtrace.Unity.dll": {},
@@ -1892,14 +1895,14 @@
         "runtimes/win-x86/native/capstone.dll"
       ]
     },
-    "AssetRipper.Primitives/3.1.1": {
-      "sha512": "GhFAVMWpG8MyZscQxwYCd1HSS36UhIQeW0Gn9iPYiininZWlo8RTV9tGYv0CNNXw5bODYJtXf4qiqo6sQOVAEg==",
+    "AssetRipper.Primitives/2.1.1": {
+      "sha512": "wCBMZDwMQCUN9Sb+rexzj++SnZKOvCCFjXuQ9fF7Fa1eCPWUFli2Qqrx7jCIfiLxlsx7WE6GeQErUhCZF8qWfQ==",
       "type": "package",
-      "path": "assetripper.primitives/3.1.1",
+      "path": "assetripper.primitives/2.1.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "assetripper.primitives.3.1.1.nupkg.sha512",
+        "assetripper.primitives.2.1.1.nupkg.sha512",
         "assetripper.primitives.nuspec",
         "lib/net35/AssetRipper.Primitives.dll",
         "lib/net35/AssetRipper.Primitives.xml",
@@ -1911,19 +1914,17 @@
         "lib/net6.0/AssetRipper.Primitives.xml",
         "lib/net7.0/AssetRipper.Primitives.dll",
         "lib/net7.0/AssetRipper.Primitives.xml",
-        "lib/net8.0/AssetRipper.Primitives.dll",
-        "lib/net8.0/AssetRipper.Primitives.xml",
         "lib/netstandard2.0/AssetRipper.Primitives.dll",
         "lib/netstandard2.0/AssetRipper.Primitives.xml"
       ]
     },
-    "BepInEx.Core/6.0.0-be.691": {
-      "sha512": "kM0vDdOpVwuJoqkE6igA1/h3tz+TwmE1TFRs+JM6jZEYejAWWRUY92jIjg11JfMi6McbjMCofTMTR/pcT39jdg==",
+    "BepInEx.Core/6.0.0-be.690": {
+      "sha512": "xrvMqr1AHpPZzlT68S1k/8kP44NIBXCt4GOnEBQZ8r6rrT8iTERFc2lk3o3JIfvD12Zda9QRvg1VpvsIG/wIEQ==",
       "type": "package",
-      "path": "bepinex.core/6.0.0-be.691",
+      "path": "bepinex.core/6.0.0-be.690",
       "files": [
         ".nupkg.metadata",
-        "bepinex.core.6.0.0-be.691.nupkg.sha512",
+        "bepinex.core.6.0.0-be.690.nupkg.sha512",
         "bepinex.core.nuspec",
         "lib/net35/BepInEx.Core.dll",
         "lib/net35/BepInEx.Core.xml",
@@ -1932,24 +1933,24 @@
         "logo.png"
       ]
     },
-    "BepInEx.PluginInfoProps/2.1.0": {
-      "sha512": "VCG3QRiqNdW9ku2FEcNsbK+HKxrZmW0VxwMNyLNO7h0xGorU+C6vBHN8Qq4eAL5fU11Uks5x2uoYdqEoKD3P8A==",
+    "BepInEx.PluginInfoProps/1.1.0": {
+      "sha512": "RqM3aaGs8Hc2m0D+8aSt9mv09rCMYNIF35NB3D6KA2zSpcXJh/9ZVWrPlIUJfA8KYzodSWcCMUexEW24fjwR3w==",
       "type": "package",
-      "path": "bepinex.plugininfoprops/2.1.0",
+      "path": "bepinex.plugininfoprops/1.1.0",
       "files": [
         ".nupkg.metadata",
-        "bepinex.plugininfoprops.2.1.0.nupkg.sha512",
+        "bepinex.plugininfoprops.1.1.0.nupkg.sha512",
         "bepinex.plugininfoprops.nuspec",
         "build/BepInEx.PluginInfoProps.props"
       ]
     },
-    "BepInEx.Unity.Common/6.0.0-be.691": {
-      "sha512": "7YP0JAWo3ozSOz8u4TBmGuasKRG5/iIIQEveCR0Z5Xiuaun1a8F4c6Wz3oY0//p9A2NFZvXXMIzj2/1YHF8auA==",
+    "BepInEx.Unity.Common/6.0.0-be.690": {
+      "sha512": "0tmL2fSGH7KpT5yEKz3sEf6+nMeCRs1SkJ5DhCPWdw6VJyRVf5SNr/fIgsycuXOvZ4wuenIVeOSSH0U04yOLuA==",
       "type": "package",
-      "path": "bepinex.unity.common/6.0.0-be.691",
+      "path": "bepinex.unity.common/6.0.0-be.690",
       "files": [
         ".nupkg.metadata",
-        "bepinex.unity.common.6.0.0-be.691.nupkg.sha512",
+        "bepinex.unity.common.6.0.0-be.690.nupkg.sha512",
         "bepinex.unity.common.nuspec",
         "lib/net35/BepInEx.Unity.Common.dll",
         "lib/net35/BepInEx.Unity.Common.xml",
@@ -1958,13 +1959,13 @@
         "logo.png"
       ]
     },
-    "BepInEx.Unity.IL2CPP/6.0.0-be.691": {
-      "sha512": "kWI1vb7vyfpvTwerVJZ8U25sPPQnI0PzFVfL4pOfWQZ9A4yRQTwKaWV2vGr5I5o84dI4w9yHptyYHT2fDPInVA==",
+    "BepInEx.Unity.IL2CPP/6.0.0-be.690": {
+      "sha512": "2sFmgWdD6Mh+K6DNeNmb4d5LlSMkRQ+17Gdh582xYtZwudRgfr4mwCHero6nqQw/KTfKXIHJTzfBlkC3I0gN6w==",
       "type": "package",
-      "path": "bepinex.unity.il2cpp/6.0.0-be.691",
+      "path": "bepinex.unity.il2cpp/6.0.0-be.690",
       "files": [
         ".nupkg.metadata",
-        "bepinex.unity.il2cpp.6.0.0-be.691.nupkg.sha512",
+        "bepinex.unity.il2cpp.6.0.0-be.690.nupkg.sha512",
         "bepinex.unity.il2cpp.nuspec",
         "lib/net6.0/BepInEx.Unity.IL2CPP.dll",
         "lib/net6.0/BepInEx.Unity.IL2CPP.xml",
@@ -4739,42 +4740,51 @@
         "system.text.encoding.nuspec"
       ]
     },
-    "System.Text.Encodings.Web/6.0.0": {
-      "sha512": "Vg8eB5Tawm1IFqj4TVK1czJX89rhFxJo9ELqc/Eiq0eXy13RK00eubyU6TJE6y+GQXjyV5gSfiewDUZjQgSE0w==",
+    "System.Text.Encodings.Web/8.0.0": {
+      "sha512": "yev/k9GHAEGx2Rg3/tU6MQh4HGBXJs70y7j1LaM1i/ER9po+6nnQ6RRqTJn1E7Xu0fbIFK80Nh5EoODxrbxwBQ==",
       "type": "package",
-      "path": "system.text.encodings.web/6.0.0",
+      "path": "system.text.encodings.web/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
         "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.Text.Encodings.Web.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
         "buildTransitive/netcoreapp2.0/System.Text.Encodings.Web.targets",
-        "buildTransitive/netcoreapp3.1/_._",
-        "lib/net461/System.Text.Encodings.Web.dll",
-        "lib/net461/System.Text.Encodings.Web.xml",
+        "lib/net462/System.Text.Encodings.Web.dll",
+        "lib/net462/System.Text.Encodings.Web.xml",
         "lib/net6.0/System.Text.Encodings.Web.dll",
         "lib/net6.0/System.Text.Encodings.Web.xml",
-        "lib/netcoreapp3.1/System.Text.Encodings.Web.dll",
-        "lib/netcoreapp3.1/System.Text.Encodings.Web.xml",
+        "lib/net7.0/System.Text.Encodings.Web.dll",
+        "lib/net7.0/System.Text.Encodings.Web.xml",
+        "lib/net8.0/System.Text.Encodings.Web.dll",
+        "lib/net8.0/System.Text.Encodings.Web.xml",
         "lib/netstandard2.0/System.Text.Encodings.Web.dll",
         "lib/netstandard2.0/System.Text.Encodings.Web.xml",
         "runtimes/browser/lib/net6.0/System.Text.Encodings.Web.dll",
         "runtimes/browser/lib/net6.0/System.Text.Encodings.Web.xml",
-        "system.text.encodings.web.6.0.0.nupkg.sha512",
+        "runtimes/browser/lib/net7.0/System.Text.Encodings.Web.dll",
+        "runtimes/browser/lib/net7.0/System.Text.Encodings.Web.xml",
+        "runtimes/browser/lib/net8.0/System.Text.Encodings.Web.dll",
+        "runtimes/browser/lib/net8.0/System.Text.Encodings.Web.xml",
+        "system.text.encodings.web.8.0.0.nupkg.sha512",
         "system.text.encodings.web.nuspec",
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.Text.Json/6.0.8": {
-      "sha512": "WhW6zPEgRZoo+c1NEvSSmrME4+LqXmW6tcsRFsEiSMeco+qZ9rpLs7tT53EIkE/s9GNTYS4/STQoaGiKDSWifQ==",
+    "System.Text.Json/8.0.1": {
+      "sha512": "7AWk2za1hSEJBppe/Lg+uDcam2TrDqwIKa9XcPssSwyjC2xa39EKEGul3CO5RWNF+hMuZG4zlBDrvhBdDTg4lg==",
       "type": "package",
-      "path": "system.text.json/6.0.8",
+      "path": "system.text.json/8.0.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
         "LICENSE.TXT",
+        "PACKAGE.md",
         "THIRD-PARTY-NOTICES.TXT",
         "analyzers/dotnet/roslyn3.11/cs/System.Text.Json.SourceGeneration.dll",
         "analyzers/dotnet/roslyn3.11/cs/cs/System.Text.Json.SourceGeneration.resources.dll",
@@ -4804,18 +4814,36 @@
         "analyzers/dotnet/roslyn4.0/cs/tr/System.Text.Json.SourceGeneration.resources.dll",
         "analyzers/dotnet/roslyn4.0/cs/zh-Hans/System.Text.Json.SourceGeneration.resources.dll",
         "analyzers/dotnet/roslyn4.0/cs/zh-Hant/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/System.Text.Json.SourceGeneration.dll",
+        "analyzers/dotnet/roslyn4.4/cs/cs/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/de/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/es/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/fr/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/it/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ja/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ko/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pl/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pt-BR/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ru/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/tr/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hans/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hant/System.Text.Json.SourceGeneration.resources.dll",
+        "buildTransitive/net461/System.Text.Json.targets",
+        "buildTransitive/net462/System.Text.Json.targets",
+        "buildTransitive/net6.0/System.Text.Json.targets",
         "buildTransitive/netcoreapp2.0/System.Text.Json.targets",
-        "buildTransitive/netcoreapp3.1/System.Text.Json.targets",
         "buildTransitive/netstandard2.0/System.Text.Json.targets",
-        "lib/net461/System.Text.Json.dll",
-        "lib/net461/System.Text.Json.xml",
+        "lib/net462/System.Text.Json.dll",
+        "lib/net462/System.Text.Json.xml",
         "lib/net6.0/System.Text.Json.dll",
         "lib/net6.0/System.Text.Json.xml",
-        "lib/netcoreapp3.1/System.Text.Json.dll",
-        "lib/netcoreapp3.1/System.Text.Json.xml",
+        "lib/net7.0/System.Text.Json.dll",
+        "lib/net7.0/System.Text.Json.xml",
+        "lib/net8.0/System.Text.Json.dll",
+        "lib/net8.0/System.Text.Json.xml",
         "lib/netstandard2.0/System.Text.Json.dll",
         "lib/netstandard2.0/System.Text.Json.xml",
-        "system.text.json.6.0.8.nupkg.sha512",
+        "system.text.json.8.0.1.nupkg.sha512",
         "system.text.json.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -4959,10 +4987,10 @@
         "system.threading.tasks.nuspec"
       ]
     },
-    "VRising.Unhollowed.Client/1.1.8.9179701": {
-      "sha512": "AhIpTgpYL6aKb7STKV7SZLbr01OgIgxaih1rQdUW5D7E2J3hvKFGVvkTcp9jQ6slAsbTe+vpgbnHzQ9d/oIRpA==",
+    "VRising.Unhollowed.Client/1.1.8.9179702": {
+      "sha512": "kYVt0YGmv9KxSFhb3wEIz6vC3HJbrXnhrf5U6dL9pG3ZgL4kSjZz8N7/R8471bQXd+5m9/KRFdrbOrCrT3OMjw==",
       "type": "package",
-      "path": "vrising.unhollowed.client/1.1.8.9179701",
+      "path": "vrising.unhollowed.client/1.1.8.9179702",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -5141,17 +5169,17 @@
         "lib/net6.0/com.stunlock.network.eos.dll",
         "lib/net6.0/com.stunlock.platform.dll",
         "lib/net6.0/com.stunlock.platform.pc.dll",
-        "vrising.unhollowed.client.1.1.8.9179701.nupkg.sha512",
+        "vrising.unhollowed.client.1.1.8.9179702.nupkg.sha512",
         "vrising.unhollowed.client.nuspec"
       ]
     }
   },
   "projectFileDependencyGroups": {
     "net6.0": [
-      "BepInEx.Core >= 6.0.0-be.691",
-      "BepInEx.PluginInfoProps >= 2.1.0",
-      "BepInEx.Unity.IL2CPP >= 6.0.0-be.691",
-      "VRising.Unhollowed.Client >= 1.1.8.9179701"
+      "BepInEx.Core >= 6.0.0-be.690",
+      "BepInEx.PluginInfoProps >= 1.*",
+      "BepInEx.Unity.IL2CPP >= 6.0.0-be.690",
+      "VRising.Unhollowed.Client >= 1.1.8.*"
     ]
   },
   "packageFolders": {
@@ -5161,16 +5189,17 @@
   "project": {
     "version": "2.0.0",
     "restore": {
-      "projectUniqueName": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
+      "projectUniqueName": "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\RaidForge.csproj",
       "projectName": "RaidForge",
-      "projectPath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
+      "projectPath": "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\RaidForge.csproj",
       "packagesPath": "C:\\Users\\Darrean\\.nuget\\packages\\",
-      "outputPath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\obj\\",
+      "outputPath": "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
+        "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\NuGet.Config",
         "C:\\Users\\Darrean\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
@@ -5184,7 +5213,8 @@
         "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client": {},
         "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client\\1.0.45.802790001-1": {},
         "C:\\Users\\Darrean\\Downloads\\sqllitedb": {},
-        "https://api.nuget.org/v3/index.json": {}
+        "https://api.nuget.org/v3/index.json": {},
+        "https://nuget.bepinex.dev/v3/index.json": {}
       },
       "frameworks": {
         "net6.0": {
@@ -5211,20 +5241,20 @@
           "BepInEx.Core": {
             "include": "Compile",
             "target": "Package",
-            "version": "[6.0.0-be.691, )"
+            "version": "[6.0.0-be.690, )"
           },
           "BepInEx.PluginInfoProps": {
             "target": "Package",
-            "version": "[2.1.0, )"
+            "version": "[1.*, )"
           },
           "BepInEx.Unity.IL2CPP": {
             "include": "Compile",
             "target": "Package",
-            "version": "[6.0.0-be.691, )"
+            "version": "[6.0.0-be.690, )"
           },
           "VRising.Unhollowed.Client": {
             "target": "Package",
-            "version": "[1.1.8.9179701, )"
+            "version": "[1.1.8.*, )"
           }
         },
         "imports": [

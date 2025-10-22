@@ -1,16 +1,15 @@
-﻿using ProjectM;
-using ProjectM.Network;
-using Unity.Entities;
-using Unity.Collections;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using System.Text.Json;
+using System.Linq;
+using System.Text;
+using BepInEx;
+using ProjectM;
+using ProjectM.Network;
 using RaidForge.Config;
 using RaidForge.Utils;
-using BepInEx.Logging;
-using BepInEx;
+using Unity.Collections;
+using Unity.Entities;
 
 namespace RaidForge.Services
 {
@@ -55,10 +54,9 @@ namespace RaidForge.Services
         private static HashSet<string> _defaultOrpAtBootKeys = new HashSet<string>();
 
         private static readonly string DataSubfolder = "Data";
-        private static readonly string OfflineStatesSaveFileName = "RaidForge_OfflineStates.json";
+        private static readonly string OfflineStatesSaveFileName = "RaidForge_OfflineStates.csv";
         private static bool _dataLoadedFromDisk = false;
 
-        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { WriteIndented = true };
         private static readonly object _saveLock = new object();
 
         private static string GetSaveFilePath()
@@ -85,22 +83,28 @@ namespace RaidForge.Services
                 }
                 try
                 {
-                    string json = File.ReadAllText(filePath);
-                    if (string.IsNullOrWhiteSpace(json)) { _dataLoadedFromDisk = true; return; }
-
-                    var loadedEntries = JsonSerializer.Deserialize<List<PersistedOfflineStateEntry>>(json);
-                    if (loadedEntries == null || !loadedEntries.Any()) { _dataLoadedFromDisk = true; return; }
-
-                    foreach (var entry in loadedEntries)
+                    var lines = File.ReadAllLines(filePath);
+                    foreach (var line in lines.Skip(1)) // Skip header
                     {
-                        if (!string.IsNullOrEmpty(entry.PersistentKey))
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+
+                        var parts = line.Split(',');
+                        if (parts.Length >= 3)
                         {
-                            _persistedOfflineStartTimes[entry.PersistentKey] = new DateTime(entry.OfflineStartTimeTicks, DateTimeKind.Utc);
-                            _persistedOfflineEntityNames[entry.PersistentKey] = entry.ContextualName ?? "UnknownNameFromSave";
+                            var key = parts[0].Trim();
+                            var name = parts[2].Trim();
+                            if (!string.IsNullOrEmpty(key) && long.TryParse(parts[1], out long ticks))
+                            {
+                                _persistedOfflineStartTimes[key] = new DateTime(ticks, DateTimeKind.Utc);
+                                _persistedOfflineEntityNames[key] = name;
+                            }
                         }
                     }
                 }
-                catch (Exception) { }
+                catch (Exception ex)
+                {
+                    LoggingHelper.Error("Failed to load offline states from CSV.", ex);
+                }
                 _dataLoadedFromDisk = true;
             }
         }
@@ -111,24 +115,25 @@ namespace RaidForge.Services
             lock (_saveLock)
             {
                 string filePath = GetSaveFilePath();
-                string dirPath = Path.GetDirectoryName(filePath);
                 try
                 {
-                    Directory.CreateDirectory(dirPath);
-                    var entriesToSave = new List<PersistedOfflineStateEntry>();
+                    var sb = new StringBuilder();
+                    sb.AppendLine("PersistentKey,OfflineStartTimeTicks,ContextualName"); 
+
                     foreach (var kvp in _persistedOfflineStartTimes)
                     {
-                        entriesToSave.Add(new PersistedOfflineStateEntry
-                        {
-                            PersistentKey = kvp.Key,
-                            OfflineStartTimeTicks = kvp.Value.Ticks,
-                            ContextualName = _persistedOfflineEntityNames.TryGetValue(kvp.Key, out var name) ? name : "NameNotFoundOnSave"
-                        });
+                        var key = kvp.Key;
+                        var ticks = kvp.Value.Ticks;
+                        var name = _persistedOfflineEntityNames.TryGetValue(key, out var n) ? n : "NameNotFoundOnSave";
+                        sb.AppendLine($"{key},{ticks},{name}");
                     }
-                    string json = JsonSerializer.Serialize(entriesToSave, _jsonOptions);
-                    File.WriteAllText(filePath, json);
+
+                    File.WriteAllText(filePath, sb.ToString());
                 }
-                catch (Exception) { }
+                catch (Exception ex)
+                {
+                    LoggingHelper.Error("Failed to save offline states to CSV.", ex);
+                }
             }
         }
 
@@ -188,36 +193,54 @@ namespace RaidForge.Services
 
         public static void HandleUserDisconnected(EntityManager entityManager, Entity disconnectedUserEntity, bool isFromPersistenceLoadEvent_IGNORED)
         {
+            LoggingHelper.Debug("[ShardVulnerability] OfflineGraceService.HandleUserDisconnected has been called.");
+
             if (!Plugin.SystemsInitialized) { return; }
             if (!(OfflineRaidProtectionConfig.EnableOfflineRaidProtection?.Value ?? false)) { return; }
-            if (!entityManager.Exists(disconnectedUserEntity) || !entityManager.HasComponent<User>(disconnectedUserEntity)) { return; }
+            if (!entityManager.Exists(disconnectedUserEntity) || !entityManager.TryGetComponentData<User>(disconnectedUserEntity, out var disconnectedUserData)) { return; }
 
-            User disconnectedUserData = entityManager.GetComponentData<User>(disconnectedUserEntity);
-            FixedString64Bytes charNameFs = disconnectedUserData.CharacterName;
-            string charNameStr = charNameFs.ToString();
-            ulong platformId = disconnectedUserData.PlatformId;
-            string userPersistentKey = PersistentKeyHelper.GetUserKey(platformId);
+            string charNameStr = disconnectedUserData.CharacterName.ToString();
 
-            Entity currentClanEntity = disconnectedUserData.ClanEntity._Entity;
-            DateTime disconnectTime = DateTime.UtcNow;
-
-            if (currentClanEntity != Entity.Null && entityManager.Exists(currentClanEntity) && entityManager.HasComponent<ClanTeam>(currentClanEntity))
+            if (UserHelper.IsVulnerableDueToShard(entityManager, disconnectedUserEntity, out string reason))
             {
-                string clanPersistentKey = PersistentKeyHelper.GetClanKey(entityManager, currentClanEntity);
-                if (string.IsNullOrEmpty(clanPersistentKey))
+                string clanPersistentKey = null;
+                string contextualName = charNameStr;
+                Entity clanEntity = disconnectedUserData.ClanEntity._Entity;
+
+                if (clanEntity.Exists() && entityManager.TryGetComponentData<ClanTeam>(clanEntity, out var clanTeam))
                 {
-                    MarkAsOffline(userPersistentKey, disconnectTime, charNameStr);
-                    return;
+                    clanPersistentKey = PersistentKeyHelper.GetClanKey(entityManager, clanEntity);
+                    contextualName = clanTeam.Name.ToString();
                 }
-                if (!UserHelper.IsAnyClanMemberOnline(entityManager, currentClanEntity, disconnectedUserEntity))
-                {
-                    string clanName = entityManager.GetComponentData<ClanTeam>(currentClanEntity).Name.ToString();
-                    MarkAsOffline(clanPersistentKey, disconnectTime, clanName + $" (last online: {charNameStr})");
-                }
+
+                var finalKey = clanPersistentKey ?? PersistentKeyHelper.GetUserKey(disconnectedUserData.PlatformId);
+                var finalName = clanPersistentKey != null ? contextualName : charNameStr;
+
+                LoggingHelper.Debug($"[ShardVulnerability] Vulnerability reason for '{finalName}': {reason}");
+                ShardVulnerabilityService.SetVulnerable(finalKey, finalName);
+                return;
             }
             else
             {
-                MarkAsOffline(userPersistentKey, disconnectTime, charNameStr);
+                LoggingHelper.Debug($"[ShardVulnerability] No shard found for {charNameStr}'s team. Proceeding with normal ORP.");
+
+                Entity currentClanEntity = disconnectedUserData.ClanEntity._Entity;
+                DateTime disconnectTime = DateTime.UtcNow;
+
+                if (currentClanEntity.Exists() && entityManager.HasComponent<ClanTeam>(currentClanEntity))
+                {
+                    string clanPersistentKey = PersistentKeyHelper.GetClanKey(entityManager, currentClanEntity);
+                    if (!UserHelper.IsAnyClanMemberOnline(entityManager, currentClanEntity, disconnectedUserEntity))
+                    {
+                        string clanName = entityManager.GetComponentData<ClanTeam>(currentClanEntity).Name.ToString();
+                        MarkAsOffline(clanPersistentKey, disconnectTime, clanName + $" (last online: {charNameStr})");
+                    }
+                }
+                else
+                {
+                    string userPersistentKey = PersistentKeyHelper.GetUserKey(disconnectedUserData.PlatformId);
+                    MarkAsOffline(userPersistentKey, disconnectTime, charNameStr);
+                }
             }
         }
 
@@ -262,11 +285,6 @@ namespace RaidForge.Services
 
             EntityQuery userQuery = default;
             NativeArray<Entity> allUserEntities = default;
-            int newDefaultOrpUserEntries = 0;
-
-            EntityQuery clanQuery = default;
-            NativeArray<Entity> allClanEntities = default;
-            int newDefaultOrpClanEntries = 0;
 
             try
             {
@@ -285,7 +303,6 @@ namespace RaidForge.Services
                         if (_defaultOrpAtBootKeys.Add(userPersistentKey))
                         {
                             _persistedOfflineEntityNames[userPersistentKey] = contextualUserName + " (Default Boot ORP - User)";
-                            newDefaultOrpUserEntries++;
                         }
                     }
                 }
@@ -293,10 +310,12 @@ namespace RaidForge.Services
             catch (Exception) { }
             finally { if (allUserEntities.IsCreated) allUserEntities.Dispose(); }
 
-            clanQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<ClanTeam>());
-            allClanEntities = clanQuery.ToEntityArray(Allocator.TempJob);
+            EntityQuery clanQuery = default;
+            NativeArray<Entity> allClanEntities = default;
             try
             {
+                clanQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<ClanTeam>());
+                allClanEntities = clanQuery.ToEntityArray(Allocator.TempJob);
                 foreach (Entity clanEntityInLoop in allClanEntities)
                 {
                     string clanPersistentKey = PersistentKeyHelper.GetClanKey(entityManager, clanEntityInLoop);
@@ -310,7 +329,6 @@ namespace RaidForge.Services
                                 {
                                     string clanName = entityManager.GetComponentData<ClanTeam>(clanEntityInLoop).Name.ToString();
                                     _persistedOfflineEntityNames[clanPersistentKey] = clanName + " (Default Boot ORP - Clan)";
-                                    newDefaultOrpClanEntries++;
                                 }
                             }
                         }

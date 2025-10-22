@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "wt0pTrRKQpY=",
+  "dgSpecHash": "kg58uddYpQY=",
   "success": true,
-  "projectFilePath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
+  "projectFilePath": "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\RaidForge.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Darrean\\.nuget\\packages\\asmresolver\\5.5.0\\asmresolver.5.5.0.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\asmresolver.dotnet\\5.5.0\\asmresolver.dotnet.5.5.0.nupkg.sha512",
@@ -10,11 +10,11 @@
     "C:\\Users\\Darrean\\.nuget\\packages\\asmresolver.pe.file\\5.5.0\\asmresolver.pe.file.5.5.0.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\assetripper.cil\\1.0.0\\assetripper.cil.1.0.0.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\assetripper.gee.external.capstone\\2.3.1\\assetripper.gee.external.capstone.2.3.1.nupkg.sha512",
-    "C:\\Users\\Darrean\\.nuget\\packages\\assetripper.primitives\\3.1.1\\assetripper.primitives.3.1.1.nupkg.sha512",
-    "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.core\\6.0.0-be.691\\bepinex.core.6.0.0-be.691.nupkg.sha512",
-    "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.plugininfoprops\\2.1.0\\bepinex.plugininfoprops.2.1.0.nupkg.sha512",
-    "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.unity.common\\6.0.0-be.691\\bepinex.unity.common.6.0.0-be.691.nupkg.sha512",
-    "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.unity.il2cpp\\6.0.0-be.691\\bepinex.unity.il2cpp.6.0.0-be.691.nupkg.sha512",
+    "C:\\Users\\Darrean\\.nuget\\packages\\assetripper.primitives\\2.1.1\\assetripper.primitives.2.1.1.nupkg.sha512",
+    "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.core\\6.0.0-be.690\\bepinex.core.6.0.0-be.690.nupkg.sha512",
+    "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.plugininfoprops\\1.1.0\\bepinex.plugininfoprops.1.1.0.nupkg.sha512",
+    "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.unity.common\\6.0.0-be.690\\bepinex.unity.common.6.0.0-be.690.nupkg.sha512",
+    "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.unity.il2cpp\\6.0.0-be.690\\bepinex.unity.il2cpp.6.0.0-be.690.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\disarm\\2022.1.0-master.26\\disarm.2022.1.0-master.26.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\harmonyx\\2.10.1\\harmonyx.2.10.1.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\iced\\1.20.0\\iced.1.20.0.nupkg.sha512",
@@ -89,11 +89,11 @@
     "C:\\Users\\Darrean\\.nuget\\packages\\system.security.cryptography.primitives\\4.3.0\\system.security.cryptography.primitives.4.3.0.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\system.security.cryptography.x509certificates\\4.3.0\\system.security.cryptography.x509certificates.4.3.0.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\system.text.encoding\\4.3.0\\system.text.encoding.4.3.0.nupkg.sha512",
-    "C:\\Users\\Darrean\\.nuget\\packages\\system.text.encodings.web\\6.0.0\\system.text.encodings.web.6.0.0.nupkg.sha512",
-    "C:\\Users\\Darrean\\.nuget\\packages\\system.text.json\\6.0.8\\system.text.json.6.0.8.nupkg.sha512",
+    "C:\\Users\\Darrean\\.nuget\\packages\\system.text.encodings.web\\8.0.0\\system.text.encodings.web.8.0.0.nupkg.sha512",
+    "C:\\Users\\Darrean\\.nuget\\packages\\system.text.json\\8.0.1\\system.text.json.8.0.1.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\system.threading\\4.3.0\\system.threading.4.3.0.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\system.threading.tasks\\4.3.0\\system.threading.tasks.4.3.0.nupkg.sha512",
-    "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client\\1.1.8.9179701\\vrising.unhollowed.client.1.1.8.9179701.nupkg.sha512"
+    "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client\\1.1.8.9179702\\vrising.unhollowed.client.1.1.8.9179702.nupkg.sha512"
   ],
   "logs": []
 }

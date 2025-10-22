@@ -1,51 +1,36 @@
 ﻿using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
-using Unity.Entities;
+using Stunlock.Network;
 using System;
-using RaidForge.Services; 
-using RaidForge.Utils;    
+using RaidForge.Services;
+using RaidForge.Utils;
+using Unity.Entities;
 
 namespace RaidForge.Patches
 {
-    [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.CreateUserDisconnectedEvent))]
-    public static class UserCreateDisconnectedEventHookPatch
+    [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.OnUserDisconnected))]
+    public static class UserCreateDisconnectedHookPatch
     {
-        private static void Postfix(Entity userEntity, EntityManager entityManager, ConnectedUser connectedUser, bool isFromPersistenceLoad)
+        private static void Prefix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId)
         {
-            LoggingHelper.Info($"[UserCreateDisconnectedEventHookPatch] Postfix entered. UserEntity: {userEntity}, IsFromPersistenceLoad: {isFromPersistenceLoad}");
-
-            if (entityManager == default)
-            {
-                LoggingHelper.Error("[UserCreateDisconnectedEventHookPatch] EntityManager is default! Cannot proceed.");
-                return;
-            }
-
             try
             {
-                if (entityManager.Exists(userEntity))
+                if (__instance._NetEndPointToApprovedUserIndex.TryGetValue(netConnectionId, out int userIndex))
                 {
-                    string charNameForLog = "[Name Unknown/No UserComp]";
-                    if (entityManager.HasComponent<User>(userEntity))
+                    var serverClient = __instance._ApprovedUsersLookup[userIndex];
+                    var userEntity = serverClient.UserEntity;
+                    var entityManager = __instance.EntityManager;
+
+                    if (entityManager.Exists(userEntity))
                     {
-                        User userDataForLog = entityManager.GetComponentData<User>(userEntity);
-                        charNameForLog = userDataForLog.CharacterName.ToString();
-                        LoggingHelper.Info($"[UserCreateDisconnectedEventHookPatch] User '{charNameForLog}' (Entity: {userEntity}) disconnected event created. Calling HandleUserDisconnected.");
+                        OfflineGraceService.HandleUserDisconnected(entityManager, userEntity, false);
                     }
-                    else
-                    {
-                        LoggingHelper.Warning($"[UserCreateDisconnectedEventHookPatch] UserEntity {userEntity} exists but lacks User component. Still calling HandleUserDisconnected.");
-                    }
-                    OfflineGraceService.HandleUserDisconnected(entityManager, userEntity); 
-                }
-                else
-                {
-                    LoggingHelper.Warning($"[UserCreateDisconnectedEventHookPatch] Disconnected UserEntity {userEntity} provided by game event does NOT exist in EntityManager. Cannot call HandleUserDisconnected.");
                 }
             }
             catch (Exception ex)
             {
-                LoggingHelper.Error($"Error in UserCreateDisconnectedEventHookPatch Postfix", ex);
+                LoggingHelper.Error("Error in OnUserDisconnectedHookPatch Prefix", ex);
             }
         }
     }

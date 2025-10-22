@@ -13,3 +13,18 @@ F:\VRising 1.1 Mods Public\RaidForge\RaidForge\obj\Debug\net6.0\RaidForge.pdb
 F:\VRising 1.1 Mods Public\RaidForge\RaidForge\obj\Debug\net6.0\ref\RaidForge.dll
 F:\VRising 1.1 Mods Public\RaidForge\RaidForge\bin\Debug\net6.0\VampireCommandFramework.dll
 F:\VRising 1.1 Mods Public\RaidForge\RaidForge\obj\Debug\net6.0\RaidForge.csproj.Up2Date
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\RaidForge.csproj.AssemblyReference.cache
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\RaidForge.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\RaidForge.AssemblyInfoInputs.cache
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\RaidForge.AssemblyInfo.cs
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\RaidForge.csproj.CoreCompileInputs.cache
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\RaidForge.dll
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\refint\RaidForge.dll
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\RaidForge.pdb
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\PluginInfo.cs
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\bin\Debug\net6.0\RaidForge.deps.json
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\bin\Debug\net6.0\RaidForge.dll
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\bin\Debug\net6.0\RaidForge.pdb
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\bin\Debug\net6.0\VampireCommandFramework.dll
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\RaidForge.csproj.Up2Date
+C:\Users\Darrean\Documents\RaidForge-main922\RaidForge-main\obj\Debug\net6.0\ref\RaidForge.dll

@@ -94,8 +94,9 @@ namespace RaidForge.Patches
                                     continue;
                                 }
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
+
                             }
                         }
 

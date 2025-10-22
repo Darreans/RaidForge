@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx.Logging;
 using ProjectM;
 using ProjectM.CastleBuilding;
 using ProjectM.Network;
@@ -27,7 +26,7 @@ namespace RaidForge.Services
         private static float _tickTimer = 0f;
         private const float CHECK_INTERVAL_SECONDS = 1.5f;
 
-        public static void Initialize(ManualLogSource loggerFromPlugin)
+        public static void Initialize() 
         {
             _isServiceLogicInitialized = true;
         }
@@ -76,7 +75,7 @@ namespace RaidForge.Services
                 if (defendingInfo == Entity.Null || attackerInfo == Entity.Null) { return; }
                 _activeSieges[castleHeartEntity] = (attackerInfo, defendingInfo);
             }
-            catch (Exception) { }
+            catch (Exception) { } // Removed ex
         }
 
         public static void EndSiege(Entity castleHeartEntity)
@@ -100,7 +99,7 @@ namespace RaidForge.Services
             if (!EnsureSystemsInitialized()) { return; }
 
             List<Entity> heartsToRemoveFromSiege = new List<Entity>();
-            var currentSiegeHeartsView = _activeSieges.Keys.ToList();
+            var currentSiegeHeartsView = _activeSieges.Keys.ToList(); 
 
             foreach (var castleHeartEntity in currentSiegeHeartsView)
             {
@@ -139,7 +138,7 @@ namespace RaidForge.Services
                                 CastleTerritory fetchedTerritoryComponent;
                                 isInTerritory = ProjectM.CastleBuilding.CastleTerritoryExtensions.IsTileInTerritory(_entityManager, tilePos.Tile, ref actualTerritoryEntity, out fetchedTerritoryComponent);
                             }
-                            catch (Exception) { }
+                            catch (Exception) { } 
                         }
 
                         if (isInTerritory)
@@ -149,12 +148,15 @@ namespace RaidForge.Services
 
                             if (!isAttacker && !isDefender)
                             {
-                                ApplyInterloperDebuff(characterEntity, userEntity);
+                                if (!user.IsAdmin)
+                                {
+                                    ApplyInterloperDebuff(characterEntity, userEntity);
+                                }
                             }
                         }
                     }
                 }
-                finally { if (users.IsCreated) users.Dispose(); }
+                finally { if (users.IsCreated) users.Dispose(); userQuery.Dispose(); } 
             }
             foreach (var heart in heartsToRemoveFromSiege) EndSiege(heart);
         }
@@ -168,7 +170,6 @@ namespace RaidForge.Services
             var applyBuffDebugEvent = new ApplyBuffDebugEvent() { BuffPrefabGUID = PrefabData.InterloperDebuff };
             _debugEventsSystem_instance.ApplyBuff(fromCharacter, applyBuffDebugEvent);
 
-            _serverGameManager_instance.TryGetBuff(characterEntity, PrefabData.InterloperDebuff, out Entity debuffEntity);
 
             if ((DateTime.UtcNow - _lastDebuffMessageTimeForAllPlayers).TotalSeconds > 10)
             {

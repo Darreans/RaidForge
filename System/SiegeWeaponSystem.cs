@@ -8,7 +8,7 @@ namespace RaidForge.Systems
 {
     public static class SiegeWeaponSystem
     {
-        public static bool SetSiegeWeaponHealth(SiegeWeaponHealth newValue, ManualLogSource loggerContext = null)
+        public static bool SetSiegeWeaponHealth(SiegeWeaponHealth newValue)
         {
             try
             {
@@ -31,13 +31,13 @@ namespace RaidForge.Systems
                     return false;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
         }
 
-        public static SiegeWeaponHealth? GetSiegeWeaponHealth(ManualLogSource loggerContext = null)
+        public static SiegeWeaponHealth? GetSiegeWeaponHealth()
         {
             try
             {
@@ -47,7 +47,7 @@ namespace RaidForge.Systems
                 }
                 return null;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }

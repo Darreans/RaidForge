@@ -70,6 +70,41 @@ namespace RaidForge.Patches
                             else if (em.HasComponent<User>(defenderKeyEntity) && em.TryGetComponentData<User>(defenderKeyEntity, out User u)) persistentKey = PersistentKeyHelper.GetUserKey(u.PlatformId);
                         }
 
+                        if (em.GetComponentData<CastleHeart>(castleHeartEntity).IsSieged() || OfflineProtectionService.IsBaseDecaying(castleHeartEntity, em))
+                        {
+                        }
+                        else if (ShardVulnerabilityService.IsVulnerable(persistentKey))
+                        {
+                            continue;
+                        }
+                        else if (OptInRaidingConfig.EnableOptInRaiding.Value && !OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value)
+                        {
+                            bool isProtected = true;
+                            string reason = "(Not Opted-In)";
+
+                            if (OptInScheduleConfig.EnableOptInSchedule.Value)
+                            {
+                                if (OptInScheduleConfig.IsOptInSystemAllowedToday())
+                                {
+                                    isProtected = !OptInRaidService.IsOptedIn(persistentKey);
+                                }
+                                else
+                                {
+                                    isProtected = false;
+                                }
+                            }
+                            else
+                            {
+                                isProtected = !OptInRaidService.IsOptedIn(persistentKey);
+                            }
+
+                            if (isProtected)
+                            {
+                                BlockDamageAndNotify(em, eventEntity, originalEvent, sourceOfDamageEntity, defenderBaseName, "PROTECTED", reason);
+                                continue;
+                            }
+                        }
+
                         bool isBreached = em.HasComponent<CastleHeart>(castleHeartEntity) && em.GetComponentData<CastleHeart>(castleHeartEntity).IsSieged();
                         bool isDecaying = OfflineProtectionService.IsBaseDecaying(castleHeartEntity, em);
                         bool orpDamageBlockingEnabled = OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value;
@@ -131,8 +166,7 @@ namespace RaidForge.Patches
 
                         if (willBeFullyProtectedByORP)
                         {
-                            string orpType = OfflineGraceService.TryGetOfflineStartTime(persistentKey, out _) ? "(Timed)" : "(Boot State)";
-                            BlockDamageAndNotify(em, eventEntity, originalEvent, sourceOfDamageEntity, defenderBaseName, "OFFLINE PROTECTED", orpType);
+                            BlockDamageAndNotify(em, eventEntity, originalEvent, sourceOfDamageEntity, defenderBaseName, "OFFLINE PROTECTED", "");
                         }
                     }
                 }
@@ -153,7 +187,15 @@ namespace RaidForge.Patches
             var messageBuilder = new StringBuilder();
             messageBuilder.Append(ChatColors.InfoText($"{defenderBaseName} is "));
             messageBuilder.Append(ChatColors.AccentText(protectionStatusKeyword));
-            messageBuilder.Append(ChatColors.InfoText($" {protectionContext}."));
+
+            if (!string.IsNullOrEmpty(protectionContext))
+            {
+                messageBuilder.Append(ChatColors.InfoText($" {protectionContext}."));
+            }
+            else
+            {
+                messageBuilder.Append(ChatColors.InfoText("."));
+            }
 
             SendAttackerMessageWithCooldown(em, sourceOfDamageEntity, messageBuilder.ToString(), _lastProtectedMessageTimes, OfflineProtectedMessageCooldown);
         }

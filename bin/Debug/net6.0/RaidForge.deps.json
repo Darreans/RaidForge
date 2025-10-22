@@ -8,10 +8,10 @@
     ".NETCoreApp,Version=v6.0": {
       "RaidForge/2.0.0": {
         "dependencies": {
-          "BepInEx.Core": "6.0.0-be.691",
-          "BepInEx.PluginInfoProps": "2.1.0",
-          "BepInEx.Unity.IL2CPP": "6.0.0-be.691",
-          "VRising.Unhollowed.Client": "1.1.8.9179701",
+          "BepInEx.Core": "6.0.0-be.690",
+          "BepInEx.PluginInfoProps": "1.1.0",
+          "BepInEx.Unity.IL2CPP": "6.0.0-be.690",
+          "VRising.Unhollowed.Client": "1.1.8.9179702",
           "VampireCommandFramework": "0.10.2.0"
         },
         "runtime": {
@@ -22,7 +22,7 @@
       "AsmResolver.DotNet/5.5.0": {
         "dependencies": {
           "AsmResolver.PE": "5.5.0",
-          "System.Text.Json": "6.0.8"
+          "System.Text.Json": "8.0.1"
         }
       },
       "AsmResolver.PE/5.5.0": {
@@ -41,25 +41,29 @@
         }
       },
       "AssetRipper.Gee.External.Capstone/2.3.1": {},
-      "AssetRipper.Primitives/3.1.1": {},
-      "BepInEx.Core/6.0.0-be.691": {
+      "AssetRipper.Primitives/2.1.1": {
+        "dependencies": {
+          "System.Text.Json": "8.0.1"
+        }
+      },
+      "BepInEx.Core/6.0.0-be.690": {
         "dependencies": {
           "HarmonyX": "2.10.1",
           "MonoMod.Utils": "22.5.1.1",
           "SemanticVersioning": "2.0.2"
         }
       },
-      "BepInEx.PluginInfoProps/2.1.0": {},
-      "BepInEx.Unity.Common/6.0.0-be.691": {
+      "BepInEx.PluginInfoProps/1.1.0": {},
+      "BepInEx.Unity.Common/6.0.0-be.690": {
         "dependencies": {
-          "AssetRipper.Primitives": "3.1.1",
+          "AssetRipper.Primitives": "2.1.1",
           "MonoMod.Utils": "22.5.1.1"
         }
       },
-      "BepInEx.Unity.IL2CPP/6.0.0-be.691": {
+      "BepInEx.Unity.IL2CPP/6.0.0-be.690": {
         "dependencies": {
-          "BepInEx.Core": "6.0.0-be.691",
-          "BepInEx.Unity.Common": "6.0.0-be.691",
+          "BepInEx.Core": "6.0.0-be.690",
+          "BepInEx.Unity.Common": "6.0.0-be.690",
           "HarmonyX": "2.10.1",
           "Iced": "1.20.0",
           "Il2CppInterop.Generator": "1.4.6-ci.426",
@@ -184,7 +188,7 @@
       },
       "Samboy063.LibCpp2IL/2022.1.0-development.972": {
         "dependencies": {
-          "AssetRipper.Primitives": "3.1.1",
+          "AssetRipper.Primitives": "2.1.1",
           "Samboy063.WasmDisassembler": "2022.1.0-development.972"
         }
       },
@@ -591,15 +595,15 @@
           "System.Runtime": "4.3.0"
         }
       },
-      "System.Text.Encodings.Web/6.0.0": {
+      "System.Text.Encodings.Web/8.0.0": {
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
-      "System.Text.Json/6.0.8": {
+      "System.Text.Json/8.0.1": {
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0",
-          "System.Text.Encodings.Web": "6.0.0"
+          "System.Text.Encodings.Web": "8.0.0"
         }
       },
       "System.Threading/4.3.0": {
@@ -615,7 +619,7 @@
           "System.Runtime": "4.3.0"
         }
       },
-      "VRising.Unhollowed.Client/1.1.8.9179701": {
+      "VRising.Unhollowed.Client/1.1.8.9179702": {
         "runtime": {
           "lib/net6.0/Backtrace.Unity.dll": {
             "assemblyVersion": "0.0.0.0",
@@ -703,7 +707,7 @@
           },
           "lib/net6.0/Newtonsoft.Json.dll": {
             "assemblyVersion": "13.0.0.0",
-            "fileVersion": "0.0.0.0"
+            "fileVersion": "13.0.3.27908"
           },
           "lib/net6.0/ProjectM.Behaviours.dll": {
             "assemblyVersion": "0.0.0.0",
@@ -1369,40 +1373,40 @@
       "path": "assetripper.gee.external.capstone/2.3.1",
       "hashPath": "assetripper.gee.external.capstone.2.3.1.nupkg.sha512"
     },
-    "AssetRipper.Primitives/3.1.1": {
+    "AssetRipper.Primitives/2.1.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-GhFAVMWpG8MyZscQxwYCd1HSS36UhIQeW0Gn9iPYiininZWlo8RTV9tGYv0CNNXw5bODYJtXf4qiqo6sQOVAEg==",
-      "path": "assetripper.primitives/3.1.1",
-      "hashPath": "assetripper.primitives.3.1.1.nupkg.sha512"
+      "sha512": "sha512-wCBMZDwMQCUN9Sb+rexzj++SnZKOvCCFjXuQ9fF7Fa1eCPWUFli2Qqrx7jCIfiLxlsx7WE6GeQErUhCZF8qWfQ==",
+      "path": "assetripper.primitives/2.1.1",
+      "hashPath": "assetripper.primitives.2.1.1.nupkg.sha512"
     },
-    "BepInEx.Core/6.0.0-be.691": {
+    "BepInEx.Core/6.0.0-be.690": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-kM0vDdOpVwuJoqkE6igA1/h3tz+TwmE1TFRs+JM6jZEYejAWWRUY92jIjg11JfMi6McbjMCofTMTR/pcT39jdg==",
-      "path": "bepinex.core/6.0.0-be.691",
-      "hashPath": "bepinex.core.6.0.0-be.691.nupkg.sha512"
+      "sha512": "sha512-xrvMqr1AHpPZzlT68S1k/8kP44NIBXCt4GOnEBQZ8r6rrT8iTERFc2lk3o3JIfvD12Zda9QRvg1VpvsIG/wIEQ==",
+      "path": "bepinex.core/6.0.0-be.690",
+      "hashPath": "bepinex.core.6.0.0-be.690.nupkg.sha512"
     },
-    "BepInEx.PluginInfoProps/2.1.0": {
+    "BepInEx.PluginInfoProps/1.1.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-VCG3QRiqNdW9ku2FEcNsbK+HKxrZmW0VxwMNyLNO7h0xGorU+C6vBHN8Qq4eAL5fU11Uks5x2uoYdqEoKD3P8A==",
-      "path": "bepinex.plugininfoprops/2.1.0",
-      "hashPath": "bepinex.plugininfoprops.2.1.0.nupkg.sha512"
+      "sha512": "sha512-RqM3aaGs8Hc2m0D+8aSt9mv09rCMYNIF35NB3D6KA2zSpcXJh/9ZVWrPlIUJfA8KYzodSWcCMUexEW24fjwR3w==",
+      "path": "bepinex.plugininfoprops/1.1.0",
+      "hashPath": "bepinex.plugininfoprops.1.1.0.nupkg.sha512"
     },
-    "BepInEx.Unity.Common/6.0.0-be.691": {
+    "BepInEx.Unity.Common/6.0.0-be.690": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-7YP0JAWo3ozSOz8u4TBmGuasKRG5/iIIQEveCR0Z5Xiuaun1a8F4c6Wz3oY0//p9A2NFZvXXMIzj2/1YHF8auA==",
-      "path": "bepinex.unity.common/6.0.0-be.691",
-      "hashPath": "bepinex.unity.common.6.0.0-be.691.nupkg.sha512"
+      "sha512": "sha512-0tmL2fSGH7KpT5yEKz3sEf6+nMeCRs1SkJ5DhCPWdw6VJyRVf5SNr/fIgsycuXOvZ4wuenIVeOSSH0U04yOLuA==",
+      "path": "bepinex.unity.common/6.0.0-be.690",
+      "hashPath": "bepinex.unity.common.6.0.0-be.690.nupkg.sha512"
     },
-    "BepInEx.Unity.IL2CPP/6.0.0-be.691": {
+    "BepInEx.Unity.IL2CPP/6.0.0-be.690": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-kWI1vb7vyfpvTwerVJZ8U25sPPQnI0PzFVfL4pOfWQZ9A4yRQTwKaWV2vGr5I5o84dI4w9yHptyYHT2fDPInVA==",
-      "path": "bepinex.unity.il2cpp/6.0.0-be.691",
-      "hashPath": "bepinex.unity.il2cpp.6.0.0-be.691.nupkg.sha512"
+      "sha512": "sha512-2sFmgWdD6Mh+K6DNeNmb4d5LlSMkRQ+17Gdh582xYtZwudRgfr4mwCHero6nqQw/KTfKXIHJTzfBlkC3I0gN6w==",
+      "path": "bepinex.unity.il2cpp/6.0.0-be.690",
+      "hashPath": "bepinex.unity.il2cpp.6.0.0-be.690.nupkg.sha512"
     },
     "Disarm/2022.1.0-master.26": {
       "type": "package",
@@ -1922,19 +1926,19 @@
       "path": "system.text.encoding/4.3.0",
       "hashPath": "system.text.encoding.4.3.0.nupkg.sha512"
     },
-    "System.Text.Encodings.Web/6.0.0": {
+    "System.Text.Encodings.Web/8.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-Vg8eB5Tawm1IFqj4TVK1czJX89rhFxJo9ELqc/Eiq0eXy13RK00eubyU6TJE6y+GQXjyV5gSfiewDUZjQgSE0w==",
-      "path": "system.text.encodings.web/6.0.0",
-      "hashPath": "system.text.encodings.web.6.0.0.nupkg.sha512"
+      "sha512": "sha512-yev/k9GHAEGx2Rg3/tU6MQh4HGBXJs70y7j1LaM1i/ER9po+6nnQ6RRqTJn1E7Xu0fbIFK80Nh5EoODxrbxwBQ==",
+      "path": "system.text.encodings.web/8.0.0",
+      "hashPath": "system.text.encodings.web.8.0.0.nupkg.sha512"
     },
-    "System.Text.Json/6.0.8": {
+    "System.Text.Json/8.0.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-WhW6zPEgRZoo+c1NEvSSmrME4+LqXmW6tcsRFsEiSMeco+qZ9rpLs7tT53EIkE/s9GNTYS4/STQoaGiKDSWifQ==",
-      "path": "system.text.json/6.0.8",
-      "hashPath": "system.text.json.6.0.8.nupkg.sha512"
+      "sha512": "sha512-7AWk2za1hSEJBppe/Lg+uDcam2TrDqwIKa9XcPssSwyjC2xa39EKEGul3CO5RWNF+hMuZG4zlBDrvhBdDTg4lg==",
+      "path": "system.text.json/8.0.1",
+      "hashPath": "system.text.json.8.0.1.nupkg.sha512"
     },
     "System.Threading/4.3.0": {
       "type": "package",
@@ -1950,12 +1954,12 @@
       "path": "system.threading.tasks/4.3.0",
       "hashPath": "system.threading.tasks.4.3.0.nupkg.sha512"
     },
-    "VRising.Unhollowed.Client/1.1.8.9179701": {
+    "VRising.Unhollowed.Client/1.1.8.9179702": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-AhIpTgpYL6aKb7STKV7SZLbr01OgIgxaih1rQdUW5D7E2J3hvKFGVvkTcp9jQ6slAsbTe+vpgbnHzQ9d/oIRpA==",
-      "path": "vrising.unhollowed.client/1.1.8.9179701",
-      "hashPath": "vrising.unhollowed.client.1.1.8.9179701.nupkg.sha512"
+      "sha512": "sha512-kYVt0YGmv9KxSFhb3wEIz6vC3HJbrXnhrf5U6dL9pG3ZgL4kSjZz8N7/R8471bQXd+5m9/KRFdrbOrCrT3OMjw==",
+      "path": "vrising.unhollowed.client/1.1.8.9179702",
+      "hashPath": "vrising.unhollowed.client.1.1.8.9179702.nupkg.sha512"
     },
     "VampireCommandFramework/0.10.2.0": {
       "type": "reference",

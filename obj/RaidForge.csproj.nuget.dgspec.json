@@ -1,22 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj": {}
+    "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\RaidForge.csproj": {}
   },
   "projects": {
-    "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj": {
+    "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\RaidForge.csproj": {
       "version": "2.0.0",
       "restore": {
-        "projectUniqueName": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
+        "projectUniqueName": "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\RaidForge.csproj",
         "projectName": "RaidForge",
-        "projectPath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\RaidForge.csproj",
+        "projectPath": "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\RaidForge.csproj",
         "packagesPath": "C:\\Users\\Darrean\\.nuget\\packages\\",
-        "outputPath": "F:\\VRising 1.1 Mods Public\\RaidForge\\RaidForge\\obj\\",
+        "outputPath": "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
+          "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\NuGet.Config",
           "C:\\Users\\Darrean\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
@@ -30,7 +31,8 @@
           "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client": {},
           "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client\\1.0.45.802790001-1": {},
           "C:\\Users\\Darrean\\Downloads\\sqllitedb": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://nuget.bepinex.dev/v3/index.json": {}
         },
         "frameworks": {
           "net6.0": {
@@ -57,20 +59,20 @@
             "BepInEx.Core": {
               "include": "Compile",
               "target": "Package",
-              "version": "[6.0.0-be.691, )"
+              "version": "[6.0.0-be.690, )"
             },
             "BepInEx.PluginInfoProps": {
               "target": "Package",
-              "version": "[2.1.0, )"
+              "version": "[1.*, )"
             },
             "BepInEx.Unity.IL2CPP": {
               "include": "Compile",
               "target": "Package",
-              "version": "[6.0.0-be.691, )"
+              "version": "[6.0.0-be.690, )"
             },
             "VRising.Unhollowed.Client": {
               "target": "Package",
-              "version": "[1.1.8.9179701, )"
+              "version": "[1.1.8.*, )"
             }
           },
           "imports": [

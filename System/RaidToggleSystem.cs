@@ -7,17 +7,17 @@ namespace RaidForge.Systems
 {
     public static class RaidToggleSystem
     {
-        public static bool EnableRaids(ManualLogSource loggerContext = null)
+        public static bool EnableRaids()
         {
-            return SetCastleDamageMode(CastleDamageMode.Always, loggerContext);
+            return SetCastleDamageMode(CastleDamageMode.Always);
         }
 
-        public static bool DisableRaids(ManualLogSource loggerContext = null)
+        public static bool DisableRaids()
         {
-            return SetCastleDamageMode(CastleDamageMode.TimeRestricted, loggerContext);
+            return SetCastleDamageMode(CastleDamageMode.TimeRestricted);
         }
 
-        private static bool SetCastleDamageMode(CastleDamageMode newMode, ManualLogSource loggerContext = null)
+        private static bool SetCastleDamageMode(CastleDamageMode newMode)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace RaidForge.Systems
                     return false;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
