@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>RaidForge</AssemblyName>
+    <Description>Allows for flexible control over raid mechanics.</Description>
+    <Version>2.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>RaidForge</RootNamespace>
+    <AssemblyVersion>0.1.10.0</AssemblyVersion>
+    <FileVersion>0.1.10.0</FileVersion>
+    <InformationalVersion>0.1.10+1.Branch.main.Sha.c33d0879382e1a0da34861ec55914ba7e637a80e</InformationalVersion>
+  </PropertyGroup>
+  <ItemGroup>
+	  <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.690" IncludeAssets="compile" />
+	  <PackageReference Include="BepInEx.Core" Version="6.0.0-be.690" IncludeAssets="compile" />
+	  <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+	  <PackageReference Include="VRising.Unhollowed.Client" Version="1.1.8.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="HookDOTS.API">
+      <HintPath>..\..\cheesasaurus-HookDOTS_API-1.1.1\HookDOTS.API.dll</HintPath>
+    </Reference>
+    <Reference Include="VampireCommandFramework">
+      <HintPath>C:\Users\Darrean\Downloads\deca-VampireCommandFramework-0.10.2\VampireCommandFramework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
