@@ -18,6 +18,9 @@
 	  <PackageReference Include="VRising.Unhollowed.Client" Version="1.1.8.*" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="HookDOTS.API">
+      <HintPath>..\..\cheesasaurus-HookDOTS_API-1.1.1\HookDOTS.API.dll</HintPath>
+    </Reference>
     <Reference Include="VampireCommandFramework">
       <HintPath>C:\Users\Darrean\Downloads\deca-VampireCommandFramework-0.10.2\VampireCommandFramework.dll</HintPath>
     </Reference>

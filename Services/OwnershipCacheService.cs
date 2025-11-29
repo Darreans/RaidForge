@@ -5,7 +5,6 @@ using Unity.Entities;
 using System;
 using System.Collections.Generic;
 using RaidForge.Utils;
-using RaidForge.Config;
 using ProjectM.CastleBuilding;
 
 namespace RaidForge.Services
@@ -17,6 +16,30 @@ namespace RaidForge.Services
 
         private static Dictionary<Entity, Entity> _userToClanCache = new Dictionary<Entity, Entity>();
         private static bool _isClanCachePopulatedFromInitialScan = false;
+
+        // --- NEW METHOD FOR SPAWN PATCH ---
+        // This allows the patch to inject single hearts as they spawn.
+        public static void AddHeartToCache(Entity heartEntity, EntityManager em)
+        {
+            if (!em.Exists(heartEntity)) return;
+
+            // We need to find the UserOwner component
+            if (em.TryGetComponentData<UserOwner>(heartEntity, out UserOwner userOwner))
+            {
+                Entity ownerEntity = userOwner.Owner._Entity;
+                if (ownerEntity != Entity.Null && em.Exists(ownerEntity))
+                {
+                    _heartToOwnerUserCache[heartEntity] = ownerEntity;
+
+                    // While we are here, update the user's clan in the cache too
+                    if (em.TryGetComponentData<User>(ownerEntity, out User userData))
+                    {
+                        _userToClanCache[ownerEntity] = userData.ClanEntity._Entity;
+                    }
+                }
+            }
+        }
+        // ----------------------------------
 
         public static int InitializeHeartOwnershipCache(EntityManager entityManager)
         {
@@ -43,12 +66,10 @@ namespace RaidForge.Services
 
                 foreach (Entity heartEntity in heartEntities)
                 {
-                    if (!entityManager.Exists(heartEntity)) continue;
-                    UserOwner userOwner = entityManager.GetComponentData<UserOwner>(heartEntity);
-                    Entity ownerEntity = userOwner.Owner._Entity;
-                    if (ownerEntity != Entity.Null && entityManager.Exists(ownerEntity))
+                    // Re-use the logic from AddHeartToCache to keep it consistent
+                    AddHeartToCache(heartEntity, entityManager);
+                    if (_heartToOwnerUserCache.ContainsKey(heartEntity))
                     {
-                        _heartToOwnerUserCache[heartEntity] = ownerEntity;
                         heartsCached++;
                     }
                 }
@@ -106,7 +127,7 @@ namespace RaidForge.Services
                 if (userEntities.IsCreated) userEntities.Dispose();
                 if (userQuery != default) userQuery.Dispose();
             }
-            
+
             _isClanCachePopulatedFromInitialScan = true;
             return usersCached;
         }
@@ -119,7 +140,7 @@ namespace RaidForge.Services
             {
                 return false;
             }
-            
+
             if (clanEntity != Entity.Null && !em.Exists(clanEntity))
             {
                 clanEntity = Entity.Null;
@@ -127,7 +148,7 @@ namespace RaidForge.Services
 
             bool madeChange = false;
             bool hadPrevious = _userToClanCache.TryGetValue(userEntity, out var prevClanInCache);
-            
+
             if (!hadPrevious)
             {
                 _userToClanCache[userEntity] = clanEntity;
@@ -170,7 +191,7 @@ namespace RaidForge.Services
             {
                 ownerUserEntity = Entity.Null;
             }
-            
+
             if (ownerUserEntity == Entity.Null)
             {
                 _heartToOwnerUserCache.Remove(heartEntity);

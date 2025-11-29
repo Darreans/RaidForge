@@ -12,6 +12,7 @@
           "BepInEx.PluginInfoProps": "1.1.0",
           "BepInEx.Unity.IL2CPP": "6.0.0-be.690",
           "VRising.Unhollowed.Client": "1.1.8.9179702",
+          "HookDOTS.API": "1.1.1.0",
           "VampireCommandFramework": "0.10.2.0"
         },
         "runtime": {
@@ -1315,6 +1316,14 @@
           }
         }
       },
+      "HookDOTS.API/1.1.1.0": {
+        "runtime": {
+          "HookDOTS.API.dll": {
+            "assemblyVersion": "1.1.1.0",
+            "fileVersion": "1.1.1.0"
+          }
+        }
+      },
       "VampireCommandFramework/0.10.2.0": {
         "runtime": {
           "VampireCommandFramework.dll": {
@@ -1960,6 +1969,11 @@
       "sha512": "sha512-kYVt0YGmv9KxSFhb3wEIz6vC3HJbrXnhrf5U6dL9pG3ZgL4kSjZz8N7/R8471bQXd+5m9/KRFdrbOrCrT3OMjw==",
       "path": "vrising.unhollowed.client/1.1.8.9179702",
       "hashPath": "vrising.unhollowed.client.1.1.8.9179702.nupkg.sha512"
+    },
+    "HookDOTS.API/1.1.1.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
     },
     "VampireCommandFramework/0.10.2.0": {
       "type": "reference",

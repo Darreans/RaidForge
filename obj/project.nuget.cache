@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "kg58uddYpQY=",
+  "dgSpecHash": "ivzeRxsO89Y=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Darrean\\Documents\\RaidForge-main922\\RaidForge-main\\RaidForge.csproj",
+  "projectFilePath": "C:\\Users\\Darrean\\Documents\\RaidForge-main\\RaidForge-main\\RaidForge.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Darrean\\.nuget\\packages\\asmresolver\\5.5.0\\asmresolver.5.5.0.nupkg.sha512",
     "C:\\Users\\Darrean\\.nuget\\packages\\asmresolver.dotnet\\5.5.0\\asmresolver.dotnet.5.5.0.nupkg.sha512",

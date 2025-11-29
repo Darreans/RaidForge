@@ -22,7 +22,6 @@ namespace RaidForge.Systems
             SiegeWeaponHealth? determinedTargetHealth = null;
             string determinedSource = "None";
 
-            // Corrected variable name usage below
             string manualLevelOverrideString = GolemAutomationConfig.ManualSiegeWeaponHealthOverride?.Value;
 
             if (!string.IsNullOrEmpty(manualLevelOverrideString))
