@@ -1,152 +1,141 @@
-# RaidForge Mod - README
+RaidForge Mod - README
 
-*This mod is actively maintained and will continue to receive improvements and optimizations. For issues or support, please reach out to Darrean`inility#4118` on the [VArena Discord](https://discord.gg/varena) or The Modding Community Discord(https://wiki.vrisingmods.com/).*
+For issues or support, please reach out to Darrean (inility#4118).
 
-## Description
+Because of the complex nature of this mod some edge cases may still exist and issues may occur. If you run into any issues or find any weird bugs, please reach out.
 
-RaidForge is a comprehensive V Rising mod designed to give server administrators enhanced control over raid mechanics, offline base protection, and raid participation. It allows for custom raid schedules, automating Siege Golem health, protection for offline players' bases (including grace periods), and management of interference during active sieges.
+Description
+RaidForge is a comprehensive V Rising mod designed to give server administrators total control over raid mechanics, offline base protection, and raid participation.
 
-With RaidForge, you can:
+What's New in the Latest Version:
 
-* Manually enable or disable raiding periods instantly.
-* Configure specific daily raid windows using the server's local time.
-* Automate Siege Golem health adjustments based on server runtime.
-* Manually set and persist Siege Golem health levels.
-* Protect offline players' bases from Golem damage with a configurable grace period system.
-* Discourage third-party interference during active Golem sieges.
-* Allow players to view raid schedules, upcoming raid times, and detailed base vulnerability status.
-* Restrict Waygate usage during active raid windows.
+Overhauled Damage Detection: We've changed the way damage is detected. RaidForge now intercepts damage directly, making the system much more accurate and reliable.
 
-## Features
+Weapon Raiding (No Golems Needed): You no longer need Siege Golems to attack offline/protected bases! You can now configure regular weapons to damage stone structures.
 
-* **Manual Raid Control:** Instantly enable (`.raidon`) or disable (`.raidoff`) raids, overriding any schedule.
-* **Scheduled Raids:** Define custom start and end times for raiding for each day of the week via configuration files. Raids automatically toggle based on this schedule.
-* **Advanced Offline Raid Protection:**
-    * Shields bases from Siege Golem damage when all associated defenders (clan members or solo owner) are offline.
-    * Includes a configurable grace period (default 15 minutes) that defines a window of **vulnerability** after the last defender logs off or leaves their clan. This ensures raids can still proceed for a short time if defenders log off specifically to avoid an imminent raid, preventing the offline protection mechanic from being immediately exploited.
-    * The grace period is intelligently voided (and full offline protection resumes if applicable) should a defending player come back online.
-    * Fully controllable via a global enable/disable setting in `OfflineProtection.cfg`.
-* **Dynamic Raid Interference System:**
-    * Discourages third-party interference during active Golem sieges.
-    * Automatically applies a configurable debuff to players ("interlopers") who enter an active Golem siege territory if they are not part of the attacking or defending parties.
-    * Can be toggled on or off globally via `RaidInterference.cfg`.
-* **Automated Golem Health:**
-    * Set a "server start date" for automation.
-    * Configure Siege Golem health levels to activate automatically on certain days after this start date.
-    * Enable/disable day-based automation (overridden by manual Golem health settings).
-    * Set the start date easily using `.golemstartdate`.
-* **Manual & Persistent Golem Control:**
-    * Check current live and configured Golem health settings (`.golemcurrent`).
-    * Manually set a specific Siege Golem health level that persists across server restarts (`.golemsethp <LevelName>`), overriding automation.
-    * Clear manual overrides and revert to day-based automation with `.golemauto`.
-    * List available Golem health levels and estimated HP (`.golemlist`).
-* **Player Information Commands:**
-    * Check time until the next raid or current raid status (`.raidt`).
-    * View the weekly raid schedule (`.raiddays`).
-    * Check detailed raid vulnerability status of any player's base (`.raidtimer <PlayerNameOrSteamID>`).
-* **Configurable Waygate Restrictions:** Optionally prevent Waygate use during active raid windows.
-* **Configurable Logging:** Enable detailed verbose logging via `Troubleshooting.cfg`.
-* **Configuration Reload:** Admins can reload all mod configurations live (`.reloadraidforge`).
+Strict Opt-In Raiding: Fully fixed. If enabled, both the attacker and the defender must be opted in. You cannot raid an opted-in player if you are not opted in yourself.
 
-## Crucial Server Settings for Raid Control
+Map Icons: Added map icons to instantly spot when a decayed base or an offline-protected base is being raided.
 
-To prevent conflicts and ensure RaidForge can fully manage raid windows, **you must disable your server's default raid hour configurations** found within your server settings. Leaving default game raid hours active may cause overlapping schedules and unexpected issues with when raids turn on or off.
+Raid Interference Fixes: Third-party interference burning is fixed. Plus, Admins and players in Bear Form are now completely immune to the burn!
 
-## Commands
+Shard Protection: Offline Raid Protection for Soul Shard holders has been adjusted and fine tuned to catch more edge cases.
 
-**Note on Displayed Times:** All times shown by RaidForge commands (e.g., `.raiddays`, `.raidt`) are based on the **server's local timezone and clock**, not your individual client's timezone.
+Core Features
+🛡️ Advanced Offline Protection
 
-### Admin-Only Commands:
+Offline Protection: Prevents bases from damage when all associated defenders (clan members or solo owners) are offline.
+Configurable Grace Period: Defines a window of vulnerability after the last defender logs off. Makes it so players cannot just log off before they are being raided , they must be offline for the given grace  period to obtain Offline protection.
 
-* `.reloadraidforge`: Reloads all RaidForge configuration files from disk.
-* `.raidon`: Forces raids ON immediately, overriding the schedule.
-* `.raidoff`: Forces raids OFF immediately, overriding the schedule.
-* `.golemstartdate`: Sets the Golem Automation "server start date" to the current date/time. Saves to config and re-evaluates automation.
-* `.golemcurrent`: Shows current live Golem health, manual override status, and day-based automation status.
-* `.golemsethp <LevelName>`: Manually sets and persists a Siege Golem health level (e.g., `Max`, `Low`). Overrides day-based automation. Use `.golemlist` for valid names.
-* `.golemauto`: Clears any manual Golem health override. Day-based automation will apply if enabled.
-* `.golemlist`: Lists available Siege Golem health levels and their estimated HP from config.
+Soul Shard Rules: Choose whether holding a Soul Shard revokes a clan's Offline Raid Protection. 
 
-### Player-Accessible Commands:
+⚔️ Opt-In Raiding System
 
-* `.raidt`: Shows time until the next scheduled raid window or if raids are currently active by schedule.
-* `.raiddays`: Displays the configured weekly raid schedule.
-* `.raidtimer <PlayerNameOrSteamID>`: Shows raid vulnerability status (Offline Protected, Grace Period, In Breach, Raidable) for the specified player's clan/base.
+Turn your server into a consensual PvP zone. When enabled, standard Offline Raid Protection is bypassed, and bases are invincible by default.
 
-## Configuration
+Players must use .raidoptin to become raidable.
 
-All RaidForge configuration files are located in the `BepInEx/config/RaidForge/` directory (created automatically after the first server run with the mod).
+Mutual Combat: An attacker cannot damage an opted-in base unless the attacker is also opted in. Both parties must be flagged for raiding.
 
-### 1. `RaidScheduleAndGeneral.cfg`
-* **`[DailyRaidSchedule]`**: Define raid start/end times (HH:mm format, 24-hour clock) for each day (e.g., `MondayStartTime = 20:00`, `MondayEndTime = 23:00`).
-    * Use `00:00` for both start and end if no raid is scheduled for a day.
-    * For raids spanning midnight (e.g., Friday 22:00 to Saturday 02:00), set the first day's end time to `00:00` (special value representing midnight end) and the next day's schedule will cover the remainder.
-* **`[General]`**:
-    * `AllowWaygateTeleportsDuringRaid` (true/false): Allow/disallow Waygate use during active raid windows.
+🏰 Dynamic Raid Interference
 
-### 2. `GolemSettings.cfg`
-* **`[GolemMainControls]`**:
-    * `EnableDayBasedAutomation` (true/false): Toggle Golem health automation based on server days.
-    * `ServerStartDateForAutomation` (yyyy-MM-dd HH:mm:ss): Start date for day-based automation. Set via `.golemstartdate`.
-    * `ManualOverrideSiegeLevel` (string, e.g., `Normal`, `Max`, or empty): Manually sets a Golem health level, overriding automation. Set via `.golemsethp`, cleared by `.golemauto`.
-* **`[GolemDayBasedAutomationSchedule]`**: For each `SiegeWeaponHealth` level (e.g., `VeryLow`, `Normal`, `Max`):
-    * `{LevelName}_EnableInSchedule` (true/false): Include this level in the day-based schedule.
-    * `{LevelName}_DayToActivateInSchedule` (integer, e.g., 0, 7): Day number (0 = start date) this health level activates.
+Discourages third-party from interfering in active sieges.
 
-### 3. `OfflineProtection.cfg`
-* **`[Offline Raid Protection]`**:
-    * `EnableOfflineProtection` (true/false): Toggle the offline raid protection and grace period system for Golem damage.
+Automatically applies a burning debuff to players who enter an active siege territory if they are not the attacker or the defender.
 
-### 4. `RaidInterference.cfg`
-* **`[Raid Interference]`**:
-    * `EnableRaidInterference` (true/false): Toggle the system that debuffs "interlopers" during active Golem sieges.
+Exemptions: Server Admins and players utilizing Bear Form are immune to the burn (great for spectating! and is configurable)
 
-### 5. `Troubleshooting.cfg`
-* **`[Logging]`**:
-    * `EnableVerboseLogging` (true/false): Enable detailed logs for debugging. Can impact performance on busy servers.
+🗺️ Live Map Icons
+Configurable map markers will automatically appear to alert the server when a Decayed Base or an Offline Base is actively taking damage and will apply a icon over the castle heart for a given time.
 
-## Installation Instructions
+🤖 Siege Golem Automation & Weapon Raiding
+Weapon Raiding: Enable regular weapons and explosives to damage walls (with a configurable damage multiplier), making Golems optional for raiding.
 
-1.  Ensure BepInEx is correctly installed on your V Rising server.
-2.  Download the latest `RaidForge.dll` from the releases page.
-3.  Place `RaidForge.dll` into your server’s `BepInEx/plugins` directory.
-4.  Start the server once. RaidForge will generate its default configuration files in the `BepInEx/config/RaidForge/` folder. You can use the .reloadraidforge to reload the config files.
+Golem Automation: Set a server start date and let RaidForge automatically scale Siege Golem HP as the server ages (e.g., higher HP on Day 7 than Day 1).
+
+Manual Golem Control: Admins can manually set and lock Golem HP levels via commands.
+
+📅 Custom Schedules & Waygate Limits
+Define exact daily raid windows using the server's local time (supports raids that span past midnight).
+
+Optionally restrict Waygate teleportation while a global raid window is active.
+
+Important Server Settings
+To prevent conflicts and ensure RaidForge can fully manage raid windows, you MUST disable your server's default raid hour configurations in your standard server settings. Leaving the vanilla game's raid hours active will cause overlapping schedules and break RaidForge's time.
+
+Commands
+(Note: All times shown by RaidForge commands are based on the server's local timezone, not the player's client.)
+
+Player Commands
+.raidt: Shows the time until the next scheduled raid window, or if raids are currently active.
+
+.raiddays: Displays the server's weekly raid schedule.
+
+.raidstatus <PlayerName>: Shows the raid vulnerability status (Offline Protected, Grace Period, Breached, Raidable) for a specific player's base.
+
+.raidoptin: Opts you and your clan into being raidable (if Opt-In system is enabled). Includes a configurable cooldown before you can opt out.
+
+.raidoptout: Opts you and your clan out of raiding (if your time-lock has expired).
+
+.raidoptstatus: Checks your current Opt-In status and time remaining on your lock.
+
+Admin Commands
+.reloadraidforge: Live reloads all RaidForge config files from the server disk so changes can be made without rebooting.
+
+.raidon / .raidoff: Manually forces global raids ON or OFF, overriding the schedule.
+
+.clearraidforgeicons: Forcefully clears all active raid map icons.
+
+.removeorp <PlayerName>: Instantly strips a player/clan of their offline protection until they log back in.
+
+.forceopt <PlayerName> <in|out>: Forces a specific player/clan into or out of the Opt-In system, bypassing cooldowns.
+
+.golemstartdate: Sets the Golem Automation "server start date" to the current exact time.
+
+.golemsethp <LevelName>: Manually locks Siege Golem health (e.g., Max, Low), overriding automation.
+
+.golemauto: Clears manual Golem HP overrides and resumes day-based automation.
+
+.golemlist / .golemcurrent: Views available Golem HP levels and checks the server's current live Golem settings.
+
+.golem <PlayerName>: Transforms the target player (or yourself) into a Siege Golem.
+
+.raidrefreshcache: Force-rebuilds the mods internal tracking of bases and clans if things get out of sync(only use in emergency)
+
+Configuration Files
+
+RaidForge generates multiple  config files in your BepInEx/config/RaidForge/ directory after the first boot.
+
+RaidScheduleAndGeneral.cfg: Set your daily raid hours and Waygate restrictions.
+
+OfflineProtection.cfg: Toggle ORP, set the Grace Period duration, and toggle global chat announcements.
+
+OptInRaiding.cfg & OptInSchedule.cfg: Toggle the Opt-In system, set opt-out cooldowns, and schedule specific days where Opt-In is forced/bypassed.
+
+WeaponRaiding.cfg: Enable/disable weapon damage to bases and set the damage multiplier against stone.
+
+RaidInterference.cfg: Toggle the interloper burn system, and manage exemptions for offline bases, decaying bases, and Bear Form.
+
+MapIcons.cfg: Toggle map icons for decay/offline raids and set how long they linger after the last hit.
+
+ShardSettings.cfg: Manage max shard limits and toggle whether holding a shard disables your offline protection.
+
+GolemSettings.cfg: Manage day-based automated Golem HP scaling.
+
+Troubleshooting.cfg: Enable verbose logging for debugging (Keep this OFF or you may run into tons of lagging).
 
 
-## Dependencies
+Community & Support
+Join the VArena Discord: https://discord.gg/varena
 
-* **VampireCommandFramework:** Required for chat command functionality. Ensure it's installed.
+V Rising Modding discussions and other mods: V Rising Modding Wiki: https://wiki.vrisingmods.com
 
-## Support & Community
+Acknowledgements:
+Special thanks to the V Rising Modding community, the developers of the underlying frameworks, helskog (for the Waygate restriction feature), and Mitch (zfolmt) (for the Raid Interference inspiration) and Amingo for helping with finding bugs .
 
-For support, questions, or to join the community:
+Developer: Darrean (inility#4118)
 
-* Join the **VArena Discord:** [https://discord.gg/varena](https://discord.gg/varena)
-* Join **The Modding Community Discord.**
-* For general V Rising modding discussions and finding other mods, visit the **V Rising Modding Wiki:** [https://wiki.vrisingmods.com](https://wiki.vrisingmods.com)
+Future Plans: Add visuals for offline protected bases (WIP)
 
-## Acknowledgements
-
-Special thanks to the V Rising Modding community and the developers of the underlying frameworks that make mods like this possible.
-
-## Developer
-
-* Darrean (inility#4118)
-
-## Contributors
-
-* **helskog** - Feature for preventing waygate usage during raid window.
-* **Mitch (zfolmt)** - Inspiration and concepts from their "Raid Guard" mod for the Raid Interference feature.
-
-## License
-
-This RaidForge mod is licensed under the MIT License with a non-commercial clause.
-
-Summary:
-
-* You **ARE free** to use, copy, modify, merge, publish, and distribute copies of this software.
-* You **MUST include** the original copyright notice and this permission notice in all copies or substantial portions of the software.
-* You **MAY NOT** sell copies of the Software or derivative works based on the Software for profit.
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-*Disclaimer: RaidForge is a third-party mod and is not affiliated with Stunlock Studios or the official V Rising development team. Use at your own risk.*
+License
+This RaidForge mod is licensed under the MIT License with a non-commercial clause. You may use, modify, and distribute this software, but you may not sell copies or derivative works for profit. Use at your own risk.
