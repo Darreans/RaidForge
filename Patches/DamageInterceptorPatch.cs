@@ -1,313 +1,433 @@
-﻿using HarmonyLib;
+﻿using System;
+using System.Text;
+using System.Linq;
+using System.Collections.Generic;
+using HookDOTS.API.Attributes;
 using ProjectM;
 using ProjectM.CastleBuilding;
+using ProjectM.Gameplay.Systems;
 using ProjectM.Network;
-using Unity.Collections;
-using Unity.Entities;
-using Stunlock.Core;
-using RaidForge.Services;
 using RaidForge.Config;
 using RaidForge.Data;
+using RaidForge.Services;
 using RaidForge.Utils;
-using RaidForge;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Stunlock.Core;
+using Unity.Collections;
+using Unity.Entities;
 using ProjectM.Scripting;
-using ProjectM.Gameplay.Systems;
 
 namespace RaidForge.Patches
 {
-    [HarmonyPatch]
-    public static class DamageInterceptorPatch
-    {
-        private static readonly TimeSpan OfflineProtectedMessageCooldown = TimeSpan.FromSeconds(10);
-        private static Dictionary<Entity, DateTime> _lastProtectedMessageTimes = new Dictionary<Entity, DateTime>();
-        private static readonly TimeSpan OfflineSiegeAnnouncementCooldown = TimeSpan.FromSeconds(30);
-        private static Dictionary<Entity, DateTime> _lastOfflineSiegeAnnouncementTimes = new Dictionary<Entity, DateTime>();
-        private static readonly TimeSpan DecayedRaidAnnouncementCooldown = TimeSpan.FromMinutes(5);
-        private static Dictionary<Entity, DateTime> _lastDecayedRaidAnnouncementTimes = new Dictionary<Entity, DateTime>();
+	public static class DamageInterceptorPatch
+	{
+		private static readonly TimeSpan OfflineProtectedMessageCooldown = TimeSpan.FromSeconds(10);
+		private static Dictionary<Entity, DateTime> _lastProtectedMessageTimes = new();
 
-        private static bool TryGetDefenderKeyFromDamagedEntity(EntityManager em, Entity damagedEntity,
-                                                               out Entity castleHeartEntity, out Entity defenderKeyEntity)
-        {
-            castleHeartEntity = Entity.Null; defenderKeyEntity = Entity.Null;
-            if (em.HasComponent<CastleHeartConnection>(damagedEntity)) castleHeartEntity = em.GetComponentData<CastleHeartConnection>(damagedEntity).CastleHeartEntity._Entity;
-            else if (em.HasComponent<CastleHeart>(damagedEntity)) castleHeartEntity = damagedEntity;
-            if (castleHeartEntity == Entity.Null || !em.Exists(castleHeartEntity)) return false;
-            if (!OwnershipCacheService.TryGetHeartOwner(castleHeartEntity, out Entity ownerUserEntity) || ownerUserEntity == Entity.Null) return false;
-            if (!em.Exists(ownerUserEntity) || !em.HasComponent<User>(ownerUserEntity)) return false;
-            if (OwnershipCacheService.TryGetUserClan(ownerUserEntity, out Entity ownerClanEntity) && ownerClanEntity != Entity.Null && em.Exists(ownerClanEntity)) defenderKeyEntity = ownerClanEntity;
-            else defenderKeyEntity = ownerUserEntity;
-            return true;
-        }
+		private static readonly TimeSpan OfflineSiegeAnnouncementCooldown = TimeSpan.FromSeconds(30);
+		private static Dictionary<Entity, DateTime> _lastOfflineSiegeAnnouncementTimes = new();
 
-        [HarmonyPatch(typeof(StatChangeSystem), nameof(StatChangeSystem.OnUpdate))]
-        [HarmonyPrefix]
-        static bool OnUpdatePrefix(StatChangeSystem __instance)
-        {
-            EntityManager em = __instance.EntityManager;
-            NativeArray<Entity> statChangeEventEntities = __instance._Query.ToEntityArray(Allocator.Temp);
+		private static readonly TimeSpan DecayedRaidAnnouncementCooldown = TimeSpan.FromMinutes(5);
+		private static Dictionary<Entity, DateTime> _lastDecayedRaidAnnouncementTimes = new();
 
-            try
-            {
-                foreach (Entity eventEntity in statChangeEventEntities)
-                {
-                    if (!em.Exists(eventEntity) || !em.HasComponent<StatChangeEvent>(eventEntity)) continue;
-                    StatChangeEvent originalEvent = em.GetComponentData<StatChangeEvent>(eventEntity);
-                    if (originalEvent.StatType != StatType.Health || originalEvent.Change >= 0) continue;
+		private static EntityQuery _damageQuery;
+		private static EntityManager _cachedEntityManager;
+		private static bool _queryInitialized = false;
 
-                    Entity targetEntity = originalEvent.Entity;
-                    Entity sourceOfDamageEntity = originalEvent.Source;
+		private static ServerScriptMapper _serverScriptMapper;
+		private static ServerGameManager _serverGameManager;
+		private static bool _sgmCached = false;
 
-                    if (TryGetDefenderKeyFromDamagedEntity(em, targetEntity, out Entity castleHeartEntity, out Entity defenderKeyEntity))
-                    {
-                        string defenderBaseName = GetDefenderBaseName(em, castleHeartEntity);
-                        string persistentKey = null;
-                        if (defenderKeyEntity != Entity.Null)
-                        {
-                            if (em.HasComponent<ClanTeam>(defenderKeyEntity)) persistentKey = PersistentKeyHelper.GetClanKey(em, defenderKeyEntity);
-                            else if (em.HasComponent<User>(defenderKeyEntity) && em.TryGetComponentData<User>(defenderKeyEntity, out User u)) persistentKey = PersistentKeyHelper.GetUserKey(u.PlatformId);
-                        }
+		public static void ResetCache()
+		{
+			_queryInitialized = false;
+			_damageQuery = default;
+			_cachedEntityManager = default;
+			_sgmCached = false;
+			_serverScriptMapper = null;
+			_serverGameManager = default;
 
-                        if (em.GetComponentData<CastleHeart>(castleHeartEntity).IsSieged() || OfflineProtectionService.IsBaseDecaying(castleHeartEntity, em))
-                        {
-                        }
-                        else if (ShardVulnerabilityService.IsVulnerable(persistentKey))
-                        {
-                            continue;
-                        }
-                        else if (OptInRaidingConfig.EnableOptInRaiding.Value && !OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value)
-                        {
-                            bool isProtected = true;
-                            string reason = "(Not Opted-In)";
+			_lastProtectedMessageTimes.Clear();
+			_lastOfflineSiegeAnnouncementTimes.Clear();
+			_lastDecayedRaidAnnouncementTimes.Clear();
+		}
 
-                            if (OptInScheduleConfig.EnableOptInSchedule.Value)
-                            {
-                                if (OptInScheduleConfig.IsOptInSystemAllowedToday())
-                                {
-                                    isProtected = !OptInRaidService.IsOptedIn(persistentKey);
-                                }
-                                else
-                                {
-                                    isProtected = false;
-                                }
-                            }
-                            else
-                            {
-                                isProtected = !OptInRaidService.IsOptedIn(persistentKey);
-                            }
+		[EcsSystemUpdatePrefix(typeof(DealDamageSystem))]
+		public static unsafe void Prefix(SystemState* systemState)
+		{
+			var em = systemState->EntityManager;
 
-                            if (isProtected)
-                            {
-                                BlockDamageAndNotify(em, eventEntity, originalEvent, sourceOfDamageEntity, defenderBaseName, "PROTECTED", reason);
-                                continue;
-                            }
-                        }
+			if (!_queryInitialized || _cachedEntityManager != em)
+			{
+				_damageQuery = em.CreateEntityQuery(ComponentType.ReadWrite<DealDamageEvent>());
+				_cachedEntityManager = em;
+				_queryInitialized = true;
+			}
 
-                        bool isBreached = em.HasComponent<CastleHeart>(castleHeartEntity) && em.GetComponentData<CastleHeart>(castleHeartEntity).IsSieged();
-                        bool isDecaying = OfflineProtectionService.IsBaseDecaying(castleHeartEntity, em);
-                        bool orpDamageBlockingEnabled = OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value;
+			if (_damageQuery.IsEmptyIgnoreFilter) return;
 
-                        bool willBeFullyProtectedByORP = false;
-                        bool isInGracePeriod = false;
+			var damageEventEntities = _damageQuery.ToEntityArray(Allocator.Temp);
 
-                        if (orpDamageBlockingEnabled && !isBreached && !isDecaying && !string.IsNullOrEmpty(persistentKey))
-                        {
-                            bool effectivelyAllOffline;
-                            if (OfflineGraceService.TryGetOfflineStartTime(persistentKey, out DateTime offlineStartTimeUtc))
-                            {
-                                TimeSpan timeOffline = DateTime.UtcNow - offlineStartTimeUtc;
-                                float configuredGraceMinutes = OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value;
+			DateTime nowUtc = DateTime.UtcNow;
+			bool logDebug = TroubleshootingConfig.EnableVerboseLogging.Value;
+			bool optInEnabled = OptInRaidingConfig.EnableOptInRaiding.Value;
+			bool orpEnabled = OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value;
+			bool announceOfflineDuringGrace = OfflineRaidProtectionConfig.AnnounceOfflineRaidDuringGrace.Value;
+			bool announceDecayed = OfflineRaidProtectionConfig.AnnounceDecayedBaseRaid.Value;
+			bool forcedRaidDay = OptInScheduleConfig.EnableOptInSchedule.Value && !OptInScheduleConfig.IsOptInSystemAllowedToday();
+			float configuredGraceMinutes = OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value;
+			bool weaponRaidingEnabled = WeaponRaidingConfig.EnableWeaponRaiding.Value;
+			float weaponDamageMultiplier = WeaponRaidingConfig.WeaponDamageVsStoneMultiplier.Value;
 
-                                if (configuredGraceMinutes > 0 && timeOffline.TotalMinutes < configuredGraceMinutes)
-                                {
-                                    isInGracePeriod = true;
-                                }
-                                else
-                                {
-                                    effectivelyAllOffline = Plugin.ServerHasJustBooted || OfflineProtectionService.AreAllDefendersActuallyOffline(castleHeartEntity, em);
-                                    if (effectivelyAllOffline)
-                                    {
-                                        willBeFullyProtectedByORP = true;
-                                    }
-                                }
-                            }
-                            else if (OfflineGraceService.IsUnderDefaultBootORP(persistentKey))
-                            {
-                                effectivelyAllOffline = Plugin.ServerHasJustBooted || OfflineProtectionService.AreAllDefendersActuallyOffline(castleHeartEntity, em);
-                                if (effectivelyAllOffline)
-                                {
-                                    willBeFullyProtectedByORP = true;
-                                }
-                            }
-                        }
+			if (!_sgmCached && VWorld.Server != null && VWorld.Server.IsCreated)
+			{
+				try
+				{
+					_serverScriptMapper = VWorld.Server.GetExistingSystemManaged<ServerScriptMapper>();
+					if (_serverScriptMapper != null)
+					{
+						_serverGameManager = _serverScriptMapper.GetServerGameManager();
+						_sgmCached = true;
+					}
+				}
+				catch { }
+			}
 
-                        if (!isBreached)
-                        {
-                            if (isDecaying && OfflineRaidProtectionConfig.AnnounceDecayedBaseRaid.Value)
-                            {
-                                AnnounceDecayedBaseDamage(em, castleHeartEntity, sourceOfDamageEntity, defenderBaseName);
-                            }
-                            else if (OfflineRaidProtectionConfig.AnnounceOfflineRaidDuringGrace.Value)
-                            {
-                                if (OfflineProtectionService.AreAllDefendersActuallyOffline(castleHeartEntity, em))
-                                {
-                                    if (IsSiegeWeaponDamage(em, sourceOfDamageEntity, out string attackerName))
-                                    {
-                                        if (isInGracePeriod || !orpDamageBlockingEnabled || (orpDamageBlockingEnabled && !willBeFullyProtectedByORP))
-                                        {
-                                            MakeOfflineSiegeAnnouncement(em, castleHeartEntity, attackerName, defenderBaseName, isInGracePeriod);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+			try
+			{
+				foreach (var entity in damageEventEntities)
+				{
+					try
+					{
+						if (!em.Exists(entity)) continue;
 
-                        if (willBeFullyProtectedByORP)
-                        {
-                            BlockDamageAndNotify(em, eventEntity, originalEvent, sourceOfDamageEntity, defenderBaseName, "OFFLINE PROTECTED", "");
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                if (statChangeEventEntities.IsCreated) statChangeEventEntities.Dispose();
-            }
-            return true;
-        }
+						var damageEvent = em.GetComponentData<DealDamageEvent>(entity);
+						if (damageEvent.MainFactor <= 0 && damageEvent.RawDamage <= 0) continue;
 
-        private static void BlockDamageAndNotify(EntityManager em, Entity eventEntity, StatChangeEvent originalEvent, Entity sourceOfDamageEntity, string defenderBaseName, string protectionStatusKeyword, string protectionContext)
-        {
-            StatChangeEvent modifiedEvent = originalEvent;
-            modifiedEvent.Change = 0;
-            em.SetComponentData(eventEntity, modifiedEvent);
+						Entity targetEntity = damageEvent.Target;
+						Entity sourceEntity = damageEvent.SpellSource;
 
-            var messageBuilder = new StringBuilder();
-            messageBuilder.Append(ChatColors.InfoText($"{defenderBaseName} is "));
-            messageBuilder.Append(ChatColors.AccentText(protectionStatusKeyword));
+						bool isCastleConnected = em.HasComponent<CastleHeartConnection>(targetEntity);
+						bool isCastleHeart = em.HasComponent<CastleHeart>(targetEntity);
 
-            if (!string.IsNullOrEmpty(protectionContext))
-            {
-                messageBuilder.Append(ChatColors.InfoText($" {protectionContext}."));
-            }
-            else
-            {
-                messageBuilder.Append(ChatColors.InfoText("."));
-            }
+						if (!isCastleConnected && !isCastleHeart) continue;
 
-            SendAttackerMessageWithCooldown(em, sourceOfDamageEntity, messageBuilder.ToString(), _lastProtectedMessageTimes, OfflineProtectedMessageCooldown);
-        }
+						if (!TryGetDefenderKeyFromDamagedEntity(em, targetEntity, out Entity castleHeartEntity, out Entity defenderKeyEntity))
+							continue;
 
-        private static bool IsSiegeWeaponDamage(EntityManager em, Entity sourceOfDamageEntity, out string attackerName)
-        {
-            attackerName = "Unknown Attacker";
-            bool isPlayerOwnedSource = UserHelper.TryGetPlayerOwnerFromSource(em, sourceOfDamageEntity, out Entity attackerCharEntity, out Entity attackerUserEntity);
-            if (isPlayerOwnedSource && em.TryGetComponentData<User>(attackerUserEntity, out User attackerUserData)) attackerName = attackerUserData.CharacterName.ToString();
-            if (isPlayerOwnedSource && HasSiegeGolemBuff(em, attackerCharEntity)) return true;
-            PrefabGUID sourcePrefabGuid = default;
-            if (em.Exists(sourceOfDamageEntity) && em.HasComponent<PrefabGUID>(sourceOfDamageEntity)) sourcePrefabGuid = em.GetComponentData<PrefabGUID>(sourceOfDamageEntity);
-            else if (em.Exists(sourceOfDamageEntity) && em.HasComponent<EntityOwner>(sourceOfDamageEntity))
-            {
-                Entity ownerOfSource = em.GetComponentData<EntityOwner>(sourceOfDamageEntity).Owner;
-                if (em.Exists(ownerOfSource) && em.HasComponent<PrefabGUID>(ownerOfSource)) sourcePrefabGuid = em.GetComponentData<PrefabGUID>(ownerOfSource);
-            }
-            if (sourcePrefabGuid.Equals(PrefabData.TntExplosivePrefab1) || sourcePrefabGuid.Equals(PrefabData.TntExplosivePrefab2))
-            {
-                if (attackerName == "Unknown Attacker") attackerName = "Explosives";
-                return true;
-            }
-            return false;
-        }
+						string persistentKey = null;
 
-        private static void MakeOfflineSiegeAnnouncement(EntityManager em, Entity castleHeartEntity, string attackerName, string defenderBaseName, bool isInGracePeriod)
-        {
-            if (!_lastOfflineSiegeAnnouncementTimes.TryGetValue(castleHeartEntity, out DateTime lastAnnTime) ||
-                (DateTime.UtcNow - lastAnnTime) > OfflineSiegeAnnouncementCooldown)
-            {
-                var messageBuilder = new StringBuilder();
-                messageBuilder.Append(ChatColors.InfoText($"{defenderBaseName} is being "));
-                messageBuilder.Append(ChatColors.WarningText("offline raided"));
-                if (isInGracePeriod)
-                {
-                }
-                messageBuilder.Append(ChatColors.InfoText(" by "));
-                messageBuilder.Append(ChatColors.HighlightText(attackerName));
-                messageBuilder.Append(ChatColors.InfoText("!"));
+						if (defenderKeyEntity != Entity.Null)
+						{
+							if (em.HasComponent<ClanTeam>(defenderKeyEntity))
+								persistentKey = PersistentKeyHelper.GetClanKey(em, defenderKeyEntity);
+							else if (em.TryGetComponentData<User>(defenderKeyEntity, out User u))
+								persistentKey = PersistentKeyHelper.GetUserKey(u.PlatformId);
+						}
 
-                FixedString512Bytes annMsg = new FixedString512Bytes(messageBuilder.ToString());
-                ServerChatUtils.SendSystemMessageToAllClients(em, ref annMsg);
-                _lastOfflineSiegeAnnouncementTimes[castleHeartEntity] = DateTime.UtcNow;
-            }
-        }
+						if (string.IsNullOrEmpty(persistentKey)) continue;
 
-        private static void AnnounceDecayedBaseDamage(EntityManager em, Entity castleHeartEntity, Entity sourceOfDamageEntity, string defenderBaseName)
-        {
-            if (!OfflineRaidProtectionConfig.AnnounceDecayedBaseRaid.Value) return;
-            if (UserHelper.TryGetPlayerOwnerFromSource(em, sourceOfDamageEntity, out _, out Entity attackerUserEntity))
-            {
-                if (em.TryGetComponentData<User>(attackerUserEntity, out User attackerUserData))
-                {
-                    if (!_lastDecayedRaidAnnouncementTimes.TryGetValue(castleHeartEntity, out DateTime lastAnnTime) ||
-                        (DateTime.UtcNow - lastAnnTime) > DecayedRaidAnnouncementCooldown)
-                    {
-                        var messageBuilder = new StringBuilder();
-                        messageBuilder.Append(ChatColors.InfoText($"{defenderBaseName} "));
-                        messageBuilder.Append(ChatColors.WarningText("is DECAYED"));
-                        messageBuilder.Append(ChatColors.InfoText(" and being raided by "));
-                        messageBuilder.Append(ChatColors.HighlightText(attackerUserData.CharacterName.ToString()));
-                        messageBuilder.Append(ChatColors.InfoText("!"));
-                        FixedString512Bytes decayedAnnMessage = new FixedString512Bytes(messageBuilder.ToString());
-                        ServerChatUtils.SendSystemMessageToAllClients(em, ref decayedAnnMessage);
-                        _lastDecayedRaidAnnouncementTimes[castleHeartEntity] = DateTime.UtcNow;
-                    }
-                }
-            }
-        }
+						string cachedDefenderBaseName = null;
+						bool isFastTrackApproved = false;
 
-        private static void SendAttackerMessageWithCooldown(EntityManager em, Entity sourceOfDamageEntity, string fullyFormattedMessageText, Dictionary<Entity, DateTime> cooldownDict, TimeSpan cooldownDuration)
-        {
-            if (UserHelper.TryGetPlayerOwnerFromSource(em, sourceOfDamageEntity, out _, out Entity attackerUserEntity))
-            {
-                if (!cooldownDict.TryGetValue(attackerUserEntity, out DateTime lastTimeSent) ||
-                    (DateTime.UtcNow - lastTimeSent) > cooldownDuration)
-                {
-                    if (em.TryGetComponentData<User>(attackerUserEntity, out User attackerUser))
-                    {
-                        FixedString512Bytes message = new FixedString512Bytes(fullyFormattedMessageText);
-                        ServerChatUtils.SendSystemMessageToClient(em, attackerUser, ref message);
-                        cooldownDict[attackerUserEntity] = DateTime.UtcNow;
-                    }
-                }
-            }
-        }
+						bool attackerResolved = false;
+						Entity attackerCharEntity = Entity.Null;
+						Entity attackerUserEntity = Entity.Null;
+						string attackerName = null;
+						string attackerKey = null;
 
-        private static string GetDefenderBaseName(EntityManager em, Entity castleHeartEntity)
-        {
-            if (castleHeartEntity != Entity.Null && em.TryGetComponentData<UserOwner>(castleHeartEntity, out UserOwner heartOwner) &&
-                em.Exists(heartOwner.Owner._Entity) &&
-                em.TryGetComponentData<User>(heartOwner.Owner._Entity, out User ownerUserData))
-            {
-                if (em.TryGetComponentData<NameableInteractable>(castleHeartEntity, out NameableInteractable castleNameComp) && !string.IsNullOrWhiteSpace(castleNameComp.Name.ToString()))
-                {
-                    return $"'{castleNameComp.Name.ToString()}'";
-                }
-                return $"{ownerUserData.CharacterName.ToString()}'s base";
-            }
-            return "A base";
-        }
+						bool isBreached = em.GetComponentData<CastleHeart>(castleHeartEntity).IsSieged();
+						bool isDecaying = OfflineProtectionService.IsBaseDecaying(castleHeartEntity, em);
 
-        private static bool HasSiegeGolemBuff(EntityManager em, Entity playerCharacterEntity)
-        {
-            if (!em.Exists(playerCharacterEntity) || !em.HasComponent<PlayerCharacter>(playerCharacterEntity)) return false;
-            World world = VWorld.Server;
-            if (world == null || !world.IsCreated) return false;
-            var serverScriptMapper = world.GetExistingSystemManaged<ServerScriptMapper>();
-            if (serverScriptMapper == null) return false;
-            ServerGameManager sgm = serverScriptMapper.GetServerGameManager();
-            try { return sgm.TryGetBuff(playerCharacterEntity, PrefabData.SiegeGolemBuff, out _); }
-            catch { return false; }
-        }
-    }
+						// 3. DECAY / BREACH CHECKS
+						if (isBreached || isDecaying)
+						{
+							// ONLY spawn decay icon if it's actually a decay raid
+							if (isDecaying && !isBreached)
+							{
+								RaidMapIconService.AddRaidIcon(castleHeartEntity, isOfflineRaid: false, isDecayRaid: true);
+
+								if (announceDecayed)
+								{
+									if (!attackerResolved) ResolveAttacker(em, sourceEntity, ref attackerResolved, ref attackerCharEntity, ref attackerUserEntity, ref attackerName, ref attackerKey);
+									if (cachedDefenderBaseName == null) cachedDefenderBaseName = GetDefenderBaseName(em, castleHeartEntity);
+
+									if (!string.IsNullOrEmpty(attackerName))
+										AnnounceDecayedBaseDamage(em, castleHeartEntity, attackerName, cachedDefenderBaseName, nowUtc);
+								}
+							}
+							if (logDebug)
+							{
+								if (cachedDefenderBaseName == null) cachedDefenderBaseName = GetDefenderBaseName(em, castleHeartEntity);
+								LoggingHelper.Debug($"[Damage] Allowed: Base {cachedDefenderBaseName} is Breached({isBreached}) or Decaying({isDecaying}).");
+							}
+							isFastTrackApproved = true;
+						}
+
+						// 4. SHARD VULNERABILITY
+						if (!isFastTrackApproved && RaidForge.Config.ShardConfig.DisableOrpForShardHolders.Value && ShardVulnerabilityService.IsVulnerable(persistentKey))
+						{
+							if (logDebug)
+							{
+								var shardEntries = ShardVulnerabilityService.GetEntriesForOwner(persistentKey);
+								string shardDetails = string.Join(" | ", shardEntries.Select(e => $"Shard: {e.ShardPrefabGuid} (Latched By: {e.LatchedByUserKey})"));
+								LoggingHelper.Debug($"[Damage] Allowed: Owner '{persistentKey}' is vulnerable. Details: {shardDetails}");
+							}
+							isFastTrackApproved = true;
+						}
+
+						if (!isFastTrackApproved)
+						{
+							// OPT-IN RAIDING
+							if (optInEnabled && !orpEnabled)
+							{
+								bool isDefenderOptedIn = OptInRaidService.IsOptedIn(persistentKey);
+								if (forcedRaidDay) isDefenderOptedIn = true;
+
+								if (!isDefenderOptedIn)
+								{
+									if (!attackerResolved) ResolveAttacker(em, sourceEntity, ref attackerResolved, ref attackerCharEntity, ref attackerUserEntity, ref attackerName, ref attackerKey);
+									if (cachedDefenderBaseName == null) cachedDefenderBaseName = GetDefenderBaseName(em, castleHeartEntity);
+
+									BlockDamageAndNotify(em, entity, attackerUserEntity, cachedDefenderBaseName, "PROTECTED", "(Not Opted-In)", nowUtc);
+									continue;
+								}
+
+								if (!attackerResolved) ResolveAttacker(em, sourceEntity, ref attackerResolved, ref attackerCharEntity, ref attackerUserEntity, ref attackerName, ref attackerKey);
+
+								bool isAttackerOptedIn = forcedRaidDay || (!string.IsNullOrEmpty(attackerKey) && OptInRaidService.IsOptedIn(attackerKey));
+								if (!isAttackerOptedIn)
+								{
+									if (cachedDefenderBaseName == null) cachedDefenderBaseName = GetDefenderBaseName(em, castleHeartEntity);
+									BlockDamageAndNotify(em, entity, attackerUserEntity, cachedDefenderBaseName, "PROTECTED", $"(Attacker {attackerName ?? "Unknown"} is not Opted-In)", nowUtc);
+									continue;
+								}
+							}
+
+							// OFFLINE RAID PROTECTION
+							if (orpEnabled)
+							{
+								bool willBeFullyProtected = false;
+								bool isInGracePeriod = false;
+								bool allDefendersOffline = false;
+								bool checkedAllDefendersOffline = false;
+
+								if (OfflineGraceService.TryGetOfflineStartTime(persistentKey, out DateTime offlineStartTimeUtc))
+								{
+									TimeSpan timeOffline = nowUtc - offlineStartTimeUtc;
+
+									if (configuredGraceMinutes > 0 && timeOffline.TotalMinutes < configuredGraceMinutes)
+									{
+										isInGracePeriod = true;
+									}
+									else
+									{
+										if (!checkedAllDefendersOffline) { allDefendersOffline = OfflineProtectionService.AreAllDefendersActuallyOffline(castleHeartEntity, em); checkedAllDefendersOffline = true; }
+										if (Plugin.ServerHasJustBooted || allDefendersOffline) willBeFullyProtected = true;
+									}
+								}
+								else if (OfflineGraceService.IsUnderDefaultBootORP(persistentKey))
+								{
+									if (!checkedAllDefendersOffline) { allDefendersOffline = OfflineProtectionService.AreAllDefendersActuallyOffline(castleHeartEntity, em); checkedAllDefendersOffline = true; }
+									if (Plugin.ServerHasJustBooted || allDefendersOffline) willBeFullyProtected = true;
+								}
+
+								if (allDefendersOffline)
+								{
+									// ONLY spawn icon if they are offline but NOT fully protected (meaning grace period)
+									if (!willBeFullyProtected)
+									{
+										RaidMapIconService.AddRaidIcon(castleHeartEntity, isOfflineRaid: true, isDecayRaid: false);
+									}
+
+									if (announceOfflineDuringGrace && !willBeFullyProtected)
+									{
+										if (!attackerResolved) ResolveAttacker(em, sourceEntity, ref attackerResolved, ref attackerCharEntity, ref attackerUserEntity, ref attackerName, ref attackerKey);
+										if (IsSiegeWeaponDamage(em, sourceEntity, attackerCharEntity, ref attackerName))
+										{
+											if (cachedDefenderBaseName == null) cachedDefenderBaseName = GetDefenderBaseName(em, castleHeartEntity);
+											MakeOfflineSiegeAnnouncement(em, castleHeartEntity, attackerName, cachedDefenderBaseName, isInGracePeriod, nowUtc);
+										}
+									}
+								}
+
+								if (willBeFullyProtected)
+								{
+									if (!attackerResolved) ResolveAttacker(em, sourceEntity, ref attackerResolved, ref attackerCharEntity, ref attackerUserEntity, ref attackerName, ref attackerKey);
+									if (cachedDefenderBaseName == null) cachedDefenderBaseName = GetDefenderBaseName(em, castleHeartEntity);
+
+									BlockDamageAndNotify(em, entity, attackerUserEntity, cachedDefenderBaseName, "OFFLINE PROTECTED", "", nowUtc);
+									continue; // BLOCKED
+								}
+							}
+						}
+
+						// 6. WEAPON RAIDING
+						if (weaponRaidingEnabled && damageEvent.MaterialModifiers.StoneStructure <= 0f)
+						{
+							if (!attackerResolved) ResolveAttacker(em, sourceEntity, ref attackerResolved, ref attackerCharEntity, ref attackerUserEntity, ref attackerName, ref attackerKey);
+
+							if (attackerUserEntity != Entity.Null)
+							{
+								var modifiedModifiers = damageEvent.MaterialModifiers;
+								modifiedModifiers.StoneStructure = weaponDamageMultiplier;
+								damageEvent.MaterialModifiers = modifiedModifiers;
+								em.SetComponentData(entity, damageEvent);
+
+								if (logDebug) LoggingHelper.Debug($"[WeaponRaiding] Overwrote StoneStructure modifier to {weaponDamageMultiplier}");
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						if (logDebug) LoggingHelper.Error("[DamageInterceptorPatch] Error processing specific damage event.", ex);
+					}
+				}
+			}
+			finally
+			{
+				if (damageEventEntities.IsCreated) damageEventEntities.Dispose();
+			}
+		}
+
+		private static void ResolveAttacker(EntityManager em, Entity sourceEntity, ref bool resolved, ref Entity charEntity, ref Entity userEntity, ref string name, ref string key)
+		{
+			resolved = true;
+			if (UserHelper.TryGetPlayerOwnerFromSource(em, sourceEntity, out charEntity, out userEntity))
+			{
+				if (em.TryGetComponentData<User>(userEntity, out User u))
+				{
+					name = u.CharacterName.ToString();
+					Entity clan = u.ClanEntity._Entity;
+					if (clan.Exists() && em.HasComponent<ClanTeam>(clan))
+						key = PersistentKeyHelper.GetClanKey(em, clan);
+					else
+						key = PersistentKeyHelper.GetUserKey(u.PlatformId);
+				}
+			}
+		}
+
+		private static void BlockDamageAndNotify(EntityManager em, Entity eventEntity, Entity attackerUserEntity, string defenderBaseName, string protectionStatusKeyword, string protectionContext, DateTime nowUtc)
+		{
+			em.DestroyEntity(eventEntity);
+
+			if (attackerUserEntity == Entity.Null) return;
+
+			var messageBuilder = new StringBuilder();
+			messageBuilder.Append(ChatColors.InfoText($"{defenderBaseName} is "));
+			messageBuilder.Append(ChatColors.AccentText(protectionStatusKeyword));
+
+			if (!string.IsNullOrEmpty(protectionContext))
+				messageBuilder.Append(ChatColors.InfoText($" {protectionContext}."));
+			else
+				messageBuilder.Append(ChatColors.InfoText("."));
+
+			if (!_lastProtectedMessageTimes.TryGetValue(attackerUserEntity, out DateTime lastTimeSent) || (nowUtc - lastTimeSent) > OfflineProtectedMessageCooldown)
+			{
+				if (em.TryGetComponentData<User>(attackerUserEntity, out User attackerUser))
+				{
+					FixedString512Bytes message = new FixedString512Bytes(messageBuilder.ToString());
+					ServerChatUtils.SendSystemMessageToClient(em, attackerUser, ref message);
+					_lastProtectedMessageTimes[attackerUserEntity] = nowUtc;
+				}
+			}
+		}
+
+		private static bool TryGetDefenderKeyFromDamagedEntity(EntityManager em, Entity damagedEntity, out Entity castleHeartEntity, out Entity defenderKeyEntity)
+		{
+			castleHeartEntity = Entity.Null; defenderKeyEntity = Entity.Null;
+			if (em.HasComponent<CastleHeartConnection>(damagedEntity)) castleHeartEntity = em.GetComponentData<CastleHeartConnection>(damagedEntity).CastleHeartEntity._Entity;
+			else if (em.HasComponent<CastleHeart>(damagedEntity)) castleHeartEntity = damagedEntity;
+
+			if (castleHeartEntity == Entity.Null || !em.Exists(castleHeartEntity)) return false;
+
+			if (!OwnershipCacheService.TryGetHeartOwner(castleHeartEntity, out Entity ownerUserEntity) || ownerUserEntity == Entity.Null) return false;
+			if (!em.Exists(ownerUserEntity) || !em.HasComponent<User>(ownerUserEntity)) return false;
+
+			if (OwnershipCacheService.TryGetUserClan(ownerUserEntity, out Entity ownerClanEntity) && ownerClanEntity != Entity.Null && em.Exists(ownerClanEntity)) defenderKeyEntity = ownerClanEntity;
+			else defenderKeyEntity = ownerUserEntity;
+
+			return true;
+		}
+
+		private static string GetDefenderBaseName(EntityManager em, Entity castleHeartEntity)
+		{
+			if (castleHeartEntity != Entity.Null && em.TryGetComponentData<UserOwner>(castleHeartEntity, out UserOwner heartOwner) &&
+			em.Exists(heartOwner.Owner._Entity) &&
+			em.TryGetComponentData<User>(heartOwner.Owner._Entity, out User ownerUserData))
+			{
+				if (em.TryGetComponentData<NameableInteractable>(castleHeartEntity, out NameableInteractable castleNameComp) && !string.IsNullOrWhiteSpace(castleNameComp.Name.ToString()))
+				{
+					return $"'{castleNameComp.Name.ToString()}'";
+				}
+				return $"{ownerUserData.CharacterName.ToString()}'s base";
+			}
+			return "A base";
+		}
+
+		private static bool IsSiegeWeaponDamage(EntityManager em, Entity sourceEntity, Entity attackerCharEntity, ref string attackerName)
+		{
+			if (attackerCharEntity != Entity.Null && HasSiegeGolemBuff(em, attackerCharEntity)) return true;
+
+			PrefabGUID sourcePrefabGuid = default;
+			if (em.Exists(sourceEntity) && em.HasComponent<PrefabGUID>(sourceEntity)) sourcePrefabGuid = em.GetComponentData<PrefabGUID>(sourceEntity);
+			else if (em.Exists(sourceEntity) && em.HasComponent<EntityOwner>(sourceEntity))
+			{
+				Entity ownerOfSource = em.GetComponentData<EntityOwner>(sourceEntity).Owner;
+				if (em.Exists(ownerOfSource) && em.HasComponent<PrefabGUID>(ownerOfSource)) sourcePrefabGuid = em.GetComponentData<PrefabGUID>(ownerOfSource);
+			}
+
+			if (sourcePrefabGuid.Equals(PrefabData.TntExplosivePrefab1) || sourcePrefabGuid.Equals(PrefabData.TntExplosivePrefab2))
+			{
+				if (string.IsNullOrEmpty(attackerName)) attackerName = "Explosives";
+				return true;
+			}
+			return false;
+		}
+
+		private static void MakeOfflineSiegeAnnouncement(EntityManager em, Entity castleHeartEntity, string attackerName, string defenderBaseName, bool isInGracePeriod, DateTime nowUtc)
+		{
+			if (!_lastOfflineSiegeAnnouncementTimes.TryGetValue(castleHeartEntity, out DateTime lastAnnTime) || (nowUtc - lastAnnTime) > OfflineSiegeAnnouncementCooldown)
+			{
+				var messageBuilder = new StringBuilder();
+				messageBuilder.Append(ChatColors.InfoText($"{defenderBaseName} is being "));
+				messageBuilder.Append(ChatColors.WarningText("offline raided"));
+				messageBuilder.Append(ChatColors.InfoText(" by "));
+				messageBuilder.Append(ChatColors.HighlightText(attackerName ?? "Unknown"));
+				messageBuilder.Append(ChatColors.InfoText("!"));
+
+				FixedString512Bytes annMsg = new FixedString512Bytes(messageBuilder.ToString());
+				ServerChatUtils.SendSystemMessageToAllClients(em, ref annMsg);
+				_lastOfflineSiegeAnnouncementTimes[castleHeartEntity] = nowUtc;
+			}
+		}
+
+		private static void AnnounceDecayedBaseDamage(EntityManager em, Entity castleHeartEntity, string attackerName, string defenderBaseName, DateTime nowUtc)
+		{
+			if (!_lastDecayedRaidAnnouncementTimes.TryGetValue(castleHeartEntity, out DateTime lastAnnTime) || (nowUtc - lastAnnTime) > DecayedRaidAnnouncementCooldown)
+			{
+				var messageBuilder = new StringBuilder();
+				messageBuilder.Append(ChatColors.InfoText($"{defenderBaseName} "));
+				messageBuilder.Append(ChatColors.WarningText("is DECAYED"));
+				messageBuilder.Append(ChatColors.InfoText(" and being raided by "));
+				messageBuilder.Append(ChatColors.HighlightText(attackerName ?? "Unknown"));
+				messageBuilder.Append(ChatColors.InfoText("!"));
+
+				FixedString512Bytes decayedAnnMessage = new FixedString512Bytes(messageBuilder.ToString());
+				ServerChatUtils.SendSystemMessageToAllClients(em, ref decayedAnnMessage);
+				_lastDecayedRaidAnnouncementTimes[castleHeartEntity] = nowUtc;
+			}
+		}
+
+		private static bool HasSiegeGolemBuff(EntityManager em, Entity playerCharacterEntity)
+		{
+			if (!em.Exists(playerCharacterEntity) || !em.HasComponent<PlayerCharacter>(playerCharacterEntity)) return false;
+			if (!_sgmCached) return false;
+
+			try
+			{
+				return _serverGameManager.TryGetBuff(playerCharacterEntity, PrefabData.SiegeGolemBuff, out _);
+			}
+			catch { return false; }
+		}
+	}
 }

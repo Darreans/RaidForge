@@ -43,7 +43,7 @@ namespace RaidForge.Config
             RaidScheduleTimeZoneDisplayString = configFile.Bind(SECTION_GENERAL,
                 "RaidScheduleTimeZoneForDisplay", 
                 "Server Time", 
-                "The timezone string (e.g., EST, PST, UTC, Server Time) to display next to raid times in the .raiddays command. Leave empty if no timezone should be shown.");
+                "The timezone string (e.g., EST, PST, UTC, Server Time) to display next to raid times in the .raiddays command.");
 
             string defaultOffTime = "00:00";
             string defaultWeekendStartTime = "20:00";

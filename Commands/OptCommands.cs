@@ -66,16 +66,13 @@ namespace RaidForge.Commands
                 return;
             }
 
-            if (VWorld.GameBalanceSettings(out var balance) && VWorld.ZDateTime(out var dt))
-            {
-                if (balance.IsCastlePvPEnabled(dt))
-                {
-                    ctx.Reply(ChatColors.ErrorText("You cannot opt-out while a raid window is active."));
-                    return;
-                }
-            }
+			if (Plugin.IsAutoRaidCurrentlyActive)
+			{
+				ctx.Reply(ChatColors.ErrorText("You cannot opt-out while a raid window is active."));
+				return;
+			}
 
-            var em = VWorld.EntityManager;
+			var em = VWorld.EntityManager;
             var userEntity = ctx.Event.SenderUserEntity;
             var user = em.GetComponentData<User>(userEntity);
             Entity clanEntity = user.ClanEntity._Entity;

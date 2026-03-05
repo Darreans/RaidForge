@@ -11,8 +11,7 @@ using ProjectM.Gameplay.Systems;
 using ProjectM.Scripting;
 using System;
 
-//really its for my own tracking.
-
+/// mehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 namespace RaidForge.Patches
 {
     [HarmonyPatch]
@@ -59,7 +58,7 @@ namespace RaidForge.Patches
                         }
                     }
                 }
-                catch (Exception e) { }
+                catch (Exception) { }
                 finally { if (eventEntities.IsCreated) eventEntities.Dispose(); }
             }
         }

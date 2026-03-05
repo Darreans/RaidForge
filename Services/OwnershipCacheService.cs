@@ -222,13 +222,11 @@ namespace RaidForge.Services
             }
         }
 
-        public static IReadOnlyDictionary<Entity, Entity> GetHeartToOwnerCacheView() =>
-            new Dictionary<Entity, Entity>(_heartToOwnerUserCache);
+		public static IReadOnlyDictionary<Entity, Entity> GetHeartToOwnerCacheView() => _heartToOwnerUserCache;
 
-        public static IReadOnlyDictionary<Entity, Entity> GetUserToClanCacheView() =>
-            new Dictionary<Entity, Entity>(_userToClanCache);
+		public static IReadOnlyDictionary<Entity, Entity> GetUserToClanCacheView() => _userToClanCache;
 
-        public static void ClearAllCaches()
+		public static void ClearAllCaches()
         {
             _heartToOwnerUserCache.Clear();
             _userToClanCache.Clear();

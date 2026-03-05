@@ -141,7 +141,7 @@ namespace RaidForge.Patches
                    
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                
             }

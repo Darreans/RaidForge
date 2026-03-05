@@ -23,7 +23,7 @@ namespace RaidForge.Config
                 SECTION_MAIN,
                 "EnableOptInSchedule",
                 false,
-                "If true, the daily schedule below is used. If false, the standard opt-in system is used.");
+                "If true, the daily schedule below is used. If false, the standard opt-in system is used. Good for if you want to allow teams to raid on weekdays  an allow others to not be raided, while still making everyone raidable on weekends.");
 
             foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
             {

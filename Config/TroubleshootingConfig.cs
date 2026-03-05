@@ -19,7 +19,7 @@ namespace RaidForge.Config
                 SECTION_LOGGING,
                 "EnableVerboseLogging",
                 false,
-                "Set to true to enable detailed informational logs from RaidForge for debugging various features. This can be performance intensive.");
+                "Set to true to enable detailed informational logs from RaidForge for debugging various features. This can be performance intensive and should be off, unless you are troubleshooting something.");
 
             logger?.LogInfo("[TroubleshootingConfig] Initialized.");
         }

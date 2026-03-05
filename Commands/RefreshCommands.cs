@@ -8,7 +8,7 @@ namespace RaidForge.Commands
 {
     public class RefreshCommands
     {
-        [Command("raidrefreshcache", "Forcefully clears and rebuilds the entire RaidForge ownership cache. Use if the server is not detecting players or bases correctly.", adminOnly: true)]
+        [Command("raidrefreshcache", "Forcefully clears and rebuilds the entire RaidForge  cache. Use if the server is not detecting players or bases correctly.", adminOnly: true)]
         public void RefreshCacheCommand(ChatCommandContext ctx)
         {
             if (Plugin.Instance == null)

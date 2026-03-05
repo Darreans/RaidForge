@@ -19,15 +19,15 @@ namespace RaidForge.Config
                 SECTION_MAIN,
                 "EnableWeaponRaiding",
                 false, 
-                "If true, players can damage castle walls/structures with regular weapons and explosives without a Siege Golem.");
+                "If true, players can damage castle walls/structures with regular weapons.");
 
             WeaponDamageVsStoneMultiplier = configFile.Bind(
                 SECTION_MAIN,
                 "WeaponDamageVsStoneMultiplier",
                 0.5f,
                 "The damage multiplier against Stone Structures (Walls, Doors). \n" +
-                "0.0 = No Damage (Vanilla).\n" +
-                "1.0 = Full Weapon Damage (Like hitting a tree).\n" +
+                "0.0 = No Damage .\n" +
+                "1.0 = Full Weapon Damage.\n" +
                 "0.5 = Half Damage (Recommended to keep Golems relevant).");
 
             if (logger != null) logger.LogInfo("[WeaponRaidingConfig] Initialized.");

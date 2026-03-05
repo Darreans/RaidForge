@@ -42,7 +42,7 @@ namespace RaidForge.Patches
 
                 OwnershipCacheService.UpdateUserClan(userToLeave, Entity.Null, entityManager);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }

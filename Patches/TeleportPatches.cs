@@ -44,17 +44,10 @@ namespace RaidForge.Patches
             {
                 if (eventEntities.Length == 0) return;
 
-                bool currentRaidStatus;
-                if (VWorld.IsServerWorldReady() && VWorld.GameBalanceSettings(out var balance) && VWorld.ZDateTime(out var dt))
-                {
-                    currentRaidStatus = balance.IsCastlePvPEnabled(dt);
-                }
-                else
-                {
-                    return;
-                }
+				if (!VWorld.IsServerWorldReady()) return;
+				bool currentRaidStatus = Plugin.IsAutoRaidCurrentlyActive;
 
-                if (currentRaidStatus && !allowWaygateConfig)
+				if (currentRaidStatus && !allowWaygateConfig)
                 {
                     World world = VWorld.Server;
                     ServerScriptMapper serverScriptMapper = null;

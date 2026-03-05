@@ -1,24 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Darrean\\Documents\\RaidForge-main\\RaidForge-main\\RaidForge.csproj": {}
+    "D:\\PublicVrisingMods\\RaidForge-DealDamageSystem\\RaidForge.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Darrean\\Documents\\RaidForge-main\\RaidForge-main\\RaidForge.csproj": {
+    "D:\\PublicVrisingMods\\RaidForge-DealDamageSystem\\RaidForge.csproj": {
       "version": "2.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Darrean\\Documents\\RaidForge-main\\RaidForge-main\\RaidForge.csproj",
+        "projectUniqueName": "D:\\PublicVrisingMods\\RaidForge-DealDamageSystem\\RaidForge.csproj",
         "projectName": "RaidForge",
-        "projectPath": "C:\\Users\\Darrean\\Documents\\RaidForge-main\\RaidForge-main\\RaidForge.csproj",
-        "packagesPath": "C:\\Users\\Darrean\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Darrean\\Documents\\RaidForge-main\\RaidForge-main\\obj\\",
+        "projectPath": "D:\\PublicVrisingMods\\RaidForge-DealDamageSystem\\RaidForge.csproj",
+        "packagesPath": "C:\\Users\\Darre\\.nuget\\packages\\",
+        "outputPath": "D:\\PublicVrisingMods\\RaidForge-DealDamageSystem\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Darrean\\Documents\\RaidForge-main\\RaidForge-main\\NuGet.Config",
-          "C:\\Users\\Darrean\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "D:\\PublicVrisingMods\\RaidForge-DealDamageSystem\\NuGet.Config",
+          "C:\\Users\\Darre\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -27,12 +27,9 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Users\\Darrean\\.nuget\\packages\\bepinex.plugininfoprops\\2.1.0": {},
-          "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client": {},
-          "C:\\Users\\Darrean\\.nuget\\packages\\vrising.unhollowed.client\\1.0.45.802790001-1": {},
-          "C:\\Users\\Darrean\\Downloads\\sqllitedb": {},
           "https://api.nuget.org/v3/index.json": {},
-          "https://nuget.bepinex.dev/v3/index.json": {}
+          "https://nuget.bepinex.dev/v3/index.json": {},
+          "https://nuget.samboy.dev/v3/index.json": {}
         },
         "frameworks": {
           "net6.0": {
@@ -50,7 +47,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net6.0": {
@@ -59,20 +56,20 @@
             "BepInEx.Core": {
               "include": "Compile",
               "target": "Package",
-              "version": "[6.0.0-be.690, )"
+              "version": "[6.0.0-be.733, )"
             },
             "BepInEx.PluginInfoProps": {
               "target": "Package",
-              "version": "[1.*, )"
+              "version": "[2.1.0, )"
             },
             "BepInEx.Unity.IL2CPP": {
               "include": "Compile",
               "target": "Package",
-              "version": "[6.0.0-be.690, )"
+              "version": "[6.0.0-be.733, )"
             },
-            "VRising.Unhollowed.Client": {
+            "VRising.UnhollowedX.Client": {
               "target": "Package",
-              "version": "[1.1.8.*, )"
+              "version": "[1.0.10, )"
             }
           },
           "imports": [
@@ -91,7 +88,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102\\RuntimeIdentifierGraph.json"
         }
       }
     }

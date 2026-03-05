@@ -15,29 +15,31 @@ namespace RaidForge.Config
                 "OfflineRaidProtection",
                 "EnableOfflineProtection",
                 true,
-                "Enable or disable the offline raid protection system against all damage types when fully active (after grace).");
+                "Enable or disable the offline raid protection system.");
 
             GracePeriodDurationMinutes = config.Bind(
                 "OfflineRaidProtection",
                 "GracePeriodMinutes",
                 15.0f,
                 "The duration (in minutes) of the grace period after all relevant defenders log off. " +
-                "During this period, their base is still considered 'recently online' and vulnerable. " +
-                "Set to 0 to have no grace period (full ORP protection may activate immediately if defenders are offline).");
+                "During this period, their base is still considered vulnerable, so they can be raided " +
+                "Set to 0 to have no grace period, which means players can just log off and they will instantly have offline protection (not really recommended to have 0 set).");
 
             AnnounceOfflineRaidDuringGrace = config.Bind(
                 "OfflineRaidProtection",
                 "AnnounceOfflineRaidDuringGrace",
                 true,
-                "If true, a global announcement will be made when an offline base (within its grace period) " +
-                "is being raided (30 second cool down).");
+                "If true, a global announcement will be made when an offline base " +
+                "is being raided. If you have offline protection and they are within their grace period, it will still announce.");
 
             AnnounceDecayedBaseRaid = config.Bind(
                 "OfflineRaidProtection",
                 "AnnounceDecayedBaseRaid",
                 true,
                 "If true, a global announcement will be made when a decayed base " +
-                "is being damaged by a player (5 minute cool down)");
+                "is being damaged by a player");
+
+
         }
     }
 }

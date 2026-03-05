@@ -23,10 +23,13 @@ namespace RaidForge.Data
         public static readonly PrefabGUID SolarusShard = new PrefabGUID(-21943750);
         public static readonly PrefabGUID MorganaShard = new PrefabGUID(1286615355);
         public static readonly PrefabGUID DraculaShard = new PrefabGUID(666638454);
-        public static readonly PrefabGUID MonsterShard = new PrefabGUID(1581189572);
+        public static readonly PrefabGUID MonsterShard = new PrefabGUID(-1581189572);
         public static readonly PrefabGUID ManticoreShard = new PrefabGUID(-1260254082);
 
-        public static readonly HashSet<PrefabGUID> SoulShardPrefabGUIDs = new()
+		public static readonly PrefabGUID BearFormBuff = new PrefabGUID(1569370346);
+		public static readonly PrefabGUID BearFormSkinBuff = new PrefabGUID(-858273386);
+
+		public static readonly HashSet<PrefabGUID> SoulShardPrefabGUIDs = new()
         {
             SolarusShard,
             MorganaShard,
