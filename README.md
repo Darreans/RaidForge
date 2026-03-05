@@ -17,30 +17,30 @@ RaidForge is a comprehensive V Rising mod designed to give server administrators
 
 ## Core Features
 
-### 🛡️ Advanced Offline Protection
+### Advanced Offline Protection
 * **Offline Protection:** Prevents bases from damage when all associated defenders (clan members or solo owners) are offline.
 * **Configurable Grace Period:** Defines a window of vulnerability after the last defender logs off. Makes it so players cannot just log off before they are being raided, they must be offline for the given grace period to obtain Offline protection.
 * **Soul Shard Rules:** Choose whether holding a Soul Shard revokes a clan's Offline Raid Protection. 
 
-### ⚔️ Opt-In Raiding System
+### Opt-In Raiding System
 * Turn your server into a consensual PvP zone. When enabled, standard Offline Raid Protection is bypassed, and bases are invincible by default.
 * Players must use `.raidoptin` to become raidable.
 * **Mutual Combat:** An attacker cannot damage an opted-in base unless the attacker is also opted in. Both parties must be flagged for raiding.
 
-### 🏰 Dynamic Raid Interference
+### Dynamic Raid Interference
 * Discourages third-party from interfering in active sieges.
 * Automatically applies a burning debuff to players who enter an active siege territory if they are not the attacker or the defender.
-* **Exemptions:** Server Admins and players utilizing Bear Form are immune to the burn (great for spectating! and is configurable).
+* **Exemptions:** Server Admins and players utilizing Bear Form are immune to the burn (great for spectating, and is configurable).
 
-### 🗺️ Live Map Icons
+### Live Map Icons
 * Configurable map markers will automatically appear to alert the server when a Decayed Base or an Offline Base is actively taking damage and will apply a icon over the castle heart for a given time.
 
-### 🤖 Siege Golem Automation & Weapon Raiding
+###  Siege Golem Automation & Weapon Raiding
 * **Weapon Raiding:** Enable regular weapons and explosives to damage walls (with a configurable damage multiplier), making Golems optional for raiding.
 * **Golem Automation:** Set a server start date and let RaidForge automatically scale Siege Golem HP as the server ages (e.g., higher HP on Day 7 than Day 1).
 * **Manual Golem Control:** Admins can manually set and lock Golem HP levels via commands.
 
-### 📅 Custom Schedules & Waygate Limits
+###  Custom Schedules & Waygate Limits
 * Define exact daily raid windows using the server's local time (supports raids that span past midnight).
 * Optionally restrict Waygate teleportation while a global raid window is active.
 
@@ -87,6 +87,7 @@ RaidForge generates multiple config files in your `BepInEx/config/RaidForge/` di
 ## Community & Support
 * **VArena Discord:** [https://discord.gg/varena](https://discord.gg/varena)
 * **V Rising Modding Wiki:** [https://wiki.vrisingmods.com](https://wiki.vrisingmods.com)
+* **VArena Website:** https://www.v-arena.com
 
 ## Acknowledgements
 Special thanks to the V Rising Modding community, the developers of the underlying frameworks, helskog (for the Waygate restriction feature), Mitch (zfolmt) (for the Raid Interference inspiration), and Amingo for helping with finding bugs.

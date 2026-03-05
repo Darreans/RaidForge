@@ -42,7 +42,7 @@ namespace RaidForge.Services
                 try
                 {
                     string[] lines = File.ReadAllLines(filePath);
-                    foreach (var line in lines.Skip(1)) // Skip header
+                    foreach (var line in lines.Skip(1)) 
                     {
                         if (string.IsNullOrWhiteSpace(line)) continue;
 

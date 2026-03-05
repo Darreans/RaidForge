@@ -17,13 +17,10 @@ namespace RaidForge.Services
         private static Dictionary<Entity, Entity> _userToClanCache = new Dictionary<Entity, Entity>();
         private static bool _isClanCachePopulatedFromInitialScan = false;
 
-        // --- NEW METHOD FOR SPAWN PATCH ---
-        // This allows the patch to inject single hearts as they spawn.
         public static void AddHeartToCache(Entity heartEntity, EntityManager em)
         {
             if (!em.Exists(heartEntity)) return;
 
-            // We need to find the UserOwner component
             if (em.TryGetComponentData<UserOwner>(heartEntity, out UserOwner userOwner))
             {
                 Entity ownerEntity = userOwner.Owner._Entity;
@@ -31,7 +28,6 @@ namespace RaidForge.Services
                 {
                     _heartToOwnerUserCache[heartEntity] = ownerEntity;
 
-                    // While we are here, update the user's clan in the cache too
                     if (em.TryGetComponentData<User>(ownerEntity, out User userData))
                     {
                         _userToClanCache[ownerEntity] = userData.ClanEntity._Entity;
@@ -39,7 +35,6 @@ namespace RaidForge.Services
                 }
             }
         }
-        // ----------------------------------
 
         public static int InitializeHeartOwnershipCache(EntityManager entityManager)
         {
@@ -66,7 +61,6 @@ namespace RaidForge.Services
 
                 foreach (Entity heartEntity in heartEntities)
                 {
-                    // Re-use the logic from AddHeartToCache to keep it consistent
                     AddHeartToCache(heartEntity, entityManager);
                     if (_heartToOwnerUserCache.ContainsKey(heartEntity))
                     {

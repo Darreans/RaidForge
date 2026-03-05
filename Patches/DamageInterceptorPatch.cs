@@ -138,10 +138,8 @@ namespace RaidForge.Patches
 						bool isBreached = em.GetComponentData<CastleHeart>(castleHeartEntity).IsSieged();
 						bool isDecaying = OfflineProtectionService.IsBaseDecaying(castleHeartEntity, em);
 
-						// 3. DECAY / BREACH CHECKS
 						if (isBreached || isDecaying)
 						{
-							// ONLY spawn decay icon if it's actually a decay raid
 							if (isDecaying && !isBreached)
 							{
 								RaidMapIconService.AddRaidIcon(castleHeartEntity, isOfflineRaid: false, isDecayRaid: true);
@@ -163,7 +161,6 @@ namespace RaidForge.Patches
 							isFastTrackApproved = true;
 						}
 
-						// 4. SHARD VULNERABILITY
 						if (!isFastTrackApproved && RaidForge.Config.ShardConfig.DisableOrpForShardHolders.Value && ShardVulnerabilityService.IsVulnerable(persistentKey))
 						{
 							if (logDebug)
@@ -177,7 +174,6 @@ namespace RaidForge.Patches
 
 						if (!isFastTrackApproved)
 						{
-							// OPT-IN RAIDING
 							if (optInEnabled && !orpEnabled)
 							{
 								bool isDefenderOptedIn = OptInRaidService.IsOptedIn(persistentKey);
@@ -203,7 +199,6 @@ namespace RaidForge.Patches
 								}
 							}
 
-							// OFFLINE RAID PROTECTION
 							if (orpEnabled)
 							{
 								bool willBeFullyProtected = false;
@@ -233,7 +228,6 @@ namespace RaidForge.Patches
 
 								if (allDefendersOffline)
 								{
-									// ONLY spawn icon if they are offline but NOT fully protected (meaning grace period)
 									if (!willBeFullyProtected)
 									{
 										RaidMapIconService.AddRaidIcon(castleHeartEntity, isOfflineRaid: true, isDecayRaid: false);
@@ -256,12 +250,12 @@ namespace RaidForge.Patches
 									if (cachedDefenderBaseName == null) cachedDefenderBaseName = GetDefenderBaseName(em, castleHeartEntity);
 
 									BlockDamageAndNotify(em, entity, attackerUserEntity, cachedDefenderBaseName, "OFFLINE PROTECTED", "", nowUtc);
-									continue; // BLOCKED
+									continue; 
 								}
 							}
 						}
 
-						// 6. WEAPON RAIDING
+						
 						if (weaponRaidingEnabled && damageEvent.MaterialModifiers.StoneStructure <= 0f)
 						{
 							if (!attackerResolved) ResolveAttacker(em, sourceEntity, ref attackerResolved, ref attackerCharEntity, ref attackerUserEntity, ref attackerName, ref attackerKey);

@@ -5,9 +5,9 @@ using ProjectM;
 using RaidForge.Systems;
 using RaidForge.Config;
 using RaidForge.Utils;
-using Unity.Entities;          // Added for Entity
-using ProjectM.Network;        // Added for ApplyBuffDebugEvent
-using RaidForge.Data;          // Added for PrefabData
+using Unity.Entities;          
+using ProjectM.Network;        
+using RaidForge.Data;          
 
 namespace RaidForge.Commands
 {
@@ -130,13 +130,11 @@ namespace RaidForge.Commands
 
 			if (string.IsNullOrEmpty(playerName))
 			{
-				// Target Self
 				targetCharacterEntity = ctx.Event.SenderCharacterEntity;
 				targetName = "yourself";
 			}
 			else
 			{
-				// Target Other
 				if (UserHelper.FindUserEntity(VWorld.EntityManager, playerName, out _, out User targetUserData, out string foundName))
 				{
 					targetCharacterEntity = targetUserData.LocalCharacter._Entity;
