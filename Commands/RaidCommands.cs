@@ -18,7 +18,7 @@ namespace RaidForge.Commands
 {
     public class RaidCommands
     {
-        [Command("reloadraidforge", "Reloads all RaidForge configuration files.", adminOnly: true)]
+        [Command("reloadraidforge", description: "Reloads RaidForge configuration files except startup-only command settings.", adminOnly: true)]
         public void ReloadConfig(ChatCommandContext ctx)
         {
             if (Plugin.Instance == null)
@@ -31,7 +31,7 @@ namespace RaidForge.Commands
             ctx.Reply(ChatColors.SuccessText("All RaidForge configurations reload requested."));
         }
 
-        [Command("raidon", "Manually turn raids ON.", adminOnly: true)]
+        [Command("raidon", description: "Manually turn raids ON.", adminOnly: true)]
         public void RaidOn(ChatCommandContext ctx)
         {
             try
@@ -39,7 +39,8 @@ namespace RaidForge.Commands
                 if (RaidSchedulingSystem.SetManualOverride(true))
                 {
                     ctx.Reply(ChatColors.SuccessText("Raids manually forced ON."));
-                    ctx.Reply(ChatColors.InfoText("RaidForge schedule automation is paused until .raidauto or restart/reload."));
+                    ctx.Reply(ChatColors.InfoText(
+                        $"RaidForge schedule automation is paused until {CommandSettingsConfig.GetInvocation("raidauto")} or restart/reload."));
                 }
                 else
                 {
@@ -53,7 +54,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("raidoff", "Manually turn raids OFF.", adminOnly: true)]
+        [Command("raidoff", description: "Manually turn raids OFF.", adminOnly: true)]
         public void Raidoff(ChatCommandContext ctx)
         {
             try
@@ -61,7 +62,8 @@ namespace RaidForge.Commands
                 if (RaidSchedulingSystem.SetManualOverride(false))
                 {
                     ctx.Reply(ChatColors.WarningText("Raids manually forced OFF."));
-                    ctx.Reply(ChatColors.InfoText("RaidForge schedule automation is paused until .raidauto or restart/reload."));
+                    ctx.Reply(ChatColors.InfoText(
+                        $"RaidForge schedule automation is paused until {CommandSettingsConfig.GetInvocation("raidauto")} or restart/reload."));
                 }
                 else
                 {
@@ -75,7 +77,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("raidauto", "Clears the manual raid override and resumes the RaidForge schedule.", adminOnly: true)]
+        [Command("raidauto", description: "Clears the manual raid override and resumes the RaidForge schedule.", adminOnly: true)]
         public void RaidAuto(ChatCommandContext ctx)
         {
             try
@@ -96,7 +98,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("removeorp", "Removes offline protection from a player/clan until they log back in.", adminOnly: true)]
+        [Command("removeorp", description: "Removes offline protection from a player/clan until they log back in.", adminOnly: true)]
         public void RemoveOrp(ChatCommandContext ctx, string playerName)
         {
             if (!Plugin.SystemsInitialized || !VWorld.IsServerWorldReady())
@@ -130,13 +132,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("raidt", "Shows time until the next scheduled raid window starts.", adminOnly: false)]
-        public void RaidTime(ChatCommandContext ctx)
-        {
-            ShowRaidTime(ctx);
-        }
-
-        [Command("raidtimer", "Shows time until the next scheduled raid window starts.", adminOnly: false)]
+        [Command("raidtime", shortHand: "raidt", description: "Shows time until the next scheduled raid window starts.", adminOnly: false)]
         public void RaidTimer(ChatCommandContext ctx)
         {
             ShowRaidTime(ctx);
@@ -231,14 +227,8 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("raiddays", "Shows the raid schedule for the week.", adminOnly: false)]
+        [Command("raiddays", shortHand: "raidd", description: "Shows the raid schedule for the week.", adminOnly: false)]
         public void RaidDays(ChatCommandContext ctx)
-        {
-            ShowRaidDays(ctx);
-        }
-
-        [Command("raidd", "Shows the raid schedule for the week.", adminOnly: false)]
-        public void RaidDaysShort(ChatCommandContext ctx)
         {
             ShowRaidDays(ctx);
         }
@@ -362,14 +352,8 @@ namespace RaidForge.Commands
                 : $" ({offsetLabel})";
         }
 
-        [Command("raidstatus", "Shows raid vulnerability status of the player/clan. Usage: .raidstatus <PlayerName>", adminOnly: false)]
+        [Command("raidstatus", shortHand: "raids", description: "Shows raid vulnerability status of the player/clan. Usage: .raidstatus <PlayerName>", adminOnly: false)]
         public void DisplayRaidStatus(ChatCommandContext ctx, string playerName)
-        {
-            ShowRaidStatus(ctx, playerName);
-        }
-
-        [Command("raids", "Shows raid vulnerability status of the player/clan. Usage: .raids <PlayerName>", adminOnly: false)]
-        public void DisplayRaidStatusShort(ChatCommandContext ctx, string playerName)
         {
             ShowRaidStatus(ctx, playerName);
         }
@@ -556,7 +540,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("raidstatusreason", "Shows why a player/clan is or is not Offline Raid Protected. Usage: .raidstatusreason <PlayerName>", adminOnly: true)]
+        [Command("raidstatusreason", description: "Shows why a player/clan is or is not Offline Raid Protected. Usage: .raidstatusreason <PlayerName>", adminOnly: true)]
         public void DisplayRaidStatusReason(ChatCommandContext ctx, string playerName)
         {
             try
@@ -643,7 +627,8 @@ namespace RaidForge.Commands
                 if (!ownedHearts.Any())
                 {
                     ctx.Reply(ChatColors.WarningText("No Castle Hearts found for this owner in the ownership cache."));
-                    ctx.Reply(ChatColors.InfoText("Run .raidrefreshcache if you expected hearts here."));
+                    ctx.Reply(ChatColors.InfoText(
+                        $"Run {CommandSettingsConfig.GetInvocation("raidrefreshcache")} if you expected hearts here."));
                     return;
                 }
 

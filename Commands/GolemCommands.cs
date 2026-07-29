@@ -13,7 +13,7 @@ namespace RaidForge.Commands
 {
     public class GolemCommands
     {
-        [Command("golemstartdate", "Sets the Golem Automation start date to the current time.", adminOnly: true)]
+        [Command("golemstartdate", description: "Sets the Golem Automation start date to the current time.", adminOnly: true)]
         public void SetGolemStartDate(ChatCommandContext ctx)
         {
             if (Plugin.Instance == null)
@@ -45,7 +45,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("golemcurrent", "Shows the current Golem health settings.", adminOnly: true)]
+        [Command("golemcurrent", description: "Shows the current Golem health settings.", adminOnly: true)]
         public void GolemCurrent(ChatCommandContext ctx)
         {
             try
@@ -76,7 +76,8 @@ namespace RaidForge.Commands
 
                 if (!string.Equals(manualLevelOverrideVal, "Not set", StringComparison.OrdinalIgnoreCase))
                 {
-                    ctx.Reply(ChatColors.WarningText("Manual Level Override is active and takes precedence over day-based automation. Use '.golemauto' to clear."));
+                    ctx.Reply(ChatColors.WarningText(
+                        $"Manual Level Override is active and takes precedence over day-based automation. Use '{CommandSettingsConfig.GetInvocation("golemauto")}' to clear."));
                 }
                 else if (!dayBasedAutomationEnabled)
                 {
@@ -90,7 +91,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("golemsethp", "Manually sets and persists a Siege Golem health level. Usage: .golemsethp <LevelName>", adminOnly: true)]
+        [Command("golemsethp", description: "Manually sets and persists a Siege Golem health level. Usage: .golemsethp <LevelName>", adminOnly: true)]
         public void GolemSetHpByLevelName(ChatCommandContext ctx, string levelName)
         {
             try
@@ -123,7 +124,9 @@ namespace RaidForge.Commands
                     hpEstimate = $" (~{approxHpVal} HP)";
                 }
 
-                ctx.Reply(ChatColors.SuccessText($"Persistent Golem health override set to Level: {ChatColors.AccentText(healthValue.ToString())}{hpEstimate}. Day-based automation is now overridden. Use '.golemauto' to clear."));
+                ctx.Reply(ChatColors.SuccessText(
+                    $"Persistent Golem health override set to Level: {ChatColors.AccentText(healthValue.ToString())}{hpEstimate}. " +
+                    $"Day-based automation is now overridden. Use '{CommandSettingsConfig.GetInvocation("golemauto")}' to clear."));
             }
             catch (Exception ex)
             {
@@ -132,7 +135,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("golemauto", "Clears manual Golem health override. Day-based automation will apply if enabled.", adminOnly: true)]
+        [Command("golemauto", description: "Clears manual Golem health override. Day-based automation will apply if enabled.", adminOnly: true)]
         public void GolemSetAuto(ChatCommandContext ctx)
         {
             try
@@ -151,7 +154,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("golemlist", "Lists available Siege Golem health levels and estimated HP.", adminOnly: true)]
+        [Command("golemlist", description: "Lists available Siege Golem health levels and estimated HP.", adminOnly: true)]
         public void GolemList(ChatCommandContext ctx)
         {
             try
@@ -176,7 +179,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("golem", "Transforms the target player into a Siege Golem. Usage: .golem [PlayerName]", adminOnly: true)]
+        [Command("golem", description: "Transforms the target player into a Siege Golem. Usage: .golem [PlayerName]", adminOnly: true)]
         public void GolemTransformCommand(ChatCommandContext ctx, string playerName = null)
         {
             try

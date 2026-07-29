@@ -22,7 +22,7 @@ using Stunlock.Core;
 
 namespace RaidForge
 {
-    [BepInPlugin("raidforge", "RaidForge", "3.1.1")]
+    [BepInPlugin("raidforge", "RaidForge", "3.2.2")]
     [BepInDependency("gg.deca.VampireCommandFramework")]
     public class Plugin : BasePlugin
     {
@@ -40,6 +40,8 @@ namespace RaidForge
         private static ConfigFile _optInRaidingConfigFile;
         private static ConfigFile _optInScheduleConfigFile;
         private static ConfigFile _weaponRaidingConfigFile;
+        private static ConfigFile _tntRaidingConfigFile;
+        private static ConfigFile _commandSettingsConfigFile;
         private static ConfigFile _shardConfigFile;
         private static ConfigFile _mapIconsConfigFile;
         private static ConfigFile _purchasedOrpConfigFile;
@@ -90,6 +92,7 @@ namespace RaidForge
             try
             {
                 CommandRegistry.RegisterAll();
+                CommandRegistryCustomizationService.ApplyStartupConfiguration();
             }
             catch (Exception ex)
             {
@@ -372,6 +375,14 @@ namespace RaidForge
 
                 Logger?.LogInfo("[RaidForge] ServantLimits.cfg changed. Servant prefab limits were refreshed.");
             }
+            else if (sender == _weaponRaidingConfigFile)
+            {
+                Logger?.LogInfo("[RaidForge] WeaponRaiding.cfg changed. New weapon structure damage settings are active.");
+            }
+            else if (sender == _tntRaidingConfigFile)
+            {
+                Logger?.LogInfo("[RaidForge] TntDamageAndRaiding.cfg changed. New TNT damage settings are active.");
+            }
         }
 
         public static void ReloadAllConfigsAndRefreshSystems()
@@ -386,6 +397,7 @@ namespace RaidForge
                 if (_optInRaidingConfigFile != null) _optInRaidingConfigFile.Reload();
                 if (_optInScheduleConfigFile != null) _optInScheduleConfigFile.Reload();
                 if (_weaponRaidingConfigFile != null) _weaponRaidingConfigFile.Reload();
+                if (_tntRaidingConfigFile != null) _tntRaidingConfigFile.Reload();
                 if (_shardConfigFile != null) _shardConfigFile.Reload();
                 if (_mapIconsConfigFile != null) _mapIconsConfigFile.Reload();
                 if (_purchasedOrpConfigFile != null) _purchasedOrpConfigFile.Reload();
@@ -462,6 +474,8 @@ namespace RaidForge
         {
             string configFolderPath = Path.Combine(Paths.ConfigPath, "RaidForge");
             Directory.CreateDirectory(configFolderPath);
+            string tntConfigPath = Path.Combine(configFolderPath, "TntDamageAndRaiding.cfg");
+            bool tntConfigExistedBeforeLoad = File.Exists(tntConfigPath);
 
             _troubleshootingConfigFile = new ConfigFile(Path.Combine(configFolderPath, "Troubleshooting.cfg"), true);
             _raidScheduleConfigFile = new ConfigFile(Path.Combine(configFolderPath, "RaidScheduleAndGeneral.cfg"), true);
@@ -471,6 +485,8 @@ namespace RaidForge
             _optInRaidingConfigFile = new ConfigFile(Path.Combine(configFolderPath, "OptInRaiding.cfg"), true);
             _optInScheduleConfigFile = new ConfigFile(Path.Combine(configFolderPath, "OptInSchedule.cfg"), true);
             _weaponRaidingConfigFile = new ConfigFile(Path.Combine(configFolderPath, "WeaponRaiding.cfg"), true);
+            _tntRaidingConfigFile = new ConfigFile(tntConfigPath, true);
+            _commandSettingsConfigFile = new ConfigFile(Path.Combine(configFolderPath, "CommandSettings.cfg"), true);
             _shardConfigFile = new ConfigFile(Path.Combine(configFolderPath, "SoulShards.cfg"), true);
             _mapIconsConfigFile = new ConfigFile(Path.Combine(configFolderPath, "MapIcons.cfg"), true);
             _purchasedOrpConfigFile = new ConfigFile(Path.Combine(configFolderPath, "PurchasedORP.cfg"), true);
@@ -483,6 +499,12 @@ namespace RaidForge
             OptInRaidingConfig.Initialize(_optInRaidingConfigFile);
             OptInScheduleConfig.Initialize(_optInScheduleConfigFile);
             WeaponRaidingConfig.Initialize(_weaponRaidingConfigFile, Logger);
+            TntRaidingConfig.Initialize(_tntRaidingConfigFile, Logger);
+            TntRaidingConfig.MigrateLegacySettingsIfNeeded(
+                _weaponRaidingConfigFile,
+                tntConfigExistedBeforeLoad,
+                Logger);
+            CommandSettingsConfig.Initialize(_commandSettingsConfigFile, Logger);
             ShardConfig.Initialize(_shardConfigFile);
             MapIconsConfig.Initialize(_mapIconsConfigFile);
             PurchasedOrpConfig.Initialize(_purchasedOrpConfigFile);
@@ -499,12 +521,13 @@ namespace RaidForge
             _optInRaidingConfigFile.SettingChanged += OnConfigSettingChanged;
             _optInScheduleConfigFile.SettingChanged += OnConfigSettingChanged;
             _weaponRaidingConfigFile.SettingChanged += OnConfigSettingChanged;
+            _tntRaidingConfigFile.SettingChanged += OnConfigSettingChanged;
             _shardConfigFile.SettingChanged += OnConfigSettingChanged;
             _mapIconsConfigFile.SettingChanged += OnConfigSettingChanged;
             _purchasedOrpConfigFile.SettingChanged += OnConfigSettingChanged;
             _servantLimitsConfigFile.SettingChanged += OnConfigSettingChanged;
 
-            Logger?.LogInfo("[RaidForge] Config files loaded, including MapIcons.cfg, PurchasedORP.cfg, and ServantLimits.cfg.");
+            Logger?.LogInfo("[RaidForge] Config files loaded, including CommandSettings.cfg and separate weapon/TNT raiding files.");
         }
 
         public override bool Unload()
@@ -519,6 +542,7 @@ namespace RaidForge
                 if (_optInRaidingConfigFile != null) _optInRaidingConfigFile.SettingChanged -= OnConfigSettingChanged;
                 if (_optInScheduleConfigFile != null) _optInScheduleConfigFile.SettingChanged -= OnConfigSettingChanged;
                 if (_weaponRaidingConfigFile != null) _weaponRaidingConfigFile.SettingChanged -= OnConfigSettingChanged;
+                if (_tntRaidingConfigFile != null) _tntRaidingConfigFile.SettingChanged -= OnConfigSettingChanged;
                 if (_shardConfigFile != null) _shardConfigFile.SettingChanged -= OnConfigSettingChanged;
                 if (_mapIconsConfigFile != null) _mapIconsConfigFile.SettingChanged -= OnConfigSettingChanged;
                 if (_purchasedOrpConfigFile != null) _purchasedOrpConfigFile.SettingChanged -= OnConfigSettingChanged;

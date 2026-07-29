@@ -50,12 +50,12 @@ namespace RaidForge.Config
             RaidScheduleTimeZoneDisplayString = configFile.Bind(SECTION_GENERAL,
                 "RaidScheduleTimeZoneForDisplay",
                 "Server Time",
-                "The timezone string (e.g., EST, PST, UTC, Server Time) to display next to raid times in .raidt/.raidtimer/.raiddays/.raidd.");
+                "Text label shown next to raid times in .raidtime/.raidt/.raiddays/.raidd. This label does not convert time; use RaidScheduleDisplayOffsetHours for a fixed adjustment.");
 
             RaidScheduleDisplayOffsetHours = configFile.Bind(SECTION_GENERAL,
                 "RaidScheduleDisplayOffsetHours",
                 0.0,
-                "Manual schedule clock offset, in hours, applied to raid schedule checks and displayed raid times. Positive values make RaidForge treat the server clock as later; negative values make it earlier. Example: server 08:00 with offset 2 is treated as schedule time 10:00.");
+                "Fixed schedule offset, in hours, added to the dedicated server's local clock for raid checks and command output. The server clock remains authoritative. Positive values move RaidForge time later; negative values move it earlier. Example: server 08:00 with offset 2 is treated as 10:00. This does not adjust automatically for daylight saving time.");
 
             string defaultOffTime = "00:00";
             string defaultWeekendStartTime = "20:00";

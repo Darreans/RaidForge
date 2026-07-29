@@ -38,6 +38,9 @@ namespace RaidForge.Patches
         private static ServerScriptMapper _serverScriptMapper;
         private static ServerGameManager _serverGameManager;
         private static bool _sgmCached = false;
+        private const int MaxTntSourceDepth = 4;
+        private const int MaxCachedTntSources = 512;
+        private static readonly Dictionary<Entity, TntTier> _tntTierBySource = new();
 
         public static void ResetRuntimeState()
         {
@@ -52,7 +55,9 @@ namespace RaidForge.Patches
             _lastProtectedMessageTimes.Clear();
             _lastOfflineSiegeAnnouncementTimes.Clear();
             _lastDecayedRaidAnnouncementTimes.Clear();
+            _tntTierBySource.Clear();
             _nextCooldownPruneUtc = DateTime.MinValue;
+            TntDamageDiagnosticService.ResetRuntimeState();
         }
 
         private sealed class DamageContext
@@ -74,7 +79,15 @@ namespace RaidForge.Patches
             public readonly bool ForcedRaidDay;
             public readonly float ConfiguredGraceMinutes;
             public readonly bool WeaponRaidingEnabled;
+            public readonly bool TntRaidingEnabled;
             public readonly float WeaponDamageMultiplier;
+            public readonly TntTier TntTier;
+            public readonly EntityTypeModifiers NativeTntModifiers;
+            public readonly float TntNormalDamagePercent;
+            public readonly float TntCastleWallDamagePercent;
+            public readonly bool UseNormalTntDamageAfterBreach;
+
+            public bool IsTntDamage => TntTier != RaidForge.Data.TntTier.None;
 
             public DealDamageEvent DamageEvent;
             public string CachedDefenderBaseName;
@@ -109,7 +122,13 @@ namespace RaidForge.Patches
                 bool forcedRaidDay,
                 float configuredGraceMinutes,
                 bool weaponRaidingEnabled,
-                float weaponDamageMultiplier)
+                bool tntRaidingEnabled,
+                float weaponDamageMultiplier,
+                TntTier tntTier,
+                EntityTypeModifiers nativeTntModifiers,
+                float tntNormalDamagePercent,
+                float tntCastleWallDamagePercent,
+                bool useNormalTntDamageAfterBreach)
             {
                 Em = em;
                 DamageEventEntity = damageEventEntity;
@@ -128,7 +147,13 @@ namespace RaidForge.Patches
                 ForcedRaidDay = forcedRaidDay;
                 ConfiguredGraceMinutes = configuredGraceMinutes;
                 WeaponRaidingEnabled = weaponRaidingEnabled;
+                TntRaidingEnabled = tntRaidingEnabled;
                 WeaponDamageMultiplier = weaponDamageMultiplier;
+                TntTier = tntTier;
+                NativeTntModifiers = nativeTntModifiers;
+                TntNormalDamagePercent = tntNormalDamagePercent;
+                TntCastleWallDamagePercent = tntCastleWallDamagePercent;
+                UseNormalTntDamageAfterBreach = useNormalTntDamageAfterBreach;
             }
         }
 
@@ -150,6 +175,7 @@ namespace RaidForge.Patches
             }
 
             bool logDebug = TroubleshootingConfig.EnableVerboseLogging.Value;
+            bool tntDamageLoggingEnabled = TroubleshootingConfig.EnableTntDamageLogging?.Value ?? false;
             bool orpSystemEnabled = OfflineRaidProtectionConfig.EnableOfflineRaidProtection.Value;
             bool orpEnabled = OfflineRaidProtectionConfig.IsOfflineProtectionAllowedToday();
             bool optInEnabled = OptInRaidingConfig.EnableOptInRaiding.Value && !orpSystemEnabled;
@@ -161,6 +187,20 @@ namespace RaidForge.Patches
             bool forcedRaidDay = OptInScheduleConfig.EnableOptInSchedule.Value && !OptInScheduleConfig.IsOptInSystemAllowedToday();
             float configuredGraceMinutes = OfflineRaidProtectionConfig.GracePeriodDurationMinutes.Value;
             bool weaponRaidingEnabled = WeaponRaidingConfig.EnableWeaponRaiding.Value;
+            bool tntRaidingEnabled = TntRaidingConfig.EnableTntRaiding?.Value ?? false;
+            float t01NormalDamagePercent = ClampTntPercent(
+                TntRaidingConfig.T01NormalDamagePercent?.Value ?? 100f);
+            float t02NormalDamagePercent = ClampTntPercent(
+                TntRaidingConfig.T02NormalDamagePercent?.Value ?? 100f);
+            float t01CastleWallDamagePercent = ClampTntPercent(
+                TntRaidingConfig.T01CastleWallDamagePercent?.Value ?? 100f);
+            float t02CastleWallDamagePercent = ClampTntPercent(
+                TntRaidingConfig.T02CastleWallDamagePercent?.Value ?? 100f);
+            bool useNormalTntDamageAfterBreach =
+                TntRaidingConfig.UseNormalTntDamageAfterBreach?.Value ?? true;
+            bool normalTntScalingEnabled =
+                Math.Abs(t01NormalDamagePercent - 100f) > 0.001f ||
+                Math.Abs(t02NormalDamagePercent - 100f) > 0.001f;
             float weaponDamageMultiplier = WeaponRaidingConfig.WeaponDamageVsStoneMultiplier.Value;
             bool decayMapIconsEnabled = MapIconsConfig.EnableDecayRaidMapIcon.Value;
 
@@ -168,10 +208,13 @@ namespace RaidForge.Patches
                 !purchasedOrpEnabled &&
                 !orpEnabled &&
                 !weaponRaidingEnabled &&
+                !tntRaidingEnabled &&
                 !announceOfflineRaid &&
                 !offlineRaidMapIconEnabled &&
                 !announceDecayed &&
-                !decayMapIconsEnabled)
+                !decayMapIconsEnabled &&
+                !tntDamageLoggingEnabled &&
+                !normalTntScalingEnabled)
             {
                 return;
             }
@@ -219,6 +262,36 @@ namespace RaidForge.Patches
 
                         Entity targetEntity = damageEvent.Target;
                         Entity sourceEntity = damageEvent.SpellSource;
+                        EntityTypeModifiers nativeTntModifiers = damageEvent.MaterialModifiers;
+                        TntTier tntTier = TntTier.None;
+                        float tntNormalDamagePercent = 100f;
+
+                        /*
+                            Ordinary TNT scaling is intentionally applied before the
+                            castle filter so it also affects creatures, players,
+                            resources, and non-castle structures. The source walk is
+                            only paid globally when at least one tier differs from 100%.
+                        */
+                        if (normalTntScalingEnabled &&
+                            nativeTntModifiers.Explosives > 0f)
+                        {
+                            tntTier = TryGetTntTier(em, sourceEntity);
+
+                            if (tntTier != TntTier.None)
+                            {
+                                tntNormalDamagePercent = tntTier == TntTier.T01
+                                    ? t01NormalDamagePercent
+                                    : t02NormalDamagePercent;
+
+                                if (Math.Abs(tntNormalDamagePercent - 100f) > 0.001f)
+                                {
+                                    damageEvent.MaterialModifiers = ScaleMaterialModifiers(
+                                        nativeTntModifiers,
+                                        tntNormalDamagePercent / 100f);
+                                    em.SetComponentData(entity, damageEvent);
+                                }
+                            }
+                        }
 
                         bool isCastleConnected = em.HasComponent<CastleHeartConnection>(targetEntity);
                         bool isCastleHeart = em.HasComponent<CastleHeart>(targetEntity);
@@ -226,6 +299,27 @@ namespace RaidForge.Patches
                         if (!isCastleConnected && !isCastleHeart)
                         {
                             continue;
+                        }
+
+                        if (tntTier == TntTier.None)
+                        {
+                            tntTier = TryGetTntTier(em, sourceEntity);
+
+                            if (tntTier != TntTier.None)
+                            {
+                                tntNormalDamagePercent = tntTier == TntTier.T01
+                                    ? t01NormalDamagePercent
+                                    : t02NormalDamagePercent;
+                            }
+                        }
+
+                        if (tntDamageLoggingEnabled)
+                        {
+                            TntDamageDiagnosticService.TryLogCastleDamageEvent(
+                                em,
+                                entity,
+                                damageEvent,
+                                nowUtc);
                         }
 
                         if (!TryGetDefenderKeyFromDamagedEntity(em, targetEntity, out Entity castleHeartEntity, out Entity defenderKeyEntity))
@@ -270,7 +364,15 @@ namespace RaidForge.Patches
                             forcedRaidDay,
                             configuredGraceMinutes,
                             weaponRaidingEnabled,
-                            weaponDamageMultiplier);
+                            tntRaidingEnabled,
+                            weaponDamageMultiplier,
+                            tntTier,
+                            nativeTntModifiers,
+                            tntNormalDamagePercent,
+                            tntTier == TntTier.T01
+                                ? t01CastleWallDamagePercent
+                                : t02CastleWallDamagePercent,
+                            useNormalTntDamageAfterBreach);
 
                         context.IsBreached = em.GetComponentData<CastleHeart>(castleHeartEntity).IsSieged();
                         context.IsDecaying = OfflineProtectionService.IsBaseDecaying(castleHeartEntity, em);
@@ -296,7 +398,7 @@ namespace RaidForge.Patches
                         }
 
                         HandleAllowedRaidSignals(context);
-                        ApplyWeaponRaiding(context);
+                        ApplyConfiguredStructureDamage(context);
                     }
                     catch (Exception ex)
                     {
@@ -533,7 +635,7 @@ namespace RaidForge.Patches
 
             EnsureAttackerResolved(context);
 
-            if (IsSiegeWeaponDamage(context.Em, context.SourceEntity, context.AttackerCharEntity, ref context.AttackerName))
+            if (IsSiegeWeaponDamage(context))
             {
                 if (context.ShowOfflineRaidIcon)
                 {
@@ -596,9 +698,22 @@ namespace RaidForge.Patches
             return true;
         }
 
-        private static void ApplyWeaponRaiding(DamageContext context)
+        private static void ApplyConfiguredStructureDamage(DamageContext context)
         {
-            if (!context.WeaponRaidingEnabled || context.DamageEvent.MaterialModifiers.StoneStructure > 0f)
+            if (!context.IsTntDamage &&
+                context.DamageEvent.MaterialModifiers.StoneStructure > 0f)
+            {
+                return;
+            }
+
+            if (context.IsTntDamage)
+            {
+                if (!context.TntRaidingEnabled)
+                {
+                    return;
+                }
+            }
+            else if (!context.WeaponRaidingEnabled)
             {
                 return;
             }
@@ -607,18 +722,81 @@ namespace RaidForge.Patches
 
             if (context.AttackerUserEntity == Entity.Null)
             {
+                if (context.LogDebug && context.IsTntDamage)
+                {
+                    LoggingHelper.Debug("[TNT Raiding] Stone damage was not enabled because the placing player could not be resolved.");
+                }
+
                 return;
             }
 
             var modifiedModifiers = context.DamageEvent.MaterialModifiers;
-            modifiedModifiers.StoneStructure = context.WeaponDamageMultiplier;
+
+            if (context.IsTntDamage)
+            {
+                float nativeExplosiveDamage = context.NativeTntModifiers.Explosives;
+
+                if (nativeExplosiveDamage <= 0f)
+                {
+                    if (context.LogDebug)
+                    {
+                        LoggingHelper.Debug("[TNT Raiding] Stone damage was not enabled because the native Explosives modifier was not positive.");
+                    }
+
+                    return;
+                }
+
+                float appliedPercent =
+                    context.IsBreached && context.UseNormalTntDamageAfterBreach
+                        ? context.TntNormalDamagePercent
+                        : context.TntCastleWallDamagePercent;
+
+                modifiedModifiers.StoneStructure =
+                    nativeExplosiveDamage * (appliedPercent / 100f);
+
+                if (modifiedModifiers.StoneStructure <= 0f)
+                {
+                    if (context.LogDebug)
+                    {
+                        LoggingHelper.Debug(
+                            $"[TNT Raiding] Stone damage is disabled at {appliedPercent}% while breached={context.IsBreached}.");
+                    }
+
+                    return;
+                }
+            }
+            else
+            {
+                modifiedModifiers.StoneStructure = context.WeaponDamageMultiplier;
+            }
+
             context.DamageEvent.MaterialModifiers = modifiedModifiers;
 
             context.Em.SetComponentData(context.DamageEventEntity, context.DamageEvent);
 
             if (context.LogDebug)
             {
-                LoggingHelper.Debug($"[WeaponRaiding] Overwrote StoneStructure modifier to {context.WeaponDamageMultiplier}");
+                if (context.IsTntDamage)
+                {
+                    float appliedPercent =
+                        context.IsBreached && context.UseNormalTntDamageAfterBreach
+                            ? context.TntNormalDamagePercent
+                            : context.TntCastleWallDamagePercent;
+                    string damageMode =
+                        context.IsBreached && context.UseNormalTntDamageAfterBreach
+                            ? "normal-after-breach"
+                            : "castle-raid";
+
+                    LoggingHelper.Debug(
+                        $"[TNT Raiding] tier={context.TntTier}, StoneStructure={modifiedModifiers.StoneStructure} " +
+                        $"(native={context.NativeTntModifiers.Explosives}, percent={appliedPercent}, " +
+                        $"mode={damageMode}, breached={context.IsBreached}).");
+                }
+                else
+                {
+                    LoggingHelper.Debug(
+                        $"[Weapon Raiding] Overwrote StoneStructure modifier to {modifiedModifiers.StoneStructure}.");
+                }
             }
         }
 
@@ -748,6 +926,12 @@ namespace RaidForge.Patches
                 return;
             }
 
+            if (_lastProtectedMessageTimes.TryGetValue(attackerUserEntity, out DateTime lastTimeSent) &&
+                (nowUtc - lastTimeSent) <= OfflineProtectedMessageCooldown)
+            {
+                return;
+            }
+
             var messageBuilder = new StringBuilder();
 
             messageBuilder.Append(ChatColors.InfoText($"{defenderBaseName} is "));
@@ -762,16 +946,12 @@ namespace RaidForge.Patches
                 messageBuilder.Append(ChatColors.InfoText("."));
             }
 
-            if (!_lastProtectedMessageTimes.TryGetValue(attackerUserEntity, out DateTime lastTimeSent) ||
-                (nowUtc - lastTimeSent) > OfflineProtectedMessageCooldown)
+            if (em.TryGetComponentData<User>(attackerUserEntity, out User attackerUser))
             {
-                if (em.TryGetComponentData<User>(attackerUserEntity, out User attackerUser))
-                {
-                    FixedString512Bytes message = new FixedString512Bytes(messageBuilder.ToString());
-                    ServerChatUtils.SendSystemMessageToClient(em, attackerUser, ref message);
+                FixedString512Bytes message = new FixedString512Bytes(messageBuilder.ToString());
+                ServerChatUtils.SendSystemMessageToClient(em, attackerUser, ref message);
 
-                    _lastProtectedMessageTimes[attackerUserEntity] = nowUtc;
-                }
+                _lastProtectedMessageTimes[attackerUserEntity] = nowUtc;
             }
         }
 
@@ -843,41 +1023,133 @@ namespace RaidForge.Patches
             return "A base";
         }
 
-        private static bool IsSiegeWeaponDamage(EntityManager em, Entity sourceEntity, Entity attackerCharEntity, ref string attackerName)
+        private static bool IsSiegeWeaponDamage(DamageContext context)
         {
-            if (attackerCharEntity != Entity.Null && HasSiegeGolemBuff(em, attackerCharEntity))
+            if (context.AttackerCharEntity != Entity.Null &&
+                HasSiegeGolemBuff(context.Em, context.AttackerCharEntity))
             {
                 return true;
             }
 
-            PrefabGUID sourcePrefabGuid = default;
-
-            if (em.Exists(sourceEntity) && em.HasComponent<PrefabGUID>(sourceEntity))
+            if (context.IsTntDamage)
             {
-                sourcePrefabGuid = em.GetComponentData<PrefabGUID>(sourceEntity);
-            }
-            else if (em.Exists(sourceEntity) && em.HasComponent<EntityOwner>(sourceEntity))
-            {
-                Entity ownerOfSource = em.GetComponentData<EntityOwner>(sourceEntity).Owner;
-
-                if (em.Exists(ownerOfSource) && em.HasComponent<PrefabGUID>(ownerOfSource))
+                if (string.IsNullOrEmpty(context.AttackerName))
                 {
-                    sourcePrefabGuid = em.GetComponentData<PrefabGUID>(ownerOfSource);
+                    context.AttackerName = "Explosives";
                 }
-            }
-
-            if (sourcePrefabGuid.Equals(PrefabData.TntExplosiveT01.Guid) ||
-                sourcePrefabGuid.Equals(PrefabData.TntExplosiveT02.Guid))
-            {
-                if (string.IsNullOrEmpty(attackerName))
-                {
-                    attackerName = "Explosives";
-                }
-
                 return true;
             }
 
             return false;
+        }
+
+        private static TntTier TryGetTntTier(EntityManager em, Entity sourceEntity)
+        {
+            if (sourceEntity == Entity.Null || !em.Exists(sourceEntity))
+            {
+                return TntTier.None;
+            }
+
+            if (_tntTierBySource.TryGetValue(sourceEntity, out TntTier cachedTier))
+            {
+                return cachedTier;
+            }
+
+            TntTier resolvedTier = ResolveTntTier(em, sourceEntity, 0);
+
+            if (_tntTierBySource.Count >= MaxCachedTntSources)
+            {
+                _tntTierBySource.Clear();
+            }
+
+            _tntTierBySource[sourceEntity] = resolvedTier;
+            return resolvedTier;
+        }
+
+        private static TntTier ResolveTntTier(EntityManager em, Entity sourceEntity, int depth)
+        {
+            if (depth > MaxTntSourceDepth ||
+                sourceEntity == Entity.Null ||
+                !em.Exists(sourceEntity))
+            {
+                return TntTier.None;
+            }
+
+            if (em.TryGetComponentData(sourceEntity, out PrefabGUID sourcePrefabGuid))
+            {
+                TntTier directTier = PrefabData.GetTntTier(sourcePrefabGuid);
+
+                if (directTier != TntTier.None)
+                {
+                    return directTier;
+                }
+            }
+
+            int nextDepth = depth + 1;
+
+            if (em.TryGetComponentData(sourceEntity, out EntityOwner entityOwner) &&
+                entityOwner.Owner != sourceEntity)
+            {
+                TntTier ownerTier = ResolveTntTier(em, entityOwner.Owner, nextDepth);
+
+                if (ownerTier != TntTier.None)
+                {
+                    return ownerTier;
+                }
+            }
+
+            if (em.TryGetComponentData(sourceEntity, out EntityCreator entityCreator))
+            {
+                Entity creatorEntity = entityCreator.Creator._Entity;
+
+                if (creatorEntity != sourceEntity &&
+                    creatorEntity != Entity.Null)
+                {
+                    TntTier creatorTier = ResolveTntTier(em, creatorEntity, nextDepth);
+
+                    if (creatorTier != TntTier.None)
+                    {
+                        return creatorTier;
+                    }
+                }
+            }
+
+            return TntTier.None;
+        }
+
+        private static float ClampTntPercent(float value)
+        {
+            return Math.Clamp(value, 0f, 1000f);
+        }
+
+        private static EntityTypeModifiers ScaleMaterialModifiers(
+            EntityTypeModifiers modifiers,
+            float multiplier)
+        {
+            modifiers.Human *= multiplier;
+            modifiers.Undead *= multiplier;
+            modifiers.Demon *= multiplier;
+            modifiers.Mechanical *= multiplier;
+            modifiers.Beast *= multiplier;
+            modifiers.CastleObject *= multiplier;
+            modifiers.PlayerVampire *= multiplier;
+            modifiers.PvEVampire *= multiplier;
+            modifiers.ShadowVBlood *= multiplier;
+            modifiers.BasicStructure *= multiplier;
+            modifiers.ReinforcedStructure *= multiplier;
+            modifiers.FortifiedStructure *= multiplier;
+            modifiers.StoneStructure *= multiplier;
+            modifiers.SiegeAltar *= multiplier;
+            modifiers.Wood *= multiplier;
+            modifiers.Minerals *= multiplier;
+            modifiers.Vegetation *= multiplier;
+            modifiers.LightArmor *= multiplier;
+            modifiers.VBlood *= multiplier;
+            modifiers.Magic *= multiplier;
+            modifiers.Explosives *= multiplier;
+            modifiers.MassiveResource *= multiplier;
+            modifiers.MonsterGate *= multiplier;
+            return modifiers;
         }
 
         private static void MakeOfflineSiegeAnnouncement(

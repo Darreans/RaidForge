@@ -4,11 +4,20 @@ using Stunlock.Core;
 
 namespace RaidForge.Data
 {
+    public enum TntTier
+    {
+        None,
+        T01,
+        T02
+    }
+
     public static class PrefabData
     {
         public static readonly PrefabRef SiegeGolemBuff = new("AB_Shapeshift_Golem_T02_Buff", 914043867);
-        public static readonly PrefabRef TntExplosiveT01 = new("Item_Building_Explosives_T01", 1779299585);
-        public static readonly PrefabRef TntExplosiveT02 = new("Item_Building_Explosives_T02", -1021407417);
+        public static readonly PrefabRef TntItemT01 = new("Item_Building_Explosives_T01", 1779299585);
+        public static readonly PrefabRef TntItemT02 = new("Item_Building_Explosives_T02", -1021407417);
+        public static readonly PrefabRef TntPlaceableT01 = new("TM_EH_Mines_ExplosiveBarrel_Placeable_T01", -1401715476);
+        public static readonly PrefabRef TntPlaceableT02 = new("TM_EH_Mines_ExplosiveBarrel_Placeable_T02", 2036168659);
         public static readonly PrefabRef InterloperDebuff = new("AB_Lucie_CripplingGoo_PoisonDebuff", 1382025211);
         public static readonly PrefabRef BearBuff = new("AB_Shapeshift_Bear_Buff", -1569370346);
         public static readonly PrefabRef BearSkinBuff = new("AB_Shapeshift_Bear_Skin01_Buff", -858273386);
@@ -29,8 +38,10 @@ namespace RaidForge.Data
         private static readonly PrefabRef[] _all =
         {
             SiegeGolemBuff,
-            TntExplosiveT01,
-            TntExplosiveT02,
+            TntItemT01,
+            TntItemT02,
+            TntPlaceableT01,
+            TntPlaceableT02,
             InterloperDebuff,
             BearBuff,
             BearSkinBuff,
@@ -56,6 +67,18 @@ namespace RaidForge.Data
             DraculaShard.Guid,
             MonsterShard.Guid,
             ManticoreShard.Guid
+        };
+
+        public static readonly HashSet<PrefabGUID> TntItemPrefabGUIDs = new()
+        {
+            TntItemT01.Guid,
+            TntItemT02.Guid
+        };
+
+        public static readonly HashSet<PrefabGUID> TntPlaceablePrefabGUIDs = new()
+        {
+            TntPlaceableT01.Guid,
+            TntPlaceableT02.Guid
         };
 
         public static readonly HashSet<PrefabGUID> SoulShardPedestalPrefabGUIDs = new()
@@ -100,6 +123,36 @@ namespace RaidForge.Data
 
             prefab = default;
             return false;
+        }
+
+        public static bool IsTntPrefab(PrefabGUID prefabGuid)
+        {
+            return IsTntItemPrefab(prefabGuid) || IsTntPlaceablePrefab(prefabGuid);
+        }
+
+        public static bool IsTntItemPrefab(PrefabGUID prefabGuid)
+        {
+            return TntItemPrefabGUIDs.Contains(prefabGuid);
+        }
+
+        public static bool IsTntPlaceablePrefab(PrefabGUID prefabGuid)
+        {
+            return TntPlaceablePrefabGUIDs.Contains(prefabGuid);
+        }
+
+        public static TntTier GetTntTier(PrefabGUID prefabGuid)
+        {
+            if (prefabGuid == TntItemT01.Guid || prefabGuid == TntPlaceableT01.Guid)
+            {
+                return TntTier.T01;
+            }
+
+            if (prefabGuid == TntItemT02.Guid || prefabGuid == TntPlaceableT02.Guid)
+            {
+                return TntTier.T02;
+            }
+
+            return TntTier.None;
         }
     }
 }

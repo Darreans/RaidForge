@@ -357,7 +357,17 @@ namespace RaidForge.Services
                 }
             }
 
-            SyncPersistentStateIcons(em);
+            if (_persistentStateIconsDirty)
+            {
+                try
+                {
+                    SyncPersistentStateIcons(em);
+                }
+                finally
+                {
+                    _persistentStateIconsDirty = false;
+                }
+            }
         }
 
         public static void RemoveAllIcons()

@@ -21,7 +21,7 @@ namespace RaidForge.Commands
         private const int CONFIG_RAID_INTERFERENCE = 9;
         private const int CONFIG_TROUBLESHOOTING = 10;
 
-        [Command("raidconfigview", "Shows a specific RaidForge config section. Usage: .raidconfigview ? OR .raidconfigview <number>", adminOnly: true)]
+        [Command("raidconfigview", description: "Shows a specific RaidForge config section. Usage: .raidconfigview ? OR .raidconfigview <number>", adminOnly: true)]
         public void RaidConfigView(ChatCommandContext ctx, string selection = null)
         {
             try
@@ -42,7 +42,8 @@ namespace RaidForge.Commands
 
                 if (!int.TryParse(selection, out int configNumber))
                 {
-                    ctx.Reply(ChatColors.ErrorText($"Invalid config selection '{selection}'. Use '.raidconfigview ?' to see valid options."));
+                    ctx.Reply(ChatColors.ErrorText(
+                        $"Invalid config selection '{selection}'. Use '{CommandSettingsConfig.GetInvocation("raidconfigview")} ?' to see valid options."));
                     return;
                 }
 
@@ -55,7 +56,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("raidconfigviewall", "Shows all currently loaded RaidForge configuration values.", adminOnly: true)]
+        [Command("raidconfigviewall", description: "Shows all currently loaded RaidForge configuration values.", adminOnly: true)]
         public void RaidConfigViewAll(ChatCommandContext ctx)
         {
             try
@@ -72,8 +73,8 @@ namespace RaidForge.Commands
         private static void ShowConfigMenu(ChatCommandContext ctx)
         {
             ctx.Reply(ChatColors.HighlightText(" RaidForge Config View Menu "));
-            ctx.Reply(ChatColors.InfoText("Use ") + ChatColors.AccentText(".raidconfigview <number>") + ChatColors.InfoText(" to view one config section."));
-            ctx.Reply(ChatColors.InfoText("Use ") + ChatColors.AccentText(".raidconfigviewall") + ChatColors.InfoText(" to view everything."));
+            ctx.Reply(ChatColors.InfoText("Use ") + ChatColors.AccentText($"{CommandSettingsConfig.GetInvocation("raidconfigview")} <number>") + ChatColors.InfoText(" to view one config section."));
+            ctx.Reply(ChatColors.InfoText("Use ") + ChatColors.AccentText(CommandSettingsConfig.GetInvocation("raidconfigviewall")) + ChatColors.InfoText(" to view everything."));
 
             ctx.Reply(ChatColors.MutedText($"{CONFIG_RAID_GENERAL}. ") + ChatColors.SuccessText("Raid Schedule / General"));
             ctx.Reply(ChatColors.MutedText($"{CONFIG_OFFLINE_PROTECTION}. ") + ChatColors.SuccessText("Offline Raid Protection"));
@@ -81,7 +82,7 @@ namespace RaidForge.Commands
             ctx.Reply(ChatColors.MutedText($"{CONFIG_OPT_IN_SCHEDULE}. ") + ChatColors.SuccessText("Opt-In Schedule"));
             ctx.Reply(ChatColors.MutedText($"{CONFIG_SOUL_SHARDS}. ") + ChatColors.SuccessText("Soul Shards"));
             ctx.Reply(ChatColors.MutedText($"{CONFIG_MAP_ICONS}. ") + ChatColors.SuccessText("Map Icons"));
-            ctx.Reply(ChatColors.MutedText($"{CONFIG_WEAPON_RAIDING}. ") + ChatColors.SuccessText("Weapon Raiding"));
+            ctx.Reply(ChatColors.MutedText($"{CONFIG_WEAPON_RAIDING}. ") + ChatColors.SuccessText("Weapon and TNT Raiding"));
             ctx.Reply(ChatColors.MutedText($"{CONFIG_GOLEM_SETTINGS}. ") + ChatColors.SuccessText("Golem Settings"));
             ctx.Reply(ChatColors.MutedText($"{CONFIG_RAID_INTERFERENCE}. ") + ChatColors.SuccessText("Raid Interference"));
             ctx.Reply(ChatColors.MutedText($"{CONFIG_TROUBLESHOOTING}. ") + ChatColors.SuccessText("Troubleshooting"));
@@ -99,7 +100,7 @@ namespace RaidForge.Commands
             ShowOptInScheduleConfig(ctx);
             ShowShardConfig(ctx);
             ShowMapIconConfig(ctx);
-            ShowWeaponRaidingConfig(ctx);
+            ShowWeaponAndTntRaidingConfig(ctx);
             ShowGolemConfig(ctx);
             ShowRaidInterferenceConfig(ctx);
             ShowTroubleshootingConfig(ctx);
@@ -136,7 +137,7 @@ namespace RaidForge.Commands
                     break;
 
                 case CONFIG_WEAPON_RAIDING:
-                    ShowWeaponRaidingConfig(ctx);
+                    ShowWeaponAndTntRaidingConfig(ctx);
                     break;
 
                 case CONFIG_GOLEM_SETTINGS:
@@ -152,7 +153,8 @@ namespace RaidForge.Commands
                     break;
 
                 default:
-                    ctx.Reply(ChatColors.ErrorText($"Invalid config number '{configNumber}'. Use '.raidconfigview ?' to see valid options."));
+                    ctx.Reply(ChatColors.ErrorText(
+                        $"Invalid config number '{configNumber}'. Use '{CommandSettingsConfig.GetInvocation("raidconfigview")} ?' to see valid options."));
                     break;
             }
         }
@@ -393,13 +395,43 @@ namespace RaidForge.Commands
             ));
         }
 
-        private static void ShowWeaponRaidingConfig(ChatCommandContext ctx)
+        private static void ShowWeaponAndTntRaidingConfig(ChatCommandContext ctx)
         {
-            ctx.Reply(ChatColors.AccentText("[7] Weapon Raiding"));
+            ctx.Reply(ChatColors.AccentText("[7] Weapon and TNT Raiding"));
 
             ctx.Reply(ConfigLine(
                 "EnableWeaponRaiding",
                 EnabledText(WeaponRaidingConfig.EnableWeaponRaiding?.Value ?? false)
+            ));
+
+            ctx.Reply(ConfigLine(
+                "EnableTntRaiding",
+                EnabledText(TntRaidingConfig.EnableTntRaiding?.Value ?? false)
+            ));
+
+            ctx.Reply(ConfigLine(
+                "T01NormalDamagePercent",
+                ChatColors.HighlightText((TntRaidingConfig.T01NormalDamagePercent?.Value ?? 100f).ToString(CultureInfo.InvariantCulture))
+            ));
+
+            ctx.Reply(ConfigLine(
+                "T02NormalDamagePercent",
+                ChatColors.HighlightText((TntRaidingConfig.T02NormalDamagePercent?.Value ?? 100f).ToString(CultureInfo.InvariantCulture))
+            ));
+
+            ctx.Reply(ConfigLine(
+                "T01CastleWallDamagePercent",
+                ChatColors.HighlightText((TntRaidingConfig.T01CastleWallDamagePercent?.Value ?? 100f).ToString(CultureInfo.InvariantCulture))
+            ));
+
+            ctx.Reply(ConfigLine(
+                "T02CastleWallDamagePercent",
+                ChatColors.HighlightText((TntRaidingConfig.T02CastleWallDamagePercent?.Value ?? 100f).ToString(CultureInfo.InvariantCulture))
+            ));
+
+            ctx.Reply(ConfigLine(
+                "UseNormalTntDamageAfterBreach",
+                EnabledText(TntRaidingConfig.UseNormalTntDamageAfterBreach?.Value ?? true)
             ));
 
             ctx.Reply(ConfigLine(
@@ -491,6 +523,11 @@ namespace RaidForge.Commands
         private static void ShowTroubleshootingConfig(ChatCommandContext ctx)
         {
             ctx.Reply(ChatColors.AccentText("[10] Troubleshooting"));
+
+            ctx.Reply(ConfigLine(
+                "EnableTntDamageLogging",
+                EnabledText(TroubleshootingConfig.EnableTntDamageLogging?.Value ?? false)
+            ));
 
             ctx.Reply(ConfigLine(
                 "EnableVerboseLogging",

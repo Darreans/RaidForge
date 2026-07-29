@@ -7,6 +7,7 @@ namespace RaidForge.Config
     {
         public static ConfigFile ConfigFileInstance { get; private set; }
 
+        public static ConfigEntry<bool> EnableTntDamageLogging { get; private set; }
         public static ConfigEntry<bool> EnableVerboseLogging { get; private set; }
 
         private const string SECTION_LOGGING = "Logging";
@@ -14,6 +15,12 @@ namespace RaidForge.Config
         public static void Initialize(ConfigFile configFile, ManualLogSource logger = null)
         {
             ConfigFileInstance = configFile;
+
+            EnableTntDamageLogging = configFile.Bind(
+                SECTION_LOGGING,
+                "EnableTntDamageLogging",
+                false,
+                "Temporarily logs throttled castle-structure DealDamage events at Info level, including damage modifiers and the source ownership graph. Use this to identify TNT damage sources, then turn it off.");
 
             EnableVerboseLogging = configFile.Bind(
                 SECTION_LOGGING,

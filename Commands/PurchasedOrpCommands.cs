@@ -12,7 +12,7 @@ namespace RaidForge.Commands
 {
     public class PurchasedOrpCommands
     {
-        [Command("buyorp", "Buys raid-day ORP protection for you or your clan. Usage: .buyorp <days>", adminOnly: false)]
+        [Command("buyorp", description: "Buys raid-day ORP protection for you or your clan. Usage: .buyorp <days>", adminOnly: false)]
         public void BuyOrp(ChatCommandContext ctx, int days)
         {
             try
@@ -25,7 +25,8 @@ namespace RaidForge.Commands
                 int maxDays = Math.Max(1, PurchasedOrpConfig.MaxPurchaseRaidDays?.Value ?? 30);
                 if (days <= 0 || days > maxDays)
                 {
-                    ctx.Reply(ChatColors.ErrorText($"Usage: .buyorp <days> where days is between 1 and {maxDays}."));
+                    ctx.Reply(ChatColors.ErrorText(
+                        $"Usage: {CommandSettingsConfig.GetInvocation("buyorp")} <days> where days is between 1 and {maxDays}."));
                     return;
                 }
 
@@ -98,19 +99,13 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("buyorpstatus", "Shows your purchased ORP protection days.", adminOnly: false)]
+        [Command("buyorpstatus", shortHand: "orpamount", description: "Shows your purchased ORP protection days.", adminOnly: false)]
         public void BuyOrpStatus(ChatCommandContext ctx)
         {
             ShowOrpAmount(ctx);
         }
 
-        [Command("orpamount", "Shows how many purchased ORP raid days you have.", adminOnly: false)]
-        public void OrpAmount(ChatCommandContext ctx)
-        {
-            ShowOrpAmount(ctx);
-        }
-
-        [Command("givebuyorp", "Admin: gives purchased ORP raid days to a player/clan. Usage: .givebuyorp <PlayerName> <amount>", adminOnly: true)]
+        [Command("givebuyorp", description: "Admin: gives purchased ORP raid days to a player/clan. Usage: .givebuyorp <PlayerName> <amount>", adminOnly: true)]
         public void GiveBuyOrp(ChatCommandContext ctx, string playerName, int amount)
         {
             try
@@ -122,7 +117,8 @@ namespace RaidForge.Commands
 
                 if (amount <= 0)
                 {
-                    ctx.Reply(ChatColors.ErrorText("Usage: .givebuyorp <PlayerName> <amount> where amount is greater than 0."));
+                    ctx.Reply(ChatColors.ErrorText(
+                        $"Usage: {CommandSettingsConfig.GetInvocation("givebuyorp")} <PlayerName> <amount> where amount is greater than 0."));
                     return;
                 }
 
@@ -161,7 +157,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("removebuyorp", "Admin: removes purchased ORP raid days from a player/clan. Usage: .removebuyorp <PlayerName> <amount>", adminOnly: true)]
+        [Command("removebuyorp", description: "Admin: removes purchased ORP raid days from a player/clan. Usage: .removebuyorp <PlayerName> <amount>", adminOnly: true)]
         public void RemoveBuyOrp(ChatCommandContext ctx, string playerName, int amount)
         {
             try

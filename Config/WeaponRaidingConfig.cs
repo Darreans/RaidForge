@@ -9,6 +9,7 @@ namespace RaidForge.Config
         public static ConfigEntry<bool> EnableWeaponRaiding { get; private set; }
         public static ConfigEntry<float> WeaponDamageVsStoneMultiplier { get; private set; }
 
+        // Kept for update compatibility with existing WeaponRaiding.cfg files.
         private const string SECTION_MAIN = "Weapon Raiding";
 
         public static void Initialize(ConfigFile configFile, ManualLogSource logger = null)
@@ -30,7 +31,7 @@ namespace RaidForge.Config
                 "1.0 = Full Weapon Damage.\n" +
                 "0.5 = Half Damage (Recommended to keep Golems relevant).");
 
-            if (logger != null) logger.LogInfo("[WeaponRaidingConfig] Initialized.");
+            if (logger != null) logger.LogInfo("[WeaponRaidingConfig] Weapon structure raiding settings initialized.");
         }
     }
 }

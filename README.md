@@ -1,27 +1,26 @@
 <p align="center">
-  <img src="assets/raidforge-logo.png" alt="RaidForge logo" width="720">
+  <img src="https://raw.githubusercontent.com/Darreans/RaidForge/main/assets/raidforge-logo.png" alt="RaidForge logo" width="720">
 </p>
 
 # RaidForge
 
-RaidForge is a server-side V Rising mod for configurable raid schedules, offline base protection, opt-in raiding, purchased protection, weapon raiding, raid interference, map alerts, Siege Golem automation, Soul Shard rules, and per-castle servant limits.
+RaidForge is a server-side V Rising mod for configurable raid schedules, offline base protection, opt-in raiding, purchased protection, weapon and explosive raiding, raid interference, map alerts, Siege Golem automation, Soul Shard rules, and per-castle servant limits.
 
-Current mod version: **3.1.1**
+Current mod version: **3.2.2**
 
 > [!IMPORTANT]
 > RaidForge changes important combat and castle-protection rules. Back up your world and configuration files before installing or updating it, and validate changes on a test server first.
 
 ## What's New
 
-- **Per-castle servant limits:** Limit selected convertible characters independently for each castle heart.
-- **Validated servant mappings:** RaidForge reads the game's `ServantConvertable.ConvertToUnit` data instead of relying on guessed regular-to-servant names.
-- **Safe coffin rejection:** Excess Insert actions are stopped before the dominated NPC is consumed.
-- **Shared base enforcement:** Every clan member using the same castle heart shares that base's servant count, while another castle heart has its own count.
-- **Clear and throttled feedback:** Rejected players receive a simple system message, limited to one notice every five seconds.
-- **Lightweight diagnostics:** Detailed servant action/count logging is optional and disabled by default.
-- **Purchased ORP:** Players can purchase protection for upcoming configured raid days using a server-selected currency.
-- **Expanded schedules and controls:** Day-based ORP, opt-in schedules, schedule clock offsets, manual raid overrides, and live configuration tools.
-- **Improved ownership and damage handling:** RaidForge uses direct damage interception and owner-aware clan/base evaluation for raid decisions.
+- **Easier raid-time command:** Players can use `.raidtime`, or the shorter `.raidt`, to see when the next raid window begins.
+- **Optional command customization:** Server owners can rename or disable individual RaidForge commands and choose whether they appear in normal `.help` results. Command changes apply after a full restart.
+- **Separate TNT controls:** T01 and T02 explosives can each have their regular damage, castle-wall damage, and after-breach behavior adjusted independently.
+- **Per-base servant limits:** Server owners can cap selected servant types separately for every castle.
+- **Clan-safe counting:** Clanmates share the servant limit for the base they are using, while a different castle keeps its own count.
+- **Safe servant rejection:** A servant coffin refuses an extra servant before the captured NPC is consumed.
+- **Clear player feedback:** Rejection messages are simple and throttled so repeated interactions do not spam chat.
+- **Lightweight troubleshooting:** Detailed diagnostic logging remains off unless a server owner intentionally enables it.
 
 ## Requirements
 
@@ -50,7 +49,43 @@ Those third-party binaries are intentionally not stored in this repository.
 5. Stop the server, review `BepInEx/config/RaidForge/`, and enable only the systems you intend to use.
 6. Restart the server and verify the startup log.
 
-If RaidForge controls your raid schedule, disable conflicting vanilla raid-hour settings. Running both scheduling systems can produce overlapping or unexpected raid windows.
+> [!IMPORTANT]
+> If RaidForge controls scheduled castle damage, the active save's `ServerGameSettings.json` must use `"CastleDamageMode": "TimeRestricted"`. Do not use `Always` or `Never`/disabled. RaidForge switches castle damage to `Always` during its configured window and returns it to `TimeRestricted` afterward.
+>
+> The vanilla weekday and weekend castle raid times must also all be set to `00:00`. In JSON, that means every `StartHour`, `StartMinute`, `EndHour`, and `EndMinute` below is `0`. Put the real raid windows in `RaidScheduleAndGeneral.cfg`.
+
+```json
+{
+  "CastleDamageMode": "TimeRestricted",
+  "PlayerInteractionSettings": {
+    "VSCastleWeekdayTime": {
+      "StartHour": 0,
+      "StartMinute": 0,
+      "EndHour": 0,
+      "EndMinute": 0
+    },
+    "VSCastleWeekendTime": {
+      "StartHour": 0,
+      "StartMinute": 0,
+      "EndHour": 0,
+      "EndMinute": 0
+    }
+  }
+}
+```
+
+Merge these values into the existing file rather than replacing unrelated server settings. They are required for reliable scheduled activation. Zeroing the vanilla times prevents a second raid schedule from overlapping RaidForge.
+
+### Server Time and Schedule Offset
+
+The dedicated server machine's local clock is RaidForge's source of truth. `RaidScheduleDisplayOffsetHours` adds a fixed number of hours to that clock for both schedule checks and command output:
+
+- `0` uses the server clock unchanged.
+- A positive value moves RaidForge's schedule clock later.
+- A negative value moves it earlier.
+- Example: if the server clock is `08:00` and the offset is `2`, RaidForge treats the schedule time as `10:00`.
+
+Use the offset when the server's clock and the community's desired timezone do not match. `RaidScheduleTimeZoneForDisplay` is only the text label shown to players; it does not convert time. The offset is fixed and does not automatically change for daylight saving time, so review it when local clocks change.
 
 ## Feature Overview
 
@@ -93,10 +128,17 @@ Offline Raid Protection takes priority if it and Opt-In Raiding are accidentally
 
 Purchased ORP is intended as its own protection mode. Standard Offline Raid Protection and Opt-In Raiding should be disabled when it is used.
 
-### Weapon Raiding and Siege Golems
+### Weapon and Explosive Raiding
 
-- Allows configured weapons and explosives to damage stone structures without requiring a Siege Golem.
-- Applies a configurable stone-structure damage multiplier.
+- Regular weapon raiding and T01/T02 explosive raiding can be enabled independently.
+- Regular weapons use the configured stone-structure multiplier.
+- T01 and T02 normal damage can be scaled independently. `100` is native damage, `10` is 10% of native damage, and `110` is 10% above native damage.
+- T01 and T02 castle-wall damage can be tuned independently from ordinary TNT damage. Castle percentages are based directly on native explosive damage, so the two settings do not multiply each other.
+- After a castle is breached, TNT can either use its tier's normal-damage percentage or continue using its configured castle-wall percentage.
+- TNT still respects Opt-In Raiding, Purchased ORP, and Offline Raid Protection before damage is enabled.
+
+### Siege Golems
+
 - Can automatically change Siege Golem health as the server ages.
 - Supports a persistent manual health override and commands for inspecting available levels.
 - Includes an admin command for transforming a player into a Siege Golem.
@@ -178,7 +220,9 @@ RaidForge creates these files under `BepInEx/config/RaidForge/`:
 - `OptInRaiding.cfg` — Opt-in defaults, locks, automatic state changes, and shard-holder behavior.
 - `OptInSchedule.cfg` — Days when the Opt-In system is allowed or overridden.
 - `PurchasedORP.cfg` — Purchased protection, currency, price, display name, and purchase maximum.
-- `WeaponRaiding.cfg` — Weapon raiding and stone-structure multiplier.
+- `WeaponRaiding.cfg` — Weapon structure raiding and the stone-structure multiplier.
+- `TntDamageAndRaiding.cfg` — T01/T02 ordinary damage, castle-wall damage, TNT raiding, and post-breach behavior.
+- `CommandSettings.cfg` — Optional startup-only command names, shorthands, disabling, and normal VCF help visibility.
 - `RaidInterference.cfg` — Third-party interference and exemptions.
 - `MapIcons.cfg` — Offline, decay, opt-in, and opt-out map icon behavior.
 - `ServantLimits.cfg` — Generated convertible-character limits per castle.
@@ -186,15 +230,19 @@ RaidForge creates these files under `BepInEx/config/RaidForge/`:
 - `GolemSettings.cfg` — Day-based Siege Golem health automation and overrides.
 - `Troubleshooting.cfg` — Verbose RaidForge diagnostics. Keep this disabled unless actively troubleshooting.
 
-Use `.reloadraidforge` after editing configuration files. Review the server log to confirm that the new values were accepted.
+Use `.reloadraidforge` after editing runtime configuration files, then review the server log to confirm that the new values were accepted. `CommandSettings.cfg` is the exception: command names, shorthands, enabled states, and help visibility are registered at startup and require a full server restart.
 
 ## Commands
 
 RaidForge commands use the configured RaidForge schedule clock and display label, not the player's local client clock.
 
+All names below are defaults. RaidForge uses normal VampireCommandFramework help: `.help` lists available plugins, `.help RaidForge` lists RaidForge commands, and `.help <command>` shows detailed command help.
+
+Custom command behavior is off by default. Set `EnableCustomCommandSettings = true` in `CommandSettings.cfg` to enable the per-command names, shorthands, disabling, and VCF help visibility options. Command settings are registered once during startup, so every command change requires a full server restart; `.reloadraidforge` intentionally does not apply them. Administrator-only permissions remain fixed in code.
+
 ### Player Commands
 
-- `.raidt` / `.raidtimer` — Show whether raids are active or the time until the next raid window.
+- `.raidtime` / `.raidt` — Show whether raids are active or the time until the next raid window.
 - `.raiddays` / `.raidd` — Display the weekly raid schedule.
 - `.raidstatus <PlayerName>` / `.raids <PlayerName>` — Display a player or clan's raid vulnerability status.
 - `.raidoptin` — Opt the player or clan into raiding when Opt-In Raiding is active.
@@ -206,7 +254,7 @@ RaidForge commands use the configured RaidForge schedule clock and display label
 
 ### Administrator Commands
 
-- `.reloadraidforge` — Reload all RaidForge configuration files.
+- `.reloadraidforge` — Reload runtime configuration files; command settings still require a restart.
 - `.raidon` / `.raidoff` — Force the global raid state on or off.
 - `.raidauto` — Clear the manual override and resume the configured schedule.
 - `.raidstatusreason <PlayerName>` — Explain an owner's ORP decision.
@@ -242,7 +290,7 @@ The compiled mod is written to `bin/Release/net6.0/RaidForge.dll`.
 
 Bugs and edge cases can happen. If you find one, please report it so it can be reproduced and resolved.
 
-Open a ticket or use the appropriate support channel in the [V Rising Modding Community Discord](https://vrisingmods.com/discord). Include:
+Join the [VArena Discord](https://discord.gg/varena) and open a ticket in the appropriate support area. You may also contact **Darrean (inility#4118)** directly for RaidForge support. Include:
 
 - RaidForge version
 - V Rising dedicated-server version
@@ -253,13 +301,15 @@ Open a ticket or use the appropriate support channel in the [V Rising Modding Co
 
 Do not include passwords, authentication tokens, private server credentials, or an entire save file in a public report.
 
-You may also contact **Darrean (inility#4118)** for RaidForge-specific support.
-
 ## Disclaimer
 
 RaidForge is an unofficial community-made mod. It is not affiliated with, endorsed by, sponsored by, or officially supported by Stunlock Studios or the V Rising team. V Rising and related names and marks belong to their respective owners.
 
 Use RaidForge at your own risk. Mods can conflict, game or dependency updates can change behavior, and bugs may affect gameplay or server state. Maintain backups and test configuration changes before using them on a production server. Please report RaidForge issues through the mod-support process above rather than to official V Rising support.
+
+## AI Assistance Disclosure
+
+RaidForge was designed and hand-coded by Darrean. AI-assisted tools were used to help review and refactor code, troubleshoot issues, and draft portions of the setup guide and release notes. Every released change remains subject to human review and testing.
 
 ## Special Thanks
 

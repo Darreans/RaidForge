@@ -14,7 +14,7 @@ namespace RaidForge.Commands
     {
         private const int OptListPageSize = 10;
 
-        [Command("raidoptin", "Opts you and your clan into being raidable.", adminOnly: false)]
+        [Command("raidoptin", description: "Opts you and your clan into being raidable.", adminOnly: false)]
         public void OptInCommand(ChatCommandContext ctx)
         {
             if (TryRejectOptInSystemUnavailable(ctx))
@@ -70,7 +70,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("raidoptout", "Opts you and your clan out of being raidable, if the time lock has expired.", adminOnly: false)]
+        [Command("raidoptout", description: "Opts you and your clan out of being raidable, if the time lock has expired.", adminOnly: false)]
         public void OptOutCommand(ChatCommandContext ctx)
         {
             if (TryRejectOptInSystemUnavailable(ctx))
@@ -115,7 +115,7 @@ namespace RaidForge.Commands
             ctx.Reply(ChatColors.SuccessText("You have opted OUT of raiding. Your base(s) are now protected."));
         }
 
-        [Command("raidoptstatus", "Checks your current opt-in raiding status.", adminOnly: false)]
+        [Command("raidoptstatus", description: "Checks your current opt-in raiding status.", adminOnly: false)]
         public void StatusCommand(ChatCommandContext ctx)
         {
             if (TryRejectOptInSystemUnavailable(ctx))
@@ -171,7 +171,8 @@ namespace RaidForge.Commands
                     }
                     else
                     {
-                        ctx.Reply(ChatColors.SuccessText("Your time lock has expired. You can use .raidoptout at any time."));
+                        ctx.Reply(ChatColors.SuccessText(
+                            $"Your time lock has expired. You can use {CommandSettingsConfig.GetInvocation("raidoptout")} at any time."));
                     }
                 }
             }
@@ -193,13 +194,14 @@ namespace RaidForge.Commands
                     }
                     else
                     {
-                        ctx.Reply(ChatColors.SuccessText("Your time lock has expired. You can use .raidoptin at any time."));
+                        ctx.Reply(ChatColors.SuccessText(
+                            $"Your time lock has expired. You can use {CommandSettingsConfig.GetInvocation("raidoptin")} at any time."));
                     }
                 }
             }
         }
 
-        [Command("raidoptlist", "Lists manually opted-in raidable players/clans. Usage: .raidoptlist [page]", adminOnly: false)]
+        [Command("raidoptlist", description: "Lists manually opted-in raidable players/clans. Usage: .raidoptlist [page]", adminOnly: false)]
         public void OptListCommand(ChatCommandContext ctx, int page = 1)
         {
             if (TryRejectOptInSystemUnavailable(ctx))
@@ -209,7 +211,8 @@ namespace RaidForge.Commands
 
             if (page < 1)
             {
-                ctx.Reply(ChatColors.ErrorText("Invalid page number. Usage: .raidoptlist 1"));
+                ctx.Reply(ChatColors.ErrorText(
+                    $"Invalid page number. Usage: {CommandSettingsConfig.GetInvocation("raidoptlist")} 1"));
                 return;
             }
 
@@ -264,7 +267,8 @@ namespace RaidForge.Commands
 
                 if (page < totalPages)
                 {
-                    ctx.Reply(ChatColors.InfoText("Next page: ") + ChatColors.AccentText($".raidoptlist {page + 1}"));
+                    ctx.Reply(ChatColors.InfoText("Next page: ") + ChatColors.AccentText(
+                        $"{CommandSettingsConfig.GetInvocation("raidoptlist")} {page + 1}"));
                 }
 
                 ctx.Reply(ChatColors.HighlightText($"=== End {listMode} List ==="));
@@ -276,7 +280,7 @@ namespace RaidForge.Commands
             }
         }
 
-        [Command("forceopt", "Admin command to force a player/clan's raiding status. Usage: .forceopt <PlayerName> <in|out>", adminOnly: true)]
+        [Command("forceopt", description: "Admin command to force a player/clan's raiding status. Usage: .forceopt <PlayerName> <in|out>", adminOnly: true)]
         public void ForceOptCommand(ChatCommandContext ctx, string playerName, string status)
         {
             if (TryRejectOptInSystemUnavailable(ctx))

@@ -7,7 +7,7 @@ namespace RaidForge.Commands
 {
     public class IconCommands
     {
-        [Command("clearraidforgeicons", "Manually clears all active raid map icons.", adminOnly: true)]
+        [Command("clearraidforgeicons", description: "Manually clears all active raid map icons.", adminOnly: true)]
         public void ClearIconsCommand(ChatCommandContext ctx)
         {
             try

@@ -15,6 +15,7 @@ namespace RaidForge.Utils
 {
     public static class UserHelper
     {
+        private const int MaxSourceOwnerDepth = 6;
 
         public static bool TryGetShardPrefabsForUserOrClan(EntityManager em, Entity userEntity, out HashSet<PrefabGUID> foundShards, out string reason)
         {
@@ -285,39 +286,108 @@ namespace RaidForge.Utils
 
         public static bool TryGetPlayerOwnerFromSource(EntityManager em, Entity sourceEntity, out Entity playerCharacterEntity, out Entity userEntity)
         {
+            return TryGetPlayerOwnerFromSource(
+                em,
+                sourceEntity,
+                0,
+                out playerCharacterEntity,
+                out userEntity);
+        }
+
+        private static bool TryGetPlayerOwnerFromSource(
+            EntityManager em,
+            Entity sourceEntity,
+            int depth,
+            out Entity playerCharacterEntity,
+            out Entity userEntity)
+        {
             playerCharacterEntity = Entity.Null;
             userEntity = Entity.Null;
 
-            if (!em.Exists(sourceEntity)) return false;
-
-            if (em.HasComponent<PlayerCharacter>(sourceEntity))
+            if (depth > MaxSourceOwnerDepth ||
+                sourceEntity == Entity.Null ||
+                !em.Exists(sourceEntity))
             {
-                playerCharacterEntity = sourceEntity;
-                if (em.TryGetComponentData<PlayerCharacter>(playerCharacterEntity, out var pc))
-                {
-                    userEntity = pc.UserEntity;
-                    return em.Exists(userEntity);
-                }
                 return false;
             }
 
-            if (em.HasComponent<EntityOwner>(sourceEntity))
+            if (em.TryGetComponentData(sourceEntity, out PlayerCharacter playerCharacter))
             {
-                Entity directOwner = em.GetComponentData<EntityOwner>(sourceEntity).Owner;
-                if (em.Exists(directOwner))
+                Entity candidateUserEntity = playerCharacter.UserEntity;
+
+                if (candidateUserEntity != Entity.Null && em.Exists(candidateUserEntity))
                 {
-                    if (em.HasComponent<PlayerCharacter>(directOwner))
-                    {
-                        playerCharacterEntity = directOwner;
-                        if (em.TryGetComponentData<PlayerCharacter>(playerCharacterEntity, out var pcOwner))
-                        {
-                            userEntity = pcOwner.UserEntity;
-                            return em.Exists(userEntity);
-                        }
-                        return false;
-                    }
+                    playerCharacterEntity = sourceEntity;
+                    userEntity = candidateUserEntity;
+                    return true;
                 }
             }
+
+            if (em.TryGetComponentData(sourceEntity, out User user))
+            {
+                userEntity = sourceEntity;
+                Entity localCharacterEntity = user.LocalCharacter._Entity;
+
+                if (localCharacterEntity != Entity.Null &&
+                    em.Exists(localCharacterEntity) &&
+                    em.HasComponent<PlayerCharacter>(localCharacterEntity))
+                {
+                    playerCharacterEntity = localCharacterEntity;
+                }
+
+                return true;
+            }
+
+            int nextDepth = depth + 1;
+
+            if (em.TryGetComponentData(sourceEntity, out UserOwner userOwner))
+            {
+                Entity ownedByUser = userOwner.Owner._Entity;
+
+                if (ownedByUser != sourceEntity &&
+                    TryGetPlayerOwnerFromSource(
+                        em,
+                        ownedByUser,
+                        nextDepth,
+                        out playerCharacterEntity,
+                        out userEntity))
+                {
+                    return true;
+                }
+            }
+
+            if (em.TryGetComponentData(sourceEntity, out EntityOwner entityOwner))
+            {
+                Entity ownerEntity = entityOwner.Owner;
+
+                if (ownerEntity != sourceEntity &&
+                    TryGetPlayerOwnerFromSource(
+                        em,
+                        ownerEntity,
+                        nextDepth,
+                        out playerCharacterEntity,
+                        out userEntity))
+                {
+                    return true;
+                }
+            }
+
+            if (em.TryGetComponentData(sourceEntity, out EntityCreator entityCreator))
+            {
+                Entity creatorEntity = entityCreator.Creator._Entity;
+
+                if (creatorEntity != sourceEntity &&
+                    TryGetPlayerOwnerFromSource(
+                        em,
+                        creatorEntity,
+                        nextDepth,
+                        out playerCharacterEntity,
+                        out userEntity))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
