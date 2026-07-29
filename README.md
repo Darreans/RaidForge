@@ -309,7 +309,7 @@ Use RaidForge at your own risk. Mods can conflict, game or dependency updates ca
 
 ## AI Assistance Disclosure
 
-RaidForge was designed and hand-coded by Darrean. AI-assisted tools were used to help review and refactor code, troubleshoot issues, and draft portions of the setup guide and release notes. Every released change remains subject to human review and testing.
+In order to align with modern standards , RaidForge was designed and hand coded at first, however  AI-assisted tools were used to help review and refactor code, troubleshoot issues, and draft portions of the setup guide and release notes. Every released change remains subject to human testing, however some issues may still arise.
 
 ## Special Thanks
 
@@ -319,6 +319,7 @@ Special thanks to the following players for testing, feedback, ideas, bug report
 - **Mitch (zfolmt)**
 - **Amingo**
 - **Thiaz**
+- **Rendy**
 
 Developer: **Darrean (inility#4118)**
 
