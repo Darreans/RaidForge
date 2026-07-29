@@ -28,7 +28,8 @@ namespace RaidForge.Commands
             }
 
             Plugin.TriggerReloadFromCommand();
-            ctx.Reply(ChatColors.SuccessText("All RaidForge configurations reload requested."));
+            ctx.Reply(ChatColors.SuccessText(
+                "RaidForge runtime configuration reload requested. Command settings require a full server restart."));
         }
 
         [Command("raidon", description: "Manually turn raids ON.", adminOnly: true)]
