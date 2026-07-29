@@ -27,6 +27,7 @@ namespace RaidForge.Services
                 if (ownerEntity != Entity.Null && em.Exists(ownerEntity))
                 {
                     _heartToOwnerUserCache[heartEntity] = ownerEntity;
+                    RaidMapIconService.MarkPersistentStateIconsDirty();
 
                     if (em.TryGetComponentData<User>(ownerEntity, out User userData))
                     {
@@ -68,9 +69,10 @@ namespace RaidForge.Services
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 _isHeartCachePopulatedFromInitialScan = false;
+                LoggingHelper.Error("[OwnershipCache] Failed while initializing heart ownership cache.", ex);
                 return heartsCached;
             }
             finally
@@ -111,9 +113,10 @@ namespace RaidForge.Services
                     usersCached++;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 _isClanCachePopulatedFromInitialScan = false;
+                LoggingHelper.Error("[OwnershipCache] Failed while initializing user clan cache.", ex);
                 return usersCached;
             }
             finally
@@ -140,24 +143,15 @@ namespace RaidForge.Services
                 clanEntity = Entity.Null;
             }
 
-            bool madeChange = false;
-            bool hadPrevious = _userToClanCache.TryGetValue(userEntity, out var prevClanInCache);
+            if (!_userToClanCache.TryGetValue(userEntity, out var prevClanInCache) ||
+                prevClanInCache != clanEntity)
+            {
+                _userToClanCache[userEntity] = clanEntity;
+                RaidMapIconService.MarkPersistentStateIconsDirty();
+                return true;
+            }
 
-            if (!hadPrevious)
-            {
-                _userToClanCache[userEntity] = clanEntity;
-                madeChange = true;
-            }
-            else if (prevClanInCache != clanEntity)
-            {
-                _userToClanCache[userEntity] = clanEntity;
-                madeChange = true;
-            }
-            else
-            {
-                madeChange = false;
-            }
-            return madeChange;
+            return false;
         }
 
         public static bool TryGetUserClan(Entity userEntity, out Entity clanEntity)
@@ -188,18 +182,29 @@ namespace RaidForge.Services
 
             if (ownerUserEntity == Entity.Null)
             {
-                _heartToOwnerUserCache.Remove(heartEntity);
+                if (_heartToOwnerUserCache.Remove(heartEntity))
+                {
+                    RaidMapIconService.MarkPersistentStateIconsDirty();
+                }
             }
             else
             {
-                _heartToOwnerUserCache[heartEntity] = ownerUserEntity;
+                if (!_heartToOwnerUserCache.TryGetValue(heartEntity, out Entity previousOwner) ||
+                    previousOwner != ownerUserEntity)
+                {
+                    _heartToOwnerUserCache[heartEntity] = ownerUserEntity;
+                    RaidMapIconService.MarkPersistentStateIconsDirty();
+                }
             }
         }
 
         public static void RemoveHeart(Entity heartEntity)
         {
             if (heartEntity == Entity.Null) return;
-            _heartToOwnerUserCache.Remove(heartEntity);
+            if (_heartToOwnerUserCache.Remove(heartEntity))
+            {
+                RaidMapIconService.MarkPersistentStateIconsDirty();
+            }
         }
 
         public static void HandlePlayerConnected(Entity userEntity, EntityManager entityManager)
@@ -216,16 +221,17 @@ namespace RaidForge.Services
             }
         }
 
-		public static IReadOnlyDictionary<Entity, Entity> GetHeartToOwnerCacheView() => _heartToOwnerUserCache;
+        public static IReadOnlyDictionary<Entity, Entity> GetHeartToOwnerCacheView() => _heartToOwnerUserCache;
 
-		public static IReadOnlyDictionary<Entity, Entity> GetUserToClanCacheView() => _userToClanCache;
+        public static IReadOnlyDictionary<Entity, Entity> GetUserToClanCacheView() => _userToClanCache;
 
-		public static void ClearAllCaches()
+        public static void ClearAllCaches()
         {
             _heartToOwnerUserCache.Clear();
             _userToClanCache.Clear();
             _isHeartCachePopulatedFromInitialScan = false;
             _isClanCachePopulatedFromInitialScan = false;
+            RaidMapIconService.MarkPersistentStateIconsDirty();
         }
     }
 }

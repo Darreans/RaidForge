@@ -21,8 +21,10 @@ namespace RaidForge.Config
 
         public static List<RaidScheduleEntry> Schedule { get; private set; }
         public static ConfigEntry<bool> AllowWaygateTeleports { get; private set; }
+        public static ConfigEntry<bool> ShowCurrentRaidingStatusInRaidStatus { get; private set; }
 
         public static ConfigEntry<string> RaidScheduleTimeZoneDisplayString { get; private set; }
+        public static ConfigEntry<double> RaidScheduleDisplayOffsetHours { get; private set; }
 
         private static ManualLogSource _logger;
         private static Dictionary<DayOfWeek, (ConfigEntry<string> Start, ConfigEntry<string> End)> _dailyConfigs;
@@ -40,27 +42,64 @@ namespace RaidForge.Config
             AllowWaygateTeleports = configFile.Bind(SECTION_GENERAL, "AllowWaygateTeleportsDuringRaid", true,
                 "Allow teleportation via Waygates during an active raid window (if global raids are ON).");
 
+            ShowCurrentRaidingStatusInRaidStatus = configFile.Bind(SECTION_GENERAL,
+                "ShowCurrentRaidingStatusInRaidStatus",
+                false,
+                "If true, .raidstatus/.raids adds a second line per base showing whether that base is currently being raided/breached.");
+
             RaidScheduleTimeZoneDisplayString = configFile.Bind(SECTION_GENERAL,
-                "RaidScheduleTimeZoneForDisplay", 
-                "Server Time", 
-                "The timezone string (e.g., EST, PST, UTC, Server Time) to display next to raid times in the .raiddays command.");
+                "RaidScheduleTimeZoneForDisplay",
+                "Server Time",
+                "The timezone string (e.g., EST, PST, UTC, Server Time) to display next to raid times in .raidt/.raidtimer/.raiddays/.raidd.");
+
+            RaidScheduleDisplayOffsetHours = configFile.Bind(SECTION_GENERAL,
+                "RaidScheduleDisplayOffsetHours",
+                0.0,
+                "Manual schedule clock offset, in hours, applied to raid schedule checks and displayed raid times. Positive values make RaidForge treat the server clock as later; negative values make it earlier. Example: server 08:00 with offset 2 is treated as schedule time 10:00.");
 
             string defaultOffTime = "00:00";
             string defaultWeekendStartTime = "20:00";
             string defaultWeekendEndTime = "22:00";
 
             _dailyConfigs[DayOfWeek.Monday] = (
-                configFile.Bind(SECTION_SCHEDULE, "MondayStartTime", defaultOffTime),
-                configFile.Bind(SECTION_SCHEDULE, "MondayEndTime", defaultOffTime)
+                BindDailyRaidTime(configFile, DayOfWeek.Monday, "StartTime", defaultOffTime),
+                BindDailyRaidTime(configFile, DayOfWeek.Monday, "EndTime", defaultOffTime)
             );
-            _dailyConfigs[DayOfWeek.Tuesday] = (configFile.Bind(SECTION_SCHEDULE, "TuesdayStartTime", defaultOffTime), configFile.Bind(SECTION_SCHEDULE, "TuesdayEndTime", defaultOffTime));
-            _dailyConfigs[DayOfWeek.Wednesday] = (configFile.Bind(SECTION_SCHEDULE, "WednesdayStartTime", defaultOffTime), configFile.Bind(SECTION_SCHEDULE, "WednesdayEndTime", defaultOffTime));
-            _dailyConfigs[DayOfWeek.Thursday] = (configFile.Bind(SECTION_SCHEDULE, "ThursdayStartTime", defaultOffTime), configFile.Bind(SECTION_SCHEDULE, "ThursdayEndTime", defaultOffTime));
-            _dailyConfigs[DayOfWeek.Friday] = (configFile.Bind(SECTION_SCHEDULE, "FridayStartTime", defaultWeekendStartTime), configFile.Bind(SECTION_SCHEDULE, "FridayEndTime", defaultWeekendEndTime));
-            _dailyConfigs[DayOfWeek.Saturday] = (configFile.Bind(SECTION_SCHEDULE, "SaturdayStartTime", defaultWeekendStartTime), configFile.Bind(SECTION_SCHEDULE, "SaturdayEndTime", defaultWeekendEndTime));
-            _dailyConfigs[DayOfWeek.Sunday] = (configFile.Bind(SECTION_SCHEDULE, "SundayStartTime", defaultWeekendStartTime), configFile.Bind(SECTION_SCHEDULE, "SundayEndTime", defaultWeekendEndTime));
+            _dailyConfigs[DayOfWeek.Tuesday] = (BindDailyRaidTime(configFile, DayOfWeek.Tuesday, "StartTime", defaultOffTime), BindDailyRaidTime(configFile, DayOfWeek.Tuesday, "EndTime", defaultOffTime));
+            _dailyConfigs[DayOfWeek.Wednesday] = (BindDailyRaidTime(configFile, DayOfWeek.Wednesday, "StartTime", defaultOffTime), BindDailyRaidTime(configFile, DayOfWeek.Wednesday, "EndTime", defaultOffTime));
+            _dailyConfigs[DayOfWeek.Thursday] = (BindDailyRaidTime(configFile, DayOfWeek.Thursday, "StartTime", defaultOffTime), BindDailyRaidTime(configFile, DayOfWeek.Thursday, "EndTime", defaultOffTime));
+            _dailyConfigs[DayOfWeek.Friday] = (BindDailyRaidTime(configFile, DayOfWeek.Friday, "StartTime", defaultWeekendStartTime), BindDailyRaidTime(configFile, DayOfWeek.Friday, "EndTime", defaultWeekendEndTime));
+            _dailyConfigs[DayOfWeek.Saturday] = (BindDailyRaidTime(configFile, DayOfWeek.Saturday, "StartTime", defaultWeekendStartTime), BindDailyRaidTime(configFile, DayOfWeek.Saturday, "EndTime", defaultWeekendEndTime));
+            _dailyConfigs[DayOfWeek.Sunday] = (BindDailyRaidTime(configFile, DayOfWeek.Sunday, "StartTime", defaultWeekendStartTime), BindDailyRaidTime(configFile, DayOfWeek.Sunday, "EndTime", defaultWeekendEndTime));
 
             if (TroubleshootingConfig.EnableVerboseLogging?.Value == true && _logger != null) _logger.LogInfo("[RaidConfig] Initialized.");
+        }
+
+        public static DateTime GetRaidScheduleNow()
+        {
+            return DateTime.Now + GetRaidScheduleOffset();
+        }
+
+        public static TimeSpan GetRaidScheduleOffset()
+        {
+            double hours = RaidScheduleDisplayOffsetHours?.Value ?? 0.0;
+
+            if (double.IsNaN(hours) || double.IsInfinity(hours))
+            {
+                return TimeSpan.Zero;
+            }
+
+            return TimeSpan.FromHours(hours);
+        }
+
+        private static ConfigEntry<string> BindDailyRaidTime(ConfigFile configFile, DayOfWeek day, string suffix, string defaultValue)
+        {
+            string direction = suffix == "StartTime" ? "start" : "end";
+            return configFile.Bind(
+                SECTION_SCHEDULE,
+                $"{day}{suffix}",
+                defaultValue,
+                $"Raid window {direction} time for {day} in HH:mm server-local time. Set both start and end to 00:00 for no raids. Use EndTime=24:00 to allow a full-day 00:00-24:00 raid window.");
         }
 
         public static void ParseSchedule()
@@ -81,7 +120,7 @@ namespace RaidForge.Config
                 var startTimeStr = configPair.Start.Value?.Trim() ?? "00:00";
                 var endTimeStr = configPair.End.Value?.Trim() ?? "00:00";
 
-             
+
                 if (startTimeStr == "00:00" && (endTimeStr == "00:00" || string.IsNullOrEmpty(endTimeStr)))
                 {
                     continue;
@@ -95,7 +134,8 @@ namespace RaidForge.Config
                 }
 
                 TimeSpan endTime;
-                bool treatEndTimeAsEndOfDay = (endTimeStr == "00:00" || string.IsNullOrEmpty(endTimeStr));
+                bool endTimeIsEndOfDay = string.Equals(endTimeStr, "24:00", StringComparison.Ordinal);
+                bool treatEndTimeAsEndOfDay = endTimeIsEndOfDay || endTimeStr == "00:00" || string.IsNullOrEmpty(endTimeStr);
 
                 if (treatEndTimeAsEndOfDay)
                 {
@@ -108,7 +148,9 @@ namespace RaidForge.Config
                     continue;
                 }
 
-                bool spansMidnight = (endTime < startTime && endTime != TimeSpan.Zero) || (startTime != TimeSpan.Zero && endTime == TimeSpan.Zero);
+                bool spansMidnight = endTimeIsEndOfDay ||
+                    (endTime < startTime && endTime != TimeSpan.Zero) ||
+                    (startTime != TimeSpan.Zero && endTime == TimeSpan.Zero);
 
 
                 newSchedule.Add(new RaidScheduleEntry { Day = day, StartTime = startTime, EndTime = endTime, SpansMidnight = spansMidnight });
@@ -122,5 +164,6 @@ namespace RaidForge.Config
             Schedule = newSchedule;
             if (TroubleshootingConfig.EnableVerboseLogging?.Value == true) _logger.LogInfo($"[RaidConfig] Total raid schedule entries parsed: {Schedule.Count}");
         }
+
     }
 }

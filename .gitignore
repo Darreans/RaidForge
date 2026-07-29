@@ -8,6 +8,7 @@ dotnet
 
 # Visual Studio Code
 .vscode
+.vs/
 
 # Rider
 .idea
@@ -36,3 +37,17 @@ bld/
 msbuild.log
 msbuild.err
 msbuild.wrn
+
+# Local agent/review files
+.agents/
+.codex/
+CODEX_FIXLIST.md
+
+# Locally supplied build dependencies
+libs/*.dll
+
+# Dedicated-server runtime data
+BepInEx/
+save-data/
+logs/
+*.log
