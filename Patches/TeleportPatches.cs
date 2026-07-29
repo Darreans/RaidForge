@@ -1,34 +1,33 @@
-﻿using HarmonyLib;
+using System;
+using HarmonyLib;
 using ProjectM;
+using ProjectM.Gameplay.Scripting;
 using ProjectM.Network;
-using Unity.Collections;
-using Unity.Entities;
-using Unity.Mathematics;
-using Unity.Transforms;
 using RaidForge.Config;
+using RaidForge.Systems;
 using RaidForge.Utils;
 using Stunlock.Core;
-using ProjectM.Scripting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Unity.Collections;
+using Unity.Entities;
 
 namespace RaidForge.Patches
 {
     [HarmonyPatch(typeof(TeleportationRequestSystem), nameof(TeleportationRequestSystem.OnUpdate))]
     public static class TeleportationRestrictionsPatch
     {
-        private const float EXEMPT_RADIUS = 5.0f;
-        private const float EXEMPT_TELEPORTER_RADIUS_SQUARED = EXEMPT_RADIUS * EXEMPT_RADIUS;
-
-        private static readonly List<float3> EXEMPT_TELEPORTER_LOCATIONS = new List<float3>
-        {
-            new float3(731.34955f, 15f, -2987.3306f),
-        };
-
-        private static readonly PrefabGUID ALWAYS_ALLOW_TELEPORT_BUFF_GUID = new PrefabGUID(1111481396);
-
         private static void Prefix(TeleportationRequestSystem __instance)
+        {
+            try
+            {
+                PrefixCore(__instance);
+            }
+            catch (Exception ex)
+            {
+                LoggingHelper.Warning("[Teleport] Error while applying waygate raid-hour restrictions.", ex);
+            }
+        }
+
+        private static void PrefixCore(TeleportationRequestSystem __instance)
         {
             if (!Plugin.SystemsInitialized)
             {
@@ -37,93 +36,202 @@ namespace RaidForge.Patches
 
             bool allowWaygateConfig = RaidConfig.AllowWaygateTeleports?.Value ?? true;
 
+            if (allowWaygateConfig)
+            {
+                return;
+            }
+
+            if (!VWorld.IsServerWorldReady())
+            {
+                return;
+            }
+
             var em = __instance.EntityManager;
+            if (__instance._TeleportRequestQuery.IsEmptyIgnoreFilter)
+            {
+                return;
+            }
+
+            if (!RaidToggleSystem.AreRaidsEnabledLive())
+            {
+                return;
+            }
+
             var eventEntities = __instance._TeleportRequestQuery.ToEntityArray(Allocator.TempJob);
 
             try
             {
-                if (eventEntities.Length == 0) return;
-
-				if (!VWorld.IsServerWorldReady()) return;
-				bool currentRaidStatus = Plugin.IsAutoRaidCurrentlyActive;
-
-				if (currentRaidStatus && !allowWaygateConfig)
+                foreach (var eventEntity in eventEntities)
                 {
-                    World world = VWorld.Server;
-                    ServerScriptMapper serverScriptMapper = null;
-                    ServerGameManager sgm = default;
-                    bool sgmSystemsReady = false;
-
-                    if (world != null && world.IsCreated)
+                    if (!em.Exists(eventEntity) || !em.HasComponent<TeleportationRequest>(eventEntity))
                     {
-                        serverScriptMapper = world.GetExistingSystemManaged<ServerScriptMapper>();
-                        if (serverScriptMapper != null)
-                        {
-                            sgm = serverScriptMapper.GetServerGameManager();
-                            sgmSystemsReady = true;
-                        }
+                        continue;
                     }
 
-                    foreach (var eventEntity in eventEntities)
+                    var requestData = em.GetComponentData<TeleportationRequest>(eventEntity);
+                    Entity playerCharacterEntity = requestData.PlayerEntity;
+
+                    if (!em.Exists(playerCharacterEntity) ||
+                        !em.HasComponent<PlayerCharacter>(playerCharacterEntity))
                     {
-                        if (!em.Exists(eventEntity) || !em.HasComponent<TeleportationRequest>(eventEntity)) continue;
-
-                        var requestData = em.GetComponentData<TeleportationRequest>(eventEntity);
-                        Entity playerCharacterEntity = requestData.PlayerEntity;
-
-                        if (!em.Exists(playerCharacterEntity) || !em.HasComponent<PlayerCharacter>(playerCharacterEntity)) continue;
-                        var requestPlayerCharacter = em.GetComponentData<PlayerCharacter>(playerCharacterEntity);
-                        Entity userEntity = requestPlayerCharacter.UserEntity;
-
-                        if (!em.Exists(userEntity) || !em.HasComponent<User>(userEntity)) continue;
-                        var requestUserObject = em.GetComponentData<User>(userEntity);
-
-                        if (sgmSystemsReady)
-                        {
-                            try
-                            {
-                                if (sgm.TryGetBuff(playerCharacterEntity, ALWAYS_ALLOW_TELEPORT_BUFF_GUID, out _))
-                                {
-                                    continue;
-                                }
-                            }
-                            catch (Exception)
-                            {
-
-                            }
-                        }
-
-                        bool isExemptByRadius = false;
-                        if (EXEMPT_TELEPORTER_LOCATIONS.Any() && em.HasComponent<Translation>(playerCharacterEntity))
-                        {
-                            Translation playerTranslation = em.GetComponentData<Translation>(playerCharacterEntity);
-
-                            foreach (float3 exemptLocation in EXEMPT_TELEPORTER_LOCATIONS)
-                            {
-                                float distanceSq = math.distancesq(playerTranslation.Value, exemptLocation);
-                                if (distanceSq <= EXEMPT_TELEPORTER_RADIUS_SQUARED)
-                                {
-                                    isExemptByRadius = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (isExemptByRadius)
-                        {
-                            continue;
-                        }
-
-                        em.DestroyEntity(eventEntity);
-                        var message = new FixedString512Bytes(ChatColors.WarningText("You cannot use waygates during raid hours!"));
-                        ServerChatUtils.SendSystemMessageToClient(em, requestUserObject, ref message);
+                        continue;
                     }
+
+                    var requestPlayerCharacter = em.GetComponentData<PlayerCharacter>(playerCharacterEntity);
+                    Entity userEntity = requestPlayerCharacter.UserEntity;
+
+                    if (!em.Exists(userEntity) || !em.HasComponent<User>(userEntity))
+                    {
+                        continue;
+                    }
+
+                    Entity activeNetherReturnWaypoint = GetActiveReturnToNetherWaypoint(em, playerCharacterEntity);
+                    bool hasActiveNetherReturn = activeNetherReturnWaypoint != Entity.Null;
+                    bool isActiveNetherReturnTeleport = IsActiveNetherReturnTeleport(em, requestData, activeNetherReturnWaypoint);
+                    var requestUserObject = em.GetComponentData<User>(userEntity);
+                    bool isAdmin = requestUserObject.IsAdmin;
+                    bool isBlockableType = ShouldBlockTeleportType(requestData.TeleportationType);
+                    bool isAllowedSpecialTeleport = IsAllowedSpecialTeleportTarget(em, requestData.FromTarget) ||
+                        IsAllowedSpecialTeleportTarget(em, requestData.ToTarget);
+
+                    LogTeleportRequest(
+                        em,
+                        requestData,
+                        hasActiveNetherReturn,
+                        isActiveNetherReturnTeleport,
+                        activeNetherReturnWaypoint,
+                        isAdmin,
+                        isBlockableType,
+                        isAllowedSpecialTeleport);
+
+                    if (!isBlockableType)
+                    {
+                        continue;
+                    }
+
+                    if (isAdmin || isActiveNetherReturnTeleport || isAllowedSpecialTeleport)
+                    {
+                        continue;
+                    }
+
+                    em.DestroyEntity(eventEntity);
+                    var message = new FixedString512Bytes(ChatColors.WarningText("You cannot use waygates during raid hours!"));
+                    ServerChatUtils.SendSystemMessageToClient(em, requestUserObject, ref message);
                 }
             }
             finally
             {
-                if (eventEntities.IsCreated) eventEntities.Dispose();
+                if (eventEntities.IsCreated)
+                {
+                    eventEntities.Dispose();
+                }
             }
+        }
+
+        private static bool ShouldBlockTeleportType(TeleportationType teleportationType)
+        {
+            return teleportationType == TeleportationType.Waypoint_To_ChunkWaypoint ||
+                teleportationType == TeleportationType.ChunkWaypoint_To_CastleWaypoint;
+        }
+
+        private static Entity GetActiveReturnToNetherWaypoint(EntityManager em, Entity playerCharacterEntity)
+        {
+            if (!em.TryGetComponentData(playerCharacterEntity, out ReturnToNetherWaypoint returnToNetherWaypoint))
+            {
+                return Entity.Null;
+            }
+
+            Entity waypointEntity = returnToNetherWaypoint.WaypointEntity;
+            return waypointEntity != Entity.Null && em.Exists(waypointEntity) ? waypointEntity : Entity.Null;
+        }
+
+        private static bool IsActiveNetherReturnTeleport(EntityManager em, TeleportationRequest requestData, Entity activeNetherReturnWaypoint)
+        {
+            if (activeNetherReturnWaypoint == Entity.Null || !em.Exists(activeNetherReturnWaypoint))
+            {
+                return false;
+            }
+
+            return requestData.FromTarget == activeNetherReturnWaypoint ||
+                requestData.ToTarget == activeNetherReturnWaypoint;
+        }
+
+        private static bool IsAllowedSpecialTeleportTarget(EntityManager em, Entity target)
+        {
+            if (target == Entity.Null || !em.Exists(target))
+            {
+                return false;
+            }
+
+            if (em.HasComponent<ReturnToNetherWaypoint>(target) ||
+                em.HasComponent<StartGraveyardExitWaypoint>(target) ||
+                em.HasComponent<ActivateDraculaWarpRift>(target) ||
+                em.HasComponent<Script_Dracula_EndGamePortal_Tag>(target))
+            {
+                return true;
+            }
+
+            if (!em.TryGetComponentData(target, out PrefabGUID prefabGuid) ||
+                !PrefabGuidResolver.TryGetPrefabName(prefabGuid, out string prefabName))
+            {
+                return false;
+            }
+
+            return prefabName.IndexOf("Nether", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                prefabName.IndexOf("Dracula", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                prefabName.IndexOf("WarpRift", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static void LogTeleportRequest(
+            EntityManager em,
+            TeleportationRequest requestData,
+            bool hasActiveNetherReturn,
+            bool isActiveNetherReturnTeleport,
+            Entity activeNetherReturnWaypoint,
+            bool isAdmin,
+            bool isBlockableType,
+            bool isAllowedSpecialTeleport)
+        {
+            if (TroubleshootingConfig.EnableVerboseLogging?.Value != true)
+            {
+                return;
+            }
+
+            LoggingHelper.Info(
+                "[Teleport] Request " +
+                $"type={requestData.TeleportationType}, " +
+                $"from={DescribeTeleportTarget(em, requestData.FromTarget)}, " +
+                $"to={DescribeTeleportTarget(em, requestData.ToTarget)}, " +
+                $"admin={isAdmin}, " +
+                $"activeNetherReturn={hasActiveNetherReturn}, " +
+                $"netherReturnTeleport={isActiveNetherReturnTeleport}, " +
+                $"netherReturnWaypoint={DescribeTeleportTarget(em, activeNetherReturnWaypoint)}, " +
+                $"allowedSpecial={isAllowedSpecialTeleport}, " +
+                $"blockedType={isBlockableType}");
+        }
+
+        private static string DescribeTeleportTarget(EntityManager em, Entity target)
+        {
+            if (target == Entity.Null)
+            {
+                return "null";
+            }
+
+            if (!em.Exists(target))
+            {
+                return $"{target.Index}:{target.Version} missing";
+            }
+
+            if (!em.TryGetComponentData(target, out PrefabGUID prefabGuid))
+            {
+                return $"{target.Index}:{target.Version} no PrefabGUID";
+            }
+
+            string prefabName = PrefabGuidResolver.TryGetPrefabName(prefabGuid, out string resolvedName)
+                ? resolvedName
+                : "unknown";
+
+            return $"{target.Index}:{target.Version} {prefabName} ({prefabGuid.GuidHash})";
         }
     }
 }

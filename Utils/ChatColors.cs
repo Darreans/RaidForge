@@ -4,19 +4,19 @@ namespace RaidForge.Utils
 {
     public static class ChatColors
     {
-        public const string Error = "#FF4136";     
-        public const string Success = "#2ECC40";   
-        public const string Info = "#FFFFFF";      
-        public const string Warning = "#F00534";   
-        public const string Highlight = "#7FDBFF"; 
-        public const string Accent = "#FFDC00";    
-        public const string Muted = "#AAAAAA";     
+        public const string Error = "#FF4136";
+        public const string Success = "#2ECC40";
+        public const string Info = "#FFFFFF";
+        public const string Warning = "#F00534";
+        public const string Highlight = "#7FDBFF";
+        public const string Accent = "#FFDC00";
+        public const string Muted = "#AAAAAA";
 
         public static string Format(string message, string colorHex)
         {
             if (string.IsNullOrEmpty(colorHex))
             {
-                return message; 
+                return message;
             }
             return $"<color={colorHex}>{message}</color>";
         }

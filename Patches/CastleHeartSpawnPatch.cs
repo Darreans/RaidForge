@@ -12,17 +12,16 @@ namespace RaidForge.Patches
     {
         public static void Prefix(SpawnCastleTeamSystem __instance)
         {
+            if (__instance._MainQuery.IsEmptyIgnoreFilter) return;
+
             NativeArray<Entity> newHearts = __instance._MainQuery.ToEntityArray(Allocator.Temp);
 
             try
             {
-                if (newHearts.Length > 0)
+                EntityManager em = __instance.EntityManager;
+                foreach (Entity heartEntity in newHearts)
                 {
-                    EntityManager em = __instance.EntityManager;
-                    foreach (Entity heartEntity in newHearts)
-                    {
-                        OwnershipCacheService.AddHeartToCache(heartEntity, em);
-                    }
+                    OwnershipCacheService.AddHeartToCache(heartEntity, em);
                 }
             }
             finally

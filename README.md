@@ -1,99 +1,277 @@
-# RaidForge Mod - README
+<p align="center">
+  <img src="assets/raidforge-logo.png" alt="RaidForge logo" width="720">
+</p>
 
-For issues or support, please reach out to Darrean (inility#4118).
+# RaidForge
 
-> **Note:** Because of the complex nature of this mod some edge cases may still exist and issues may occur. If you run into any issues or find any weird bugs, please reach out.
+RaidForge is a server-side V Rising mod for configurable raid schedules, offline base protection, opt-in raiding, purchased protection, weapon raiding, raid interference, map alerts, Siege Golem automation, Soul Shard rules, and per-castle servant limits.
 
-## Description
-RaidForge is a comprehensive V Rising mod designed to give server administrators total control over raid mechanics, offline base protection, and raid participation.
+Current mod version: **3.1.1**
 
-### What's New in the Latest Version:
-* **Overhauled Damage Detection:** We've changed the way damage is detected. RaidForge now intercepts damage directly, making the system much more accurate and reliable.
-* **Weapon Raiding (No Golems Needed):** You no longer need Siege Golems to attack offline/protected bases! You can now configure regular weapons to damage stone structures.
-* **Strict Opt-In Raiding:** Fully fixed. If enabled, both the attacker and the defender must be opted in. You cannot raid an opted-in player if you are not opted in yourself.
-* **Map Icons:** Added map icons to instantly spot when a decayed base or an offline-protected base is being raided.
-* **Raid Interference Fixes:** Third-party interference burning is fixed. Plus, Admins and players in Bear Form are now completely immune to the burn!
-* **Shard Protection:** Offline Raid Protection for Soul Shard holders has been adjusted and fine tuned to catch more edge cases.
+> [!IMPORTANT]
+> RaidForge changes important combat and castle-protection rules. Back up your world and configuration files before installing or updating it, and validate changes on a test server first.
 
-## Core Features
+## What's New
 
-### Advanced Offline Protection
-* **Offline Protection:** Prevents bases from damage when all associated defenders (clan members or solo owners) are offline.
-* **Configurable Grace Period:** Defines a window of vulnerability after the last defender logs off. Makes it so players cannot just log off before they are being raided, they must be offline for the given grace period to obtain Offline protection.
-* **Soul Shard Rules:** Choose whether holding a Soul Shard revokes a clan's Offline Raid Protection. 
+- **Per-castle servant limits:** Limit selected convertible characters independently for each castle heart.
+- **Validated servant mappings:** RaidForge reads the game's `ServantConvertable.ConvertToUnit` data instead of relying on guessed regular-to-servant names.
+- **Safe coffin rejection:** Excess Insert actions are stopped before the dominated NPC is consumed.
+- **Shared base enforcement:** Every clan member using the same castle heart shares that base's servant count, while another castle heart has its own count.
+- **Clear and throttled feedback:** Rejected players receive a simple system message, limited to one notice every five seconds.
+- **Lightweight diagnostics:** Detailed servant action/count logging is optional and disabled by default.
+- **Purchased ORP:** Players can purchase protection for upcoming configured raid days using a server-selected currency.
+- **Expanded schedules and controls:** Day-based ORP, opt-in schedules, schedule clock offsets, manual raid overrides, and live configuration tools.
+- **Improved ownership and damage handling:** RaidForge uses direct damage interception and owner-aware clan/base evaluation for raid decisions.
 
-### Opt-In Raiding System
-* Turn your server into a consensual PvP zone. When enabled, standard Offline Raid Protection is bypassed, and bases are invincible by default.
-* Players must use `.raidoptin` to become raidable.
-* **Mutual Combat:** An attacker cannot damage an opted-in base unless the attacker is also opted in. Both parties must be flagged for raiding.
+## Requirements
 
-### Dynamic Raid Interference
-* Discourages third-party from interfering in active sieges.
-* Automatically applies a burning debuff to players who enter an active siege territory if they are not the attacker or the defender.
-* **Exemptions:** Server Admins and players utilizing Bear Form are immune to the burn (great for spectating, and is configurable).
+- A V Rising dedicated server
+- BepInEx 6 for IL2CPP
+- HookDOTS.API
+- VampireCommandFramework
 
-### Live Map Icons
-* Configurable map markers will automatically appear to alert the server when a Decayed Base or an Offline Base is actively taking damage and will apply a icon over the castle heart for a given time.
+RaidForge is server-side. Players do not need to install the mod locally.
 
-###  Siege Golem Automation & Weapon Raiding
-* **Weapon Raiding:** Enable regular weapons and explosives to damage walls (with a configurable damage multiplier), making Golems optional for raiding.
-* **Golem Automation:** Set a server start date and let RaidForge automatically scale Siege Golem HP as the server ages (e.g., higher HP on Day 7 than Day 1).
-* **Manual Golem Control:** Admins can manually set and lock Golem HP levels via commands.
+This source tree expects the following locally supplied build dependencies:
 
-###  Custom Schedules & Waygate Limits
-* Define exact daily raid windows using the server's local time (supports raids that span past midnight).
-* Optionally restrict Waygate teleportation while a global raid window is active.
+```text
+libs/HookDOTS.API.dll
+libs/VampireCommandFramework.dll
+```
 
-## Important Server Settings
-To prevent conflicts and ensure RaidForge can fully manage raid windows, you **MUST** disable your server's default raid hour configurations in your standard server settings. Leaving the vanilla game's raid hours active will cause overlapping schedules and break RaidForge's time.
+Those third-party binaries are intentionally not stored in this repository.
 
-## Commands
-*(Note: All times shown by RaidForge commands are based on the server's local timezone, not the player's client.)*
+## Installation
 
-### Player Commands
-* `.raidt`: Shows the time until the next scheduled raid window, or if raids are currently active.
-* `.raiddays`: Displays the server's weekly raid schedule.
-* `.raidstatus <PlayerName>`: Shows the raid vulnerability status (Offline Protected, Grace Period, Breached, Raidable) for a specific player's base.
-* `.raidoptin`: Opts you and your clan into being raidable (if Opt-In system is enabled). Includes a configurable cooldown before you can opt out.
-* `.raidoptout`: Opts you and your clan out of raiding (if your time-lock has expired).
-* `.raidoptstatus`: Checks your current Opt-In status and time remaining on your lock.
+1. Stop the dedicated server and back up its save and configuration directories.
+2. Install BepInEx, HookDOTS.API, and VampireCommandFramework.
+3. Copy `RaidForge.dll` into `BepInEx/plugins/`.
+4. Start the server once so RaidForge can create its configuration files.
+5. Stop the server, review `BepInEx/config/RaidForge/`, and enable only the systems you intend to use.
+6. Restart the server and verify the startup log.
 
-### Admin Commands
-* `.reloadraidforge`: Live reloads all RaidForge config files from the server disk so changes can be made without rebooting.
-* `.raidon` / `.raidoff`: Manually forces global raids ON or OFF, overriding the schedule.
-* `.clearraidforgeicons`: Forcefully clears all active raid map icons.
-* `.removeorp <PlayerName>`: Instantly strips a player/clan of their offline protection until they log back in.
-* `.forceopt <PlayerName> <in|out>`: Forces a specific player/clan into or out of the Opt-In system, bypassing cooldowns.
-* `.golemstartdate`: Sets the Golem Automation "server start date" to the current exact time.
-* `.golemsethp <LevelName>`: Manually locks Siege Golem health (e.g., Max, Low), overriding automation.
-* `.golemauto`: Clears manual Golem HP overrides and resumes day-based automation.
-* `.golemlist` / `.golemcurrent`: Views available Golem HP levels and checks the server's current live Golem settings.
-* `.golem <PlayerName>`: Transforms the target player (or yourself) into a Siege Golem.
-* `.raidrefreshcache`: Force-rebuilds the mods internal tracking of bases and clans if things get out of sync (only use in emergency).
+If RaidForge controls your raid schedule, disable conflicting vanilla raid-hour settings. Running both scheduling systems can produce overlapping or unexpected raid windows.
+
+## Feature Overview
+
+### Raid Scheduling and Administration
+
+- Define daily raid windows, including windows that cross midnight.
+- Apply a display offset to RaidForge's schedule clock.
+- Allow or prevent Waygate travel during an active global raid window.
+- Force raids on or off temporarily, then return control to the automatic schedule.
+- Inspect loaded configuration, runtime state, and cached owner/base counts through admin commands.
+- Reload RaidForge configuration files without a full server restart.
+
+### Offline Raid Protection
+
+- Protects a castle when all associated defenders are offline.
+- Evaluates the castle owner or clan rather than only the last player who touched the base.
+- Supports a configurable logout grace period so logging out during danger does not immediately protect a castle.
+- Optionally restricts ORP to selected days of the week.
+- Can announce eligible offline or decayed-base raids with cooldowns to prevent chat spam.
+- Can make Soul Shard owners ineligible for Offline Raid Protection.
+
+Offline Raid Protection takes priority if it and Opt-In Raiding are accidentally enabled together.
+
+### Opt-In Raiding
+
+- Allows players and clans to choose whether their bases are raidable.
+- Supports default opted-in or opted-out server policies.
+- Enforces mutual participation when configured: an attacker must also be opted in before damaging an opted-in defender.
+- Includes opt-state lock durations, scheduled opt-in days, optional automatic opt-out, and automatic handling for Soul Shard holders.
+- Opt status is stored by persistent owner identity so clan members share the same result.
+
+### Purchased Offline Protection
+
+- Players can buy protection with `.buyorp <days>`.
+- Each purchased unit represents one configured raid-day credit.
+- Non-raid days do not consume credits.
+- The currency prefab, display name, price per raid day, and maximum purchase are configurable.
+- Protection is stored by the player or clan owner key, so clan-owned bases share the same balance.
+- Administrators can grant or remove credits.
+
+Purchased ORP is intended as its own protection mode. Standard Offline Raid Protection and Opt-In Raiding should be disabled when it is used.
+
+### Weapon Raiding and Siege Golems
+
+- Allows configured weapons and explosives to damage stone structures without requiring a Siege Golem.
+- Applies a configurable stone-structure damage multiplier.
+- Can automatically change Siege Golem health as the server ages.
+- Supports a persistent manual health override and commands for inspecting available levels.
+- Includes an admin command for transforming a player into a Siege Golem.
+
+### Raid Interference
+
+- Detects third parties entering an active siege who are neither attackers nor defenders.
+- Applies an interference burn to discourage outside participation.
+- Supports exemptions for administrators and Bear Form.
+- Can disable interference handling for offline or decaying bases.
+
+### Map Alerts
+
+- Optional icons for eligible offline-base and decayed-base raids.
+- Optional passive icons for opted-in and opted-out bases.
+- Configurable icon prefab selection and duration after the last eligible raid hit.
+- Includes an admin command to clear active RaidForge icons.
+
+### Soul Shard Rules
+
+- Configure the maximum allowed count for each tracked Soul Shard type.
+- Optionally revoke Offline Raid Protection from an owner or clan holding a tracked shard.
+- Shard ownership is refreshed against live world state.
+
+## Per-Castle Servant Limits
+
+Servant limits are configured in `ServantLimits.cfg`. On world initialization, RaidForge discovers every regular `CHAR_` prefab that the game marks as convertible and creates a blank entry for it.
+
+The control settings appear at the top of the file:
+
+```ini
+[00 - General]
+
+EnableServantLimits = false
+EnableDetailedLogging = false
+```
+
+Both settings are disabled by default for new installations.
+
+Under `[Character Limits]`, blank entries are unlimited:
+
+```ini
+CHAR_Militia_Longbowman =
+```
+
+Set a non-negative number to create a per-castle maximum:
+
+```ini
+CHAR_Militia_Longbowman = 2
+```
+
+Use `0` to block that character type completely:
+
+```ini
+CHAR_Militia_Longbowman = 0
+```
+
+Important behavior:
+
+- Configure the regular captured character, not the final `_Servant` prefab.
+- RaidForge resolves the final servant prefab from the game's conversion component.
+- Counts are isolated by `CastleHeartConnection`. Every clan member using the same base shares the same count.
+- A coffin connected to another castle heart belongs to a different base and has an independent count.
+- Converting, alive, mission-assigned, dead/revivable, and reviving servants count because their occupied coffin remains connected to the castle.
+- A short pending reservation prevents two simultaneous Insert actions from bypassing the same limit.
+- Rejection occurs before the dominated NPC is consumed.
+- The player sees: `This castle has reached the maximum number of <type> servants.`
+
+The limiter is event-driven. It runs only for relevant servant coffin Insert actions, scans the server's servant-coffin set, and counts only occupied coffins connected to the interacted castle heart. It does not run every frame.
+
+When `EnableDetailedLogging = false`, per-action mapping, coffin, count, reservation, and allow/block diagnostics are skipped. Startup summaries and genuine warnings or errors may still be logged.
 
 ## Configuration Files
-RaidForge generates multiple config files in your `BepInEx/config/RaidForge/` directory after the first boot.
 
-* `RaidScheduleAndGeneral.cfg`: Set your daily raid hours and Waygate restrictions.
-* `OfflineProtection.cfg`: Toggle ORP, set the Grace Period duration, and toggle global chat announcements.
-* `OptInRaiding.cfg` & `OptInSchedule.cfg`: Toggle the Opt-In system, set opt-out cooldowns, and schedule specific days where Opt-In is forced/bypassed.
-* `WeaponRaiding.cfg`: Enable/disable weapon damage to bases and set the damage multiplier against stone.
-* `RaidInterference.cfg`: Toggle the interloper burn system, and manage exemptions for offline bases, decaying bases, and Bear Form.
-* `MapIcons.cfg`: Toggle map icons for decay/offline raids and set how long they linger after the last hit.
-* `ShardSettings.cfg`: Manage max shard limits and toggle whether holding a shard disables your offline protection.
-* `GolemSettings.cfg`: Manage day-based automated Golem HP scaling.
-* `Troubleshooting.cfg`: Enable verbose logging for debugging (Keep this OFF or you may run into tons of lagging).
+RaidForge creates these files under `BepInEx/config/RaidForge/`:
 
-## Community & Support
-* **VArena Discord:** [https://discord.gg/varena](https://discord.gg/varena)
-* **V Rising Modding Wiki:** [https://wiki.vrisingmods.com](https://wiki.vrisingmods.com)
-* **VArena Website:** https://www.v-arena.com
+- `RaidScheduleAndGeneral.cfg` — Raid windows, schedule display/offset, Waygate policy, and raid-status display options.
+- `OfflineProtection.cfg` — ORP toggle, day schedule, logout grace period, and raid announcements.
+- `OptInRaiding.cfg` — Opt-in defaults, locks, automatic state changes, and shard-holder behavior.
+- `OptInSchedule.cfg` — Days when the Opt-In system is allowed or overridden.
+- `PurchasedORP.cfg` — Purchased protection, currency, price, display name, and purchase maximum.
+- `WeaponRaiding.cfg` — Weapon raiding and stone-structure multiplier.
+- `RaidInterference.cfg` — Third-party interference and exemptions.
+- `MapIcons.cfg` — Offline, decay, opt-in, and opt-out map icon behavior.
+- `ServantLimits.cfg` — Generated convertible-character limits per castle.
+- `SoulShards.cfg` — Shard count rules and ORP eligibility.
+- `GolemSettings.cfg` — Day-based Siege Golem health automation and overrides.
+- `Troubleshooting.cfg` — Verbose RaidForge diagnostics. Keep this disabled unless actively troubleshooting.
 
-## Acknowledgements
-Special thanks to the V Rising Modding community, the developers of the underlying frameworks, helskog (for the Waygate restriction feature), Mitch (zfolmt) (for the Raid Interference inspiration), and Amingo for helping with finding bugs.
+Use `.reloadraidforge` after editing configuration files. Review the server log to confirm that the new values were accepted.
 
-* **Developer:** Darrean (inility#4118)
-* **Future Plans:** Add visuals for offline protected bases (WIP)
+## Commands
 
-## License
-This RaidForge mod is licensed under the MIT License with a non-commercial clause. You may use, modify, and distribute this software, but you may not sell copies or derivative works for profit. Use at your own risk.
+RaidForge commands use the configured RaidForge schedule clock and display label, not the player's local client clock.
+
+### Player Commands
+
+- `.raidt` / `.raidtimer` — Show whether raids are active or the time until the next raid window.
+- `.raiddays` / `.raidd` — Display the weekly raid schedule.
+- `.raidstatus <PlayerName>` / `.raids <PlayerName>` — Display a player or clan's raid vulnerability status.
+- `.raidoptin` — Opt the player or clan into raiding when Opt-In Raiding is active.
+- `.raidoptout` — Opt out after the configured lock and schedule checks pass.
+- `.raidoptstatus` — Show the current opt status and remaining lock time.
+- `.raidoptlist [page]` — List manually opted-in owners.
+- `.buyorp <days>` — Purchase configured raid-day protection.
+- `.buyorpstatus` / `.orpamount` — Show remaining purchased ORP raid days.
+
+### Administrator Commands
+
+- `.reloadraidforge` — Reload all RaidForge configuration files.
+- `.raidon` / `.raidoff` — Force the global raid state on or off.
+- `.raidauto` — Clear the manual override and resume the configured schedule.
+- `.raidstatusreason <PlayerName>` — Explain an owner's ORP decision.
+- `.removeorp <PlayerName>` — Remove ORP until that owner reconnects.
+- `.forceopt <PlayerName> <in|out>` — Force a player or clan's opt state.
+- `.givebuyorp <PlayerName> <amount>` — Grant purchased ORP credits.
+- `.removebuyorp <PlayerName> <amount>` — Remove purchased ORP credits.
+- `.clearraidforgeicons` — Clear all active RaidForge map icons.
+- `.golemstartdate` — Set the Siege Golem automation start time.
+- `.golemcurrent` — Display the current Siege Golem health settings.
+- `.golemsethp <LevelName>` — Persist a manual Siege Golem health level.
+- `.golemauto` — Clear the manual Golem override and resume automation.
+- `.golemlist` — List available Siege Golem health levels.
+- `.golem [PlayerName]` — Transform the target or issuing administrator into a Siege Golem.
+- `.raidrefreshcache` — Rebuild RaidForge's owner, player, and castle caches.
+- `.raidforge ?` / `.raidforge status` / `.raidforge cache` — Show RaidForge help, status, and cached counts.
+- `.raidconfigview ?` / `.raidconfigview <number>` — Display a specific loaded configuration section.
+- `.raidconfigviewall` — Display all loaded RaidForge configuration values.
+
+## Building from Source
+
+1. Install the .NET 6 SDK.
+2. Place compatible HookDOTS.API and VampireCommandFramework DLLs in `libs/`.
+3. From the repository root, run:
+
+```powershell
+dotnet build RaidForge.sln -c Release
+```
+
+The compiled mod is written to `bin/Release/net6.0/RaidForge.dll`.
+
+## Bugs and Support
+
+Bugs and edge cases can happen. If you find one, please report it so it can be reproduced and resolved.
+
+Open a ticket or use the appropriate support channel in the [V Rising Modding Community Discord](https://vrisingmods.com/discord). Include:
+
+- RaidForge version
+- V Rising dedicated-server version
+- A clear description of what happened and what you expected
+- Reproduction steps
+- Relevant RaidForge configuration values
+- The matching section of `BepInEx/LogOutput.log`
+
+Do not include passwords, authentication tokens, private server credentials, or an entire save file in a public report.
+
+You may also contact **Darrean (inility#4118)** for RaidForge-specific support.
+
+## Disclaimer
+
+RaidForge is an unofficial community-made mod. It is not affiliated with, endorsed by, sponsored by, or officially supported by Stunlock Studios or the V Rising team. V Rising and related names and marks belong to their respective owners.
+
+Use RaidForge at your own risk. Mods can conflict, game or dependency updates can change behavior, and bugs may affect gameplay or server state. Maintain backups and test configuration changes before using them on a production server. Please report RaidForge issues through the mod-support process above rather than to official V Rising support.
+
+## Special Thanks
+
+Special thanks to the following players for testing, feedback, ideas, bug reports, and other help:
+
+- **helskog**
+- **Mitch (zfolmt)**
+- **Amingo**
+- **Thiaz**
+
+Developer: **Darrean (inility#4118)**
+
+## License and Use
+
+RaidForge is provided for non-commercial use. You may use, modify, and redistribute the project, but you may not sell the mod or derivative works. The software is provided as-is and without warranty.

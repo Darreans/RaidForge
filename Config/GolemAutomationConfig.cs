@@ -25,7 +25,7 @@ namespace RaidForge.Config
 
         private static ManualLogSource _logger;
 
-        public const string CONFIG_SECTION_MAIN_CONTROLS = "GolemMainControls"; 
+        public const string CONFIG_SECTION_MAIN_CONTROLS = "GolemMainControls";
         public const string CONFIG_SECTION_AUTOMATION_SCHEDULE = "GolemDayBasedAutomationSchedule";
 
         public static readonly Dictionary<SiegeWeaponHealth, int> GolemHpEstimates = new()
@@ -53,7 +53,7 @@ namespace RaidForge.Config
                 new ConfigDescription("The date/time the server 'started' for day-based automation. Format: yyyy-MM-dd HH:mm:ss. Required if DayBasedAutomation is enabled."));
 
             ManualSiegeWeaponHealthOverride = configFile.Bind(
-                new ConfigDefinition(CONFIG_SECTION_MAIN_CONTROLS, "ManualOverrideSiegeLevel"), 
+                new ConfigDefinition(CONFIG_SECTION_MAIN_CONTROLS, "ManualOverrideSiegeLevel"),
                 string.Empty,
                 new ConfigDescription("Manually set a specific SiegeWeaponHealth level (e.g., 'Normal', 'High', 'Max'). If set to a valid level name, this overrides day-based automation. Set to empty string to disable this manual override and use day-based automation (if enabled)."));
 

@@ -18,7 +18,7 @@ namespace RaidForge.Config
             EnableWeaponRaiding = configFile.Bind(
                 SECTION_MAIN,
                 "EnableWeaponRaiding",
-                false, 
+                false,
                 "If true, players can damage castle walls/structures with regular weapons.");
 
             WeaponDamageVsStoneMultiplier = configFile.Bind(

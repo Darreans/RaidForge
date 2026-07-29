@@ -23,7 +23,7 @@ namespace RaidForge.Utils
             _logger?.LogInfo(message);
         }
 
-        public static void Warning(string message, System.Exception ex = null) 
+        public static void Warning(string message, System.Exception ex = null)
         {
             if (_logger == null) return;
             if (ex != null)

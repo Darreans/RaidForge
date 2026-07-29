@@ -48,10 +48,8 @@ namespace RaidForge.Patches
                     }
                 }
             }
-            else
-            {
-                
-            }
+
+            RaidMapIconService.RemoveDecayRaidIconsForReclaimedPlot(castleHeartEntity, entityManager);
         }
     }
 }
