@@ -22,7 +22,7 @@ using Stunlock.Core;
 
 namespace RaidForge
 {
-    [BepInPlugin("raidforge", "RaidForge", "3.2.2")]
+    [BepInPlugin("raidforge", "RaidForge", "3.2.3")]
     [BepInDependency("gg.deca.VampireCommandFramework")]
     public class Plugin : BasePlugin
     {
@@ -169,6 +169,7 @@ namespace RaidForge
             RegisterRecurringTask("raid interference check", RaidInterferenceService.ProcessInterference, 2.0);
             RegisterRecurringTask("raid map icon cleanup", RaidMapIconService.ProcessCleanup, 5.0);
             RegisterRecurringTask("opt-in cooldown check", ProcessOptInCooldowns, 300.0);
+            RegisterRecurringTask("shard opt-in ownership check", ShardOwnershipService.Refresh, 1.0);
             RegisterRecurringTask("purchased ORP raid-day accounting", PurchasedOrpService.ProcessDueRaidDayConsumption, 300.0);
 
             Logger.LogInfo("[RaidForge] Initialization Complete. Mod is Active.");
@@ -339,6 +340,7 @@ namespace RaidForge
             {
                 if (SystemsInitialized)
                 {
+                    ShardOwnershipService.ResetRuntimeState();
                     OptInRaidService.ReloadStateFromDisk();
                     PurchasedOrpService.ReloadStateFromDisk();
                     RaidMapIconService.MarkPersistentStateIconsDirty();
@@ -421,6 +423,7 @@ namespace RaidForge
 
                     Logger.LogInfo($"[Reload] Cache refreshed: {hearts} Hearts, {users} Users.");
 
+                    ShardOwnershipService.ResetRuntimeState();
                     PlayerRegistryService.RefreshFromWorld(em);
                     RaidSchedulingSystem.CheckScheduleAndToggleRaids(true);
 

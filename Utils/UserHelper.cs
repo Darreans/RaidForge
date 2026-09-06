@@ -84,6 +84,7 @@ namespace RaidForge.Utils
                         var inventory = em.GetBuffer<InventoryBuffer>(inventoryEntity);
                         foreach (var item in inventory)
                         {
+                            if (item.Amount <= 0) continue;
                             if (PrefabData.SoulShardPrefabGUIDs.Contains(item.ItemType))
                             {
                                 foundShards.Add(item.ItemType);
@@ -172,31 +173,10 @@ namespace RaidForge.Utils
                 {
                     if (ownedHeartEntities.Contains(em.GetComponentData<CastleHeartConnection>(connectionEntity).CastleHeartEntity._Entity))
                     {
-                        if (pedestalGuids.Contains(em.GetComponentData<PrefabGUID>(connectionEntity)))
+                        if (pedestalGuids.Contains(em.GetComponentData<PrefabGUID>(connectionEntity)) &&
+                            TryGetSoulShardsInPedestal(em, connectionEntity, out var pedestalShards))
                         {
-                            if (em.TryGetBuffer<AttachedBuffer>(connectionEntity, out var attachedItems))
-                            {
-                                foreach (var attachedItem in attachedItems)
-                                {
-                                    var potentialInventoryEntity = attachedItem.Entity;
-                                    if (potentialInventoryEntity.Exists() && em.TryGetComponentData<PrefabGUID>(potentialInventoryEntity, out var attachedGuid))
-                                    {
-                                        if (attachedGuid == PrefabData.ExternalInventoryPrefab.Guid)
-                                        {
-                                            if (em.TryGetBuffer<InventoryBuffer>(potentialInventoryEntity, out var inventoryBuffer))
-                                            {
-                                                foreach (var inventoryItem in inventoryBuffer)
-                                                {
-                                                    if (PrefabData.SoulShardPrefabGUIDs.Contains(inventoryItem.ItemType))
-                                                    {
-                                                        foundShards.Add(inventoryItem.ItemType);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            foundShards.UnionWith(pedestalShards);
                         }
                     }
                 }
@@ -214,6 +194,38 @@ namespace RaidForge.Utils
             }
 
             return false;
+        }
+
+        public static bool TryGetSoulShardsInPedestal(EntityManager em, Entity pedestal, out HashSet<PrefabGUID> foundShards)
+        {
+            foundShards = new HashSet<PrefabGUID>();
+            if (!em.TryGetBuffer<AttachedBuffer>(pedestal, out var attachedItems)) return false;
+
+            foreach (var attachedItem in attachedItems)
+            {
+                var inventoryEntity = attachedItem.Entity;
+                if (!em.Exists(inventoryEntity) ||
+                    !em.TryGetComponentData<PrefabGUID>(inventoryEntity, out var prefab) ||
+                    prefab != PrefabData.ExternalInventoryPrefab.Guid ||
+                    !em.TryGetBuffer<InventoryBuffer>(inventoryEntity, out var inventory)) continue;
+
+                foreach (var item in inventory)
+                {
+                    if (item.Amount <= 0) continue;
+                    if (PrefabData.SoulShardPrefabGUIDs.Contains(item.ItemType))
+                    {
+                        foundShards.Add(item.ItemType);
+                    }
+                    else if (em.Exists(item.ItemEntity._Entity) &&
+                        em.TryGetComponentData<PrefabGUID>(item.ItemEntity._Entity, out var itemPrefab) &&
+                        PrefabData.SoulShardPrefabGUIDs.Contains(itemPrefab))
+                    {
+                        foundShards.Add(itemPrefab);
+                    }
+                }
+            }
+
+            return foundShards.Count > 0;
         }
 
         public static bool FindUserEntity(EntityManager em, string identifier, out Entity userEntity, out User userData, out string characterName)

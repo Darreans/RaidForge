@@ -291,6 +291,8 @@ namespace RaidForge.Services
         {
             if (!VWorld.IsServerWorldReady()) return;
 
+            ShardOwnershipService.Refresh();
+
             var em = VWorld.EntityManager;
 
             if (!AnyIconKindEnabled())
@@ -851,7 +853,8 @@ namespace RaidForge.Services
                 return false;
             }
 
-            return OptInRaidService.IsManuallyOptedOut(ownerPersistentKey);
+            return OptInRaidService.IsManuallyOptedOut(ownerPersistentKey) &&
+                !OptInRaidService.IsOptedIn(ownerPersistentKey);
         }
 
         private static bool TryGetOwnerPersistentKey(Entity castleHeartEntity, EntityManager em, out string ownerPersistentKey)

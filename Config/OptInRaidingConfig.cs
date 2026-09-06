@@ -44,10 +44,10 @@ namespace RaidForge.Config
                 "If true, players/clans cannot use .raidoptin or .raidoptout while a raid window is active.");
 
             AutoOptOutAfterCooldown = configFile.Bind(SECTION_MAIN, "AutoOptOutAfterCooldown", false,
-                "If true, players/clans are automatically opted-out the moment their lock duration expires.");
+                "If true, manual opt-ins are removed on the next cooldown check (every 5 minutes) after their lock expires. Only applies in default opted-out mode. Shard holders remain effectively opted-in while AutoOptInShardHolders is enabled.");
 
             AutoOptInShardHolders = configFile.Bind(SECTION_MAIN, "AutoOptInShardHolders", true,
-                "If true, holding a soul shard automatically treats you as opted-in during raid windows.");
+                "If true, a soul shard carried/equipped by any member or stored in an owned pedestal forces the player/clan to be opted-in during raid windows, including while offline. Ownership is checked about once per second. Manual opt-out cannot override possession; the saved preference applies again after all shards are gone. Requires Opt-In Raiding enabled and Offline Raid Protection disabled.");
 
             NormalizeDefaultMode();
         }

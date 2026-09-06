@@ -455,6 +455,7 @@ namespace RaidForge.Patches
             }
 
             if (!context.IsFastTrackApproved &&
+                context.OrpEnabled &&
                 ShardConfig.DisableOrpForShardHolders.Value &&
                 ShardVulnerabilityService.IsVulnerable(context.PersistentKey))
             {

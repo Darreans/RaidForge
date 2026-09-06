@@ -6,13 +6,15 @@
 
 RaidForge is a server-side V Rising mod for configurable raid schedules, offline base protection, opt-in raiding, purchased protection, weapon and explosive raiding, raid interference, map alerts, Siege Golem automation, Soul Shard rules, and per-castle servant limits.
 
-Current mod version: **3.2.2**
+Current mod version: **3.2.3**
 
 > [!IMPORTANT]
 > RaidForge changes important combat and castle-protection rules. Back up your world and configuration files before installing or updating it, and validate changes on a test server first.
 
 ## What's New
 
+- **Shard holders are forced into Opt-In Raiding:** `AutoOptInShardHolders` now checks live player/clan inventories, equipment, and owned Soul Shard pedestals, including offline users. Shard possession overrides saved opt-out choices without erasing them. Commands and passive map icons reflect the override. See the [Opt-In setup guide](docs/OPT_IN_GUIDE.md).
+- **ORP isolation:** Old shard vulnerability records no longer bypass Opt-In Raiding when standard ORP is disabled.
 - **Easier raid-time command:** Players can use `.raidtime`, or the shorter `.raidt`, to see when the next raid window begins.
 - **Optional command customization:** Server owners can rename or disable individual RaidForge commands and choose whether they appear in normal `.help` results. Command changes apply after a full restart.
 - **Separate TNT controls:** T01 and T02 explosives can each have their regular damage, castle-wall damage, and after-breach behavior adjusted independently.
@@ -110,6 +112,8 @@ Use the offset when the server's clock and the community's desired timezone do n
 Offline Raid Protection takes priority if it and Opt-In Raiding are accidentally enabled together.
 
 ### Opt-In Raiding
+
+For exact configuration examples, shard behavior, and verification steps, see the [Opt-In Raiding guide](docs/OPT_IN_GUIDE.md).
 
 - Allows players and clans to choose whether their bases are raidable.
 - Supports default opted-in or opted-out server policies.
@@ -285,6 +289,16 @@ dotnet build RaidForge.sln -c Release
 ```
 
 The compiled mod is written to `bin/Release/net6.0/RaidForge.dll`.
+
+The [opt-in regression harness](tests/RaidForge.OptIn.Tests/README.md) runs separately
+with a .NET 8 or newer SDK and does not require game DLLs:
+
+```powershell
+dotnet run --project tests/RaidForge.OptIn.Tests -c Release
+```
+
+See the [focused code review](docs/CODE_REVIEW_2026-09-06.md) for remaining quality
+concerns and the limits of the automated checks.
 
 ## Bugs and Support
 

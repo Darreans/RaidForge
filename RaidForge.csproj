@@ -3,14 +3,17 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>RaidForge</AssemblyName>
     <Description>Allows for flexible control over raid mechanics.</Description>
-    <Version>3.2.2</Version>
+    <Version>3.2.3</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>RaidForge</RootNamespace>
-    <AssemblyVersion>3.2.2.0</AssemblyVersion>
-    <FileVersion>3.2.2.0</FileVersion>
-    <InformationalVersion>3.2.2</InformationalVersion>
+    <AssemblyVersion>3.2.3.0</AssemblyVersion>
+    <FileVersion>3.2.3.0</FileVersion>
+    <InformationalVersion>3.2.3</InformationalVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+  </ItemGroup>
   <ItemGroup>
 	  <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.690" IncludeAssets="compile" />
 	  <PackageReference Include="BepInEx.Core" Version="6.0.0-be.690" IncludeAssets="compile" />

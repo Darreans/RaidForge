@@ -42,7 +42,7 @@ namespace RaidForge.Commands
             bool defaultEveryoneOptedIn = OptInRaidingConfig.UseDefaultOptInMode;
             bool desiredOptIn = true;
 
-            if (OptInRaidService.IsOptedIn(owner.PersistentKey))
+            if (OptInRaidService.IsSavedOptedIn(owner.PersistentKey))
             {
                 ctx.Reply(ChatColors.WarningText("You are already opted in to raiding."));
                 return;
@@ -98,6 +98,12 @@ namespace RaidForge.Commands
             bool defaultEveryoneOptedIn = OptInRaidingConfig.UseDefaultOptInMode;
             bool desiredOptIn = false;
 
+            if (OptInRaidService.IsForcedOptInByShard(owner.PersistentKey))
+            {
+                ctx.Reply(ChatColors.ErrorText("You cannot opt out while you or your clan hold a Soul Shard. Carried, equipped, and owned pedestal shards force your clan's bases into raiding during raid windows."));
+                return;
+            }
+
             if (!OptInRaidService.IsOptedIn(owner.PersistentKey))
             {
                 ctx.Reply(ChatColors.WarningText("You are already opted out of raiding."));
@@ -147,9 +153,18 @@ namespace RaidForge.Commands
             {
                 ctx.Reply(ChatColors.WarningText("Your raiding status is: RAIDABLE (Forced Raid Day)"));
 
-                string optStatus = isOptedIn ? "Opted-In" : "Opted-Out";
+                string optStatus = OptInRaidService.IsSavedOptedIn(owner.PersistentKey) ? "Opted-In" : "Opted-Out";
                 ctx.Reply(ChatColors.MutedText($"(Your saved status is {optStatus}, but the server schedule is overriding it today.)"));
 
+                return;
+            }
+
+            if (OptInRaidService.IsForcedOptInByShard(owner.PersistentKey))
+            {
+                ctx.Reply(ChatColors.WarningText("Your raiding status is: OPTED-IN (Forced by Soul Shard)"));
+                ctx.Reply(ChatColors.InfoText("You or a clan member hold a Soul Shard, or one is stored in an owned pedestal. All of your player/clan bases are raidable during raid windows, even while offline."));
+                string savedStatus = OptInRaidService.IsSavedOptedIn(owner.PersistentKey) ? "OPTED-IN" : "OPTED-OUT";
+                ctx.Reply(ChatColors.MutedText($"Saved status: {savedStatus}. The saved preference applies again once no shards remain; ownership refreshes about once per second."));
                 return;
             }
 
@@ -316,6 +331,12 @@ namespace RaidForge.Commands
             }
             else if (status == "out")
             {
+                if (OptInRaidService.IsForcedOptInByShard(owner.PersistentKey))
+                {
+                    ctx.Reply(ChatColors.ErrorText($"Cannot force '{owner.ContextualName}' out while their player/clan holds a Soul Shard. Remove the shards or disable AutoOptInShardHolders first."));
+                    return;
+                }
+
                 OptInRaidService.OptOut(owner.PersistentKey, owner.ContextualName);
                 RaidMapIconService.ProcessCleanup();
                 ctx.Reply(ChatColors.SuccessText($"Successfully forced '{owner.ContextualName}' to OPT-OUT status. This bypasses any time locks."));

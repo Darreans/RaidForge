@@ -32,6 +32,7 @@ namespace RaidForge.Services
 
         public static void ResetRuntimeState()
         {
+            ShardOwnershipService.ResetRuntimeState();
             lock (_saveLock)
             {
                 _manualStateTimes.Clear();
@@ -190,6 +191,20 @@ namespace RaidForge.Services
         }
 
         public static bool IsOptedIn(string persistentKey)
+        {
+            return IsForcedOptInByShard(persistentKey) || IsSavedOptedIn(persistentKey);
+        }
+
+        public static bool IsForcedOptInByShard(string persistentKey)
+        {
+            return OptInRaidingConfig.EnableOptInRaiding?.Value == true &&
+                OfflineRaidProtectionConfig.EnableOfflineRaidProtection?.Value != true &&
+                OptInRaidingConfig.AutoOptInShardHolders?.Value == true &&
+                ShardOwnershipService.HasShard(persistentKey);
+        }
+
+        // Manual choice/default only: shard possession never rewrites the saved preference.
+        public static bool IsSavedOptedIn(string persistentKey)
         {
             EnsureLoadedForCurrentMode();
             if (string.IsNullOrEmpty(persistentKey)) return false;
