@@ -39,6 +39,7 @@ namespace RaidForge.Patches
                 }
 
                 PlayerRegistryService.UpsertUser(entityManager, userEntity, true);
+                ShardOwnershipService.OnUserChanged(userEntity);
 
                 ulong platformId = connectedUserData.PlatformId;
                 string userPersistentKey = PersistentKeyHelper.GetUserKey(platformId);

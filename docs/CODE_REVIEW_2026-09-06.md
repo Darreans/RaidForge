@@ -23,6 +23,29 @@ not an exhaustive security audit or a live-server test.
 - The auto-opt-out configuration description now states the actual five-minute
   check interval and its restriction to default opted-out mode.
 
+## Follow-up in 3.2.4: replace polling with events
+
+Removed the one-second world scan and all lazy scan calls from damage/status/map
+lookups. Initial state is rebuilt at startup or an explicit configuration/cache
+reload. Inventory/equipment notifications identify one player or pedestal; only
+that source is re-read, after two server frames. Multiple source contributions
+are counted per player/clan. Lifecycle callbacks cover login/logout, clan changes,
+castle claims and destruction. Duplicate events are coalesced into one pending job.
+
+The hook choices were checked against the MCP decompiled game definitions for
+`ReactToInventoryChangedSystem` / `InventoryChangedEvent`,
+`ReactToEquipmentChangedSystem` / `EquipmentChangedEvent`, and
+`ProcessDestroyEventSystem` / `DestroyTagEvent`, plus inventory/equipment hook
+examples in ModCore and pickup/transfer examples in VArenaShards. `InventoryConnection`
+connects an external inventory to its owner. `PlayerCharacter.UserEntity` identifies
+the player; equipped-item ownership can also follow `InventoryItem`, `Attach`, or
+`EntityOwner`. No ModCore or VArena dependency was added.
+
+These are actual change notifications rather than pickup requests, so a failed
+pickup cannot force opt-in merely because it was attempted. The game still calls
+the patched event systems during updates; an empty event query returns immediately
+without allocating an entity array or reading inventories. No timer polls shards.
+
 ## Remaining findings
 
 ### P1 — CSV state writes are not atomic
@@ -80,17 +103,19 @@ and document compatible versions/checksums for the local DLLs.
 
 - The original source compiled successfully before changes with locally available
   HookDOTS.API and VampireCommandFramework dependencies.
-- The 3.2.3 Release build succeeds with zero warnings and zero errors.
-- All 24 opt-in regression checks pass. The tests link production opt-in policy,
-  ownership scanning, configuration, CSV parsing and writing. They cover both
+- The 3.2.4 Release build succeeds with zero warnings and zero errors.
+- All 34 opt-in regression checks pass. The tests link production opt-in policy,
+  ownership event handling, configuration, CSV parsing and writing. They cover both
   default modes, clan aggregation, offline/disabled users, pedestal ownership,
-  transfers, saved preferences, cooldown expiry, restart behavior, scan throttling,
-  failure handling, and query/array disposal.
+  transfers, saved preferences, cooldown expiry, restart behavior, duplicate-event
+  batching, source destruction, failure handling, and query/array disposal. Idle
+  lookups and gameplay event updates are checked for zero world-query creation.
 - Unity/BepInEx world access and inventory helpers are substituted in the harness.
-  It does not prove real equipped-slot/pedestal detection, actual combat hooks, or
+  It does not prove native event delivery, real equipped-slot/pedestal detection, combat hooks, or
   rendered map icons. Use the dedicated-server checklist in `OPT_IN_GUIDE.md`.
-- The new live snapshot is checked about once per second. On a scan error it keeps
-  the previous complete snapshot and retries after ten seconds. Ownership changes
-  may therefore be temporarily stale; this is logged, not silently persisted as
-  permanent opt-in state. Passive icons use the existing five-second cleanup.
+- Updates are deferred two server frames to let inventory/equipment mutations
+  settle. A failed source update keeps its prior state and logs the failure;
+  `.raidrefreshcache` rebuilds explicitly. Mods that directly alter inventories
+  without emitting game change events may require this manual recovery. There is
+  no periodic scan fallback. Passive icons use the existing five-second cleanup.
 - No running game server was modified or used for these checks.

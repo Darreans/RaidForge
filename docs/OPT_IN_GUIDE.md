@@ -104,7 +104,7 @@ exceptions bypass the normal opt-in checks.
 Command names above are defaults. If customized in `CommandSettings.cfg`, use the
 configured names. Those command configuration changes require a restart.
 
-## What shard possession does in 3.2.3
+## What shard possession does in 3.2.4
 
 - Any member's carried or equipped tracked Soul Shard forces the shared clan owner
   in. Solo players use their individual owner identity.
@@ -120,11 +120,21 @@ configured names. Those command configuration changes require a restart.
   When the last shard is gone, the owner's saved preference applies again.
   A holder can use `.raidoptin` outside restricted hours to save an opt-in that
   will remain after losing their shards.
-- Ownership is refreshed about once per second on the server thread. Changes can
-  take about a second to affect damage/status; passive map icons are maintained on
-  the existing five-second cleanup cycle. Server stalls can extend these delays.
-- A failed scan retains the last complete snapshot, logs an error, and retries
-  after ten seconds. Check the server log if ownership stops updating.
+- Ownership updates from the game's inventory-change and equipment-change events.
+  Only the affected player or pedestal is rechecked. Duplicate notifications are
+  combined into one job two server frames later, allowing inventory/equipment
+  command buffers to settle without briefly removing the override during a swap.
+- Login/logout, clan membership, castle ownership and destruction notifications
+  also update affected sources. Removing one source does not clear another clan
+  member's or pedestal's contribution.
+- A one-time world check runs at startup to find already-held shards, including
+  offline users. Explicit config reloads and `.raidrefreshcache` also rebuild this
+  state. There is **no repeating shard scan** and damage/status/map lookups perform
+  no world queries. Passive map icons still use the existing five-second cleanup.
+- A failed event update retains the prior state for that source and logs an error.
+  Use `.raidrefreshcache` to rebuild if ownership becomes stale. Other mods that
+  directly edit inventories without emitting the game's change events may need
+  that explicit refresh. No periodic scan is used as a fallback.
 
 This uses live ownership rather than the persisted ORP vulnerability latch, so
 normal ORP can remain disabled and old ORP records cannot override opt-in rules.
@@ -157,7 +167,7 @@ The automated regression harness does not run the game engine. On a test server:
    opted-in attacker, and use an active raid window. Verify normal castle damage
    is blocked without a shard.
 2. Test each supported shard type in inventory, equipped, and in a matching owned
-   pedestal. After a scan, verify `.raidoptstatus` says forced in, damage is allowed,
+   pedestal. After the action is processed, verify `.raidoptstatus` says forced in, damage is allowed,
    and `.raidoptout` and `.forceopt <name> out` are rejected.
 3. Repeat with a different clan member carrying the shard, that member offline,
    and a different castle belonging to the same clan.
@@ -173,3 +183,6 @@ The automated regression harness does not run the game engine. On a test server:
    the opt-in system.
 8. End the global raid window and confirm normal castle protection resumes.
    Test siege golems, weapon raiding and TNT separately if enabled.
+9. Test dropping, death drops, taking all, quick transfers, destruction/breakage,
+   and rapid equip/unequip. Test any inventory-management mods installed on the
+   server. Confirm event delivery and inspect the log for shard hook errors.

@@ -27,6 +27,7 @@ namespace RaidForge.Commands
 
                 int heartsFound = OwnershipCacheService.InitializeHeartOwnershipCache(em);
                 int usersFound = OwnershipCacheService.InitializeUserToClanCache(em);
+                ShardOwnershipService.Rebuild();
 
                 OfflineGraceService.EstablishInitialGracePeriodsOnBoot(em);
 

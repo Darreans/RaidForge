@@ -22,7 +22,7 @@ using Stunlock.Core;
 
 namespace RaidForge
 {
-    [BepInPlugin("raidforge", "RaidForge", "3.2.3")]
+    [BepInPlugin("raidforge", "RaidForge", "3.2.4")]
     [BepInDependency("gg.deca.VampireCommandFramework")]
     public class Plugin : BasePlugin
     {
@@ -151,6 +151,7 @@ namespace RaidForge
 
             Logger.LogInfo($"[RaidForge] World Scan Complete: {heartsFound} Hearts, {usersFound} Users.");
 
+            ShardOwnershipService.Rebuild();
             RaidMapIconService.ClearAllRaidForgeIconEntities(em);
             RunOnBootShardScanIfNeeded();
 
@@ -169,7 +170,6 @@ namespace RaidForge
             RegisterRecurringTask("raid interference check", RaidInterferenceService.ProcessInterference, 2.0);
             RegisterRecurringTask("raid map icon cleanup", RaidMapIconService.ProcessCleanup, 5.0);
             RegisterRecurringTask("opt-in cooldown check", ProcessOptInCooldowns, 300.0);
-            RegisterRecurringTask("shard opt-in ownership check", ShardOwnershipService.Refresh, 1.0);
             RegisterRecurringTask("purchased ORP raid-day accounting", PurchasedOrpService.ProcessDueRaidDayConsumption, 300.0);
 
             Logger.LogInfo("[RaidForge] Initialization Complete. Mod is Active.");
@@ -340,7 +340,7 @@ namespace RaidForge
             {
                 if (SystemsInitialized)
                 {
-                    ShardOwnershipService.ResetRuntimeState();
+                    ShardOwnershipService.Rebuild();
                     OptInRaidService.ReloadStateFromDisk();
                     PurchasedOrpService.ReloadStateFromDisk();
                     RaidMapIconService.MarkPersistentStateIconsDirty();
@@ -349,6 +349,10 @@ namespace RaidForge
                 }
 
                 Logger?.LogInfo("[RaidForge] OptInRaiding.cfg changed. Opt-in mode and map icons were refreshed.");
+            }
+            else if (sender == _offlineProtectionConfigFile)
+            {
+                if (SystemsInitialized) ShardOwnershipService.Rebuild();
             }
             else if (sender == _purchasedOrpConfigFile)
             {
@@ -423,7 +427,7 @@ namespace RaidForge
 
                     Logger.LogInfo($"[Reload] Cache refreshed: {hearts} Hearts, {users} Users.");
 
-                    ShardOwnershipService.ResetRuntimeState();
+                    ShardOwnershipService.Rebuild();
                     PlayerRegistryService.RefreshFromWorld(em);
                     RaidSchedulingSystem.CheckScheduleAndToggleRaids(true);
 

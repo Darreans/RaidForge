@@ -6,14 +6,14 @@
 
 RaidForge is a server-side V Rising mod for configurable raid schedules, offline base protection, opt-in raiding, purchased protection, weapon and explosive raiding, raid interference, map alerts, Siege Golem automation, Soul Shard rules, and per-castle servant limits.
 
-Current mod version: **3.2.3**
+Current mod version: **3.2.4**
 
 > [!IMPORTANT]
 > RaidForge changes important combat and castle-protection rules. Back up your world and configuration files before installing or updating it, and validate changes on a test server first.
 
 ## What's New
 
-- **Shard holders are forced into Opt-In Raiding:** `AutoOptInShardHolders` now checks live player/clan inventories, equipment, and owned Soul Shard pedestals, including offline users. Shard possession overrides saved opt-out choices without erasing them. Commands and passive map icons reflect the override. See the [Opt-In setup guide](docs/OPT_IN_GUIDE.md).
+- **Event-driven shard opt-in:** `AutoOptInShardHolders` now updates from inventory, equipment, and ownership/lifecycle events. A startup check accounts for existing shards; there is no repeating shard scan and damage/status lookups only read cached ownership. Shard possession overrides saved opt-out choices without erasing them. See the [Opt-In setup guide](docs/OPT_IN_GUIDE.md).
 - **ORP isolation:** Old shard vulnerability records no longer bypass Opt-In Raiding when standard ORP is disabled.
 - **Easier raid-time command:** Players can use `.raidtime`, or the shorter `.raidt`, to see when the next raid window begins.
 - **Optional command customization:** Server owners can rename or disable individual RaidForge commands and choose whether they appear in normal `.help` results. Command changes apply after a full restart.

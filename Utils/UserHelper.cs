@@ -85,6 +85,7 @@ namespace RaidForge.Utils
                         foreach (var item in inventory)
                         {
                             if (item.Amount <= 0) continue;
+                            if (em.Exists(item.ItemEntity._Entity) && em.HasComponent<DestroyTag>(item.ItemEntity._Entity)) continue;
                             if (PrefabData.SoulShardPrefabGUIDs.Contains(item.ItemType))
                             {
                                 foundShards.Add(item.ItemType);
@@ -109,7 +110,8 @@ namespace RaidForge.Utils
             if (em.TryGetComponentData<Equipment>(characterEntity, out var equipment))
             {
                 var grimoireEntity = equipment.GrimoireSlot.SlotEntity._Entity;
-                if (grimoireEntity.Exists() && em.TryGetComponentData<PrefabGUID>(grimoireEntity, out var grimoireGuid))
+                if (grimoireEntity.Exists() && !em.HasComponent<DestroyTag>(grimoireEntity) &&
+                    em.TryGetComponentData<PrefabGUID>(grimoireEntity, out var grimoireGuid))
                 {
                     if (PrefabData.SoulShardPrefabGUIDs.Contains(grimoireGuid))
                     {
@@ -205,6 +207,7 @@ namespace RaidForge.Utils
             {
                 var inventoryEntity = attachedItem.Entity;
                 if (!em.Exists(inventoryEntity) ||
+                    em.HasComponent<DestroyTag>(inventoryEntity) ||
                     !em.TryGetComponentData<PrefabGUID>(inventoryEntity, out var prefab) ||
                     prefab != PrefabData.ExternalInventoryPrefab.Guid ||
                     !em.TryGetBuffer<InventoryBuffer>(inventoryEntity, out var inventory)) continue;
@@ -212,6 +215,7 @@ namespace RaidForge.Utils
                 foreach (var item in inventory)
                 {
                     if (item.Amount <= 0) continue;
+                    if (em.Exists(item.ItemEntity._Entity) && em.HasComponent<DestroyTag>(item.ItemEntity._Entity)) continue;
                     if (PrefabData.SoulShardPrefabGUIDs.Contains(item.ItemType))
                     {
                         foundShards.Add(item.ItemType);

@@ -164,7 +164,7 @@ namespace RaidForge.Commands
                 ctx.Reply(ChatColors.WarningText("Your raiding status is: OPTED-IN (Forced by Soul Shard)"));
                 ctx.Reply(ChatColors.InfoText("You or a clan member hold a Soul Shard, or one is stored in an owned pedestal. All of your player/clan bases are raidable during raid windows, even while offline."));
                 string savedStatus = OptInRaidService.IsSavedOptedIn(owner.PersistentKey) ? "OPTED-IN" : "OPTED-OUT";
-                ctx.Reply(ChatColors.MutedText($"Saved status: {savedStatus}. The saved preference applies again once no shards remain; ownership refreshes about once per second."));
+                ctx.Reply(ChatColors.MutedText($"Saved status: {savedStatus}. The saved preference applies again once no shards remain. Ownership updates after inventory and equipment changes."));
                 return;
             }
 

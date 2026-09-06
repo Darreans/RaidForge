@@ -147,6 +147,7 @@ namespace RaidForge.Services
                 prevClanInCache != clanEntity)
             {
                 _userToClanCache[userEntity] = clanEntity;
+                ShardOwnershipService.OnUserChanged(userEntity);
                 RaidMapIconService.MarkPersistentStateIconsDirty();
                 return true;
             }
@@ -180,6 +181,7 @@ namespace RaidForge.Services
                 ownerUserEntity = Entity.Null;
             }
 
+            ShardOwnershipService.OnHeartChanged(heartEntity);
             if (ownerUserEntity == Entity.Null)
             {
                 if (_heartToOwnerUserCache.Remove(heartEntity))
@@ -201,6 +203,7 @@ namespace RaidForge.Services
         public static void RemoveHeart(Entity heartEntity)
         {
             if (heartEntity == Entity.Null) return;
+            ShardOwnershipService.OnHeartChanged(heartEntity);
             if (_heartToOwnerUserCache.Remove(heartEntity))
             {
                 RaidMapIconService.MarkPersistentStateIconsDirty();

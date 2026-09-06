@@ -67,6 +67,7 @@ namespace RaidForge.Patches
                 }
 
                 OfflineGraceService.HandleUserDisconnected(entityManager, userEntity);
+                ShardOwnershipService.OnUserChanged(userEntity);
                 PlayerRegistryService.UpsertUser(entityManager, userEntity, false);
                 RaidMapIconService.MarkPersistentStateIconsDirty();
                 RaidMapIconService.ProcessCleanup();

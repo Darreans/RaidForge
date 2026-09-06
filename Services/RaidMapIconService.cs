@@ -291,8 +291,6 @@ namespace RaidForge.Services
         {
             if (!VWorld.IsServerWorldReady()) return;
 
-            ShardOwnershipService.Refresh();
-
             var em = VWorld.EntityManager;
 
             if (!AnyIconKindEnabled())

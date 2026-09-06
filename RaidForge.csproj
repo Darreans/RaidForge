@@ -3,13 +3,13 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>RaidForge</AssemblyName>
     <Description>Allows for flexible control over raid mechanics.</Description>
-    <Version>3.2.3</Version>
+    <Version>3.2.4</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>RaidForge</RootNamespace>
-    <AssemblyVersion>3.2.3.0</AssemblyVersion>
-    <FileVersion>3.2.3.0</FileVersion>
-    <InformationalVersion>3.2.3</InformationalVersion>
+    <AssemblyVersion>3.2.4.0</AssemblyVersion>
+    <FileVersion>3.2.4.0</FileVersion>
+    <InformationalVersion>3.2.4</InformationalVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="tests/**/*.cs" />
